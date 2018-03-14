@@ -1,0 +1,4 @@
+Put the sdd package here.
+
+* Download from http://reasoning.cs.ucla.edu/sdd/
+* Install in path `pysdd/libsdd-2.0`

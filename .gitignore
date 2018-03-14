@@ -1,0 +1,16 @@
+pysdd/lib/libsdd*
+pysdd/lib/sdd*
+.idea
+build
+pysdd/sdd.c
+pysdd/*.so
+
+
+
+
+
+
+
+
+
+

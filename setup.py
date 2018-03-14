@@ -16,33 +16,48 @@ import platform
 import os
 import sys
 import re
+from pathlib import Path
 from Cython.Build import cythonize
 
-here = os.path.abspath(os.path.dirname(__file__))
+here = Path(os.path.abspath(os.path.dirname(__file__)))
 
 with open('pysdd/__init__.py', 'r') as fd:
-    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+    wrapper_version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
-if not version:
+if not wrapper_version:
     raise RuntimeError('Cannot find version information')
 
+sdd_version = "2.0"
 
-sdd_path = os.path.join(here, "pysdd", "lib", "sdd-"+version)
-lib_path = os.path.join(sdd_path, "lib")
-inc_path = os.path.join(sdd_path, "include")
-src_path = os.path.join(sdd_path, "src")
-csrc_path = os.path.join(here, "pysdd", "src")
 
-os.environ["LDFLAGS"] = "-L" + lib_path
-os.environ["CPPFLAGS"] = "-I" + inc_path + " -I" + csrc_path
+libwrapper_path = here / "pysdd" / "lib"
+sdd_path = libwrapper_path / f"sdd-{sdd_version}"
+lib_path = sdd_path / "lib"
+if "Darwin" in platform.platform():
+    lib_path = lib_path / "Darwin"
+elif "Linux" in platform.platform():
+    lib_path = lib_path / "Linux"
+inc_path = sdd_path / "include"
+src_path = sdd_path / "src"
+csrc_path = here / "pysdd" / "src"
+c_files_paths = src_path.glob("**/*.c")
+c_dirs_paths = set(p.parent for p in src_path.glob("**/*.c"))
+print("Found c file directories: ", ", ".join([str(p) for p in c_dirs_paths]))
+
+os.environ["LDFLAGS"] = f"-L{lib_path}"
+os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
+                         " ".join(f"-I{p}" for p in c_dirs_paths)
+# print("-I: " + str(os.environ["CPPFLAGS"]))
 
 ext_modules = cythonize([
     Extension(
-        "pysdd.sdd", ["pysdd/sdd.pyx", os.path.join(csrc_path, "cli.c")],
+        "pysdd.sdd", ["pysdd/sdd.pyx"] + [str(p) for p in c_files_paths],
+                     # [str(csrc_path / "io_wrapper.c")],
+                    #str(csrc_path / "cli.c")],
                     # os.path.join(src_path, "main.c"),
                     # os.path.join(src_path, "fnf", "compiler-manual.c"),
                     # os.path.join(src_path, "fnf", "compiler-auto.c")],
-        extra_objects=[os.path.join(lib_path, "libsdd.a")],
+        extra_objects=[str(lib_path / "libsdd.a")],
         include_dirs=[numpy.get_include()]
     )])
 
@@ -54,7 +69,7 @@ with open(os.path.join(here, 'README.rst'), 'r') as f:
 
 setup(
     name='PySDD',
-    version=version,
+    version=wrapper_version,
     description='Sentential Decision Diagrams',
     long_description=long_description,
     author='Wannes Meert',
