@@ -76,6 +76,14 @@ Use the SDD library's garbage collection commands (e.g. ref, deref) to
 perform memory management.
 
 
+---------------------------
+Other programming languages
+---------------------------
+
+* C: http://reasoning.cs.ucla.edu/sdd/
+* Java: https://github.com/jessa/JSDD
+
+
 -------
 Contact
 -------
