@@ -41,7 +41,17 @@ The following example builds an SDD for the formula ``a^b v b^c v c^d``.
     vtree = Vtree(var_count=4, var_order=[2,1,4,3], vtree_type="balanced")
     sdd = SddManager.from_vtree(vtree)
     a, b, c, d = [manager.literal(i) for i in range(1, 5)]
+
+    # Build SDD for formula
     formula = (a * b) + (b * c) + (c * d)
+
+    # Model Counting
+    wmc = formula.wmc(log_mode=False)
+    print(f"Model Count: {wmc.propagate()})
+    wmc.set_literal_weight(a, 0.5)
+    print(f"Weighted Model Count: {wmc.propagate()}")
+
+    # Visualize SDD and Vtree
     with open("output/sdd.dot", "w") as out:
         print(formula.dot(), file=out)
     with open("output/vtree.dot", "w") as out:
@@ -78,8 +88,7 @@ Contact
 License
 -------
 
-Copyright 2018, KU Leuven
-Copyright 2018, Regents of the University of California
+Copyright 2018, KU Leuven and Regents of the University of California.
 
-The Python wrapper is Licensed under the Apache License, Version 2.0.
+The Python SDD wrapper is licensed under the Apache License, Version 2.0.
 
