@@ -1,5 +1,5 @@
 pysdd/lib/libsdd*
-pysdd/lib/sdd*
+#pysdd/lib/sdd*
 .idea
 build
 pysdd/sdd.c
