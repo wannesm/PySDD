@@ -2,7 +2,7 @@
 PySDD
 =====
 
-Python package to interactively use Sententical Decision Diagrams (SDD).
+Python wrapper package to interactively use Sententical Decision Diagrams (SDD).
 
 *This is a beta version, API might change*
 
