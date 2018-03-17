@@ -7,5 +7,6 @@ pysdd/*.so
 .ipynb_checkpoints
 examples/output
 .python-version
+cython_debug
 
 

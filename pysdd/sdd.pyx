@@ -302,6 +302,10 @@ cdef class SddManager:
         #     return None # TODO in version 2.0 this is 0 if the variable is not yet in a formula
         return SddNode.wrap(sddapi_c.sdd_manager_literal(literal_c, self._sddmanager), self)
 
+    def l(self, lit):
+        """Short for literal(lit)"""
+        return self.literal(lit)
+
 
     ## Automatic Garbage Collection and SDD Minimization (Sec 5.1.3)
 
@@ -374,11 +378,20 @@ cdef class SddManager:
     def count(self):
         return sddapi_c.sdd_manager_count(self._sddmanager)
 
+    def live_size(self):
+        return sddapi_c.sdd_manager_live_size(self._sddmanager)
+
+    def dead_size(self):
+        return sddapi_c.sdd_manager_dead_size(self._sddmanager)
+
 
     ## File I/O (Sec 5.2.3)
 
     def save_as_dot(self, char* filename, SddNode node):
         sddapi_c.sdd_save_as_dot(filename, node._sddnode)
+
+    def shared_save_as_dot(self, char* filename):
+        sddapi_c.sdd_shared_save_as_dot(filename, self._sddmanager)
 
     def read(self, char* filename):
         return SddNode.wrap(sddapi_c.sdd_read(filename, self._sddmanager), self)
@@ -402,36 +415,46 @@ cdef class SddManager:
                 result = ifile.read()
         return result
 
-    def cnf_from_file(self, char* filename, char* vtree_type="balanced", int auto_minimization=1):
-        if self._sddmanager is not NULL:
-            sddapi_c.sdd_manager_free(self._sddmanager)
-        cnf = Fnf()
-        cnf.read_cnf(filename)
-        cdef sddapi_c.Vtree* vtree = sddapi_c.sdd_vtree_new(cnf.var_count, vtree_type)
-        self._sddmanager = sddapi_c.sdd_manager_new(vtree)
-        self.auto_gc_and_minimize_off()
-        # cli.initialize_manager_search_state(self._sddmanager)
-        sddapi_c.sdd_vtree_free(vtree)
+    @staticmethod
+    def from_cnf_file(char* filename, char* vtree_type="balanced"):
+        """Create an SDD from the given CNF file."""
+        cdef Fnf cnf = Fnf.from_cnf_file(filename)
+        vtree = Vtree(var_count=cnf.var_count, tree_type=vtree_type)
+        sdd = SddManager(vtree=vtree)
+        sdd.auto_gc_and_minimize_off()  # Having this on while building triggers segfault
+        # cli.initialize_manager_search_state(self._sddmanager)  # not required anymore in 2.0?
         # TODO: Add interruption to compilation (e.g. for timeouts)
-        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(cnf._fnf, self._sddmanager), self)
-        self.root = rnode
-        self.auto_gc_and_minimize_off()
+        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(cnf._fnf, sdd._sddmanager), sdd)
+        sdd.root = rnode
+        sdd.auto_gc_and_minimize_off()
         return rnode
 
     def read_cnf_file(self, filename):
+        """Replace the SDD by an SDD representing the theory in the given CNF file."""
         cdef Fnf cnf = Fnf.from_cnf_file(filename)
         rnode = SddNode.wrap(compiler_c.fnf_to_sdd(cnf._fnf, self._sddmanager), self)
         self.root = rnode
         return rnode
 
-    def cnf_from_string(self, cnf, char* vtree_type="balanced", int auto_minimization=1):
+    @staticmethod
+    def from_cnf_string(cnf, char* vtree_type="balanced"):
+        """Create an SDD from the given CNF string."""
         with tempfile.TemporaryDirectory() as tmpdirname:
             fname = os.path.join(tmpdirname, "program.cnf")
             fname_b = fname.encode()
             fname_c = fname_b
             with open(fname, "w") as ofile:
                 ofile.write(cnf)
-            return self.cnf_from_file(fname_c, vtree_type, auto_minimization)
+            return SddManager.from_cnf_file(fname_c, vtree_type)
+        return None
+
+
+    ## Manual Garbage Collection (Sec 5.4)
+
+    def garbage_collect(self):
+        """Performs a global garbage collection: Claims all dead SDD nodes in the manager.
+        """
+        sddapi_c.sdd_manager_garbage_collect(self._sddmanager)
 
 
     ## Manual SDD Minimization (Sec 5.5)
@@ -511,12 +534,12 @@ cdef class Vtree:
     cdef sddapi_c.Vtree* _vtree
 
     ## Creating Vtrees (Sec 5.3.1)
-    def __init__(self, var_count=None, var_order=None, tree_type="balanced", filename=None):
+    def __init__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None):
         """
         Returns a vtree over a given number of variables.
 
         :param var_count: Number of variables
-        :param tree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical", or
+        :param vtree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical", or
             "balanced".
         :param var_order: The left-to-right variable ordering is given in array var_order. The contents of array
             var_order must be a permutation of the integers from 1 to var count.
@@ -524,16 +547,16 @@ cdef class Vtree:
         """
         pass
 
-    def __cinit__(self, var_count=None, var_order=None, tree_type="balanced", filename=None):
+    def __cinit__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None):
         cdef long[:] var_order_c
         cdef long var_count_c
-        cdef char* type_c
+        cdef char* vtree_type_c
         cdef char* filename_c
-        if type(tree_type) == str:
-            tree_type = tree_type.encode()
-            type_c = tree_type
-        elif type(tree_type) == bytes:
-            type_c = tree_type
+        if type(vtree_type) == str:
+            vtree_type = vtree_type.encode()
+            vtree_type_c = vtree_type
+        elif type(vtree_type) == bytes:
+            vtree_type_c = vtree_type
         else:
             raise ValueError("Invalid type for tree_type")
         #cdef bytes type_b = type.encode()
@@ -543,13 +566,13 @@ cdef class Vtree:
         elif var_count is not None:
             var_count_c = var_count
             if var_order is None:
-                self._vtree = sddapi_c.sdd_vtree_new(var_count_c, type_c)
+                self._vtree = sddapi_c.sdd_vtree_new(var_count_c, vtree_type_c)
             else:
                 if isinstance(var_order, array.array):
                     var_order_c = var_order
                 else:
                     var_order_c = array.array('l', var_order)
-                self._vtree = sddapi_c.sdd_vtree_new_with_var_order(var_count_c, &var_order_c[0], type_c)
+                self._vtree = sddapi_c.sdd_vtree_new_with_var_order(var_count_c, &var_order_c[0], vtree_type_c)
                 if self._vtree is NULL:
                     raise MemoryError("Could not create Vtree")
         elif filename is not None:
@@ -631,9 +654,10 @@ cdef class Vtree:
         self._vtree = sddapi_c.sdd_vtree_read(filename)
 
     def save_as_dot(self, char* filename):
-        sddapi_c.sdd_vtree_save_as_dot(filename, self._vtree);
+        sddapi_c.sdd_vtree_save_as_dot(filename, self._vtree)
 
     def dot(self):
+        """Vtree to Graphiv dot string."""
         fname = None
         cdef bytes fname_b
         cdef char* fname_c

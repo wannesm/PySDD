@@ -13,19 +13,8 @@ def main():
 
     # construct a formula (A^B)v(B^C)v(C^D)
     print("constructing SDD ... ")
-    f_a = manager.literal(1)
-    f_b = manager.literal(2)
-    f_c = manager.literal(3)
-    f_d = manager.literal(4)
-
-    alpha = manager.false()
-
-    beta = f_a * f_b
-    alpha = alpha + beta
-    beta = f_b * f_c
-    alpha = alpha + beta
-    beta = f_c * f_d
-    alpha = alpha + beta
+    a, b, c, d = [manager.literal(i) for i in range(1, 5)]
+    alpha = (a * b) + (b * c) + (c * d)
     print("done")
 
     print("saving sdd and vtree ... ")

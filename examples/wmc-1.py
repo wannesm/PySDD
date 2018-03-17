@@ -17,7 +17,7 @@ def main():
     # Model Counting
     wmc = root.wmc(log_mode=True)
     w = wmc.propagate()
-    print(f"Number of models: {int(math.exp(w))}")
+    print(f"Model count: {int(math.exp(w))}")
 
     # Weighted Model Counting
     lits = [None] + [sdd.literal(i) for i in range(1, sdd.var_count() + 1)]
@@ -29,7 +29,7 @@ def main():
     print(f"Weighted model count: {math.exp(w)}")
 
     # Visualize SDD and VTREE
-    print("saving sdd and vtree ... ")
+    print("saving sdd and vtree ... ", end="")
     with open(here / "output" / "sdd.dot", "w") as out:
         print(sdd.dot(), file=out)
     with open(here / "output" / "vtree.dot", "w") as out:
