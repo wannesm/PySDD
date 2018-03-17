@@ -6,9 +6,9 @@ def main():
     # set up vtree and manager
     var_count = 4
     var_order = [2,1,4,3]
-    tree_type = "balanced"
+    vtree_type = "balanced"
 
-    vtree = Vtree(var_count, var_order, tree_type)
+    vtree = Vtree(var_count, var_order, vtree_type)
     manager = SddManager.from_vtree(vtree)
 
     # construct a formula (A^B)v(B^C)v(C^D)
