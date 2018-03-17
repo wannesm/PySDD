@@ -8,8 +8,8 @@ __license__ = "APL"
 cimport sddapi_c
 cimport compiler_c
 
-# cdef extern from "fnf.c":
-#     void free_fnf(compiler_c.Fnf* fnf)
+cdef extern from "fnf.h":
+    void free_fnf(compiler_c.Fnf* fnf)
 
-cdef extern from "fnf_wrapper.h":
-    void free_fnf_wrapper(compiler_c.Fnf* fnf)
+# cdef extern from "fnf_wrapper.h":
+#     void free_fnf_wrapper(compiler_c.Fnf* fnf)

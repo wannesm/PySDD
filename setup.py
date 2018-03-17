@@ -11,7 +11,7 @@ from setuptools.extension import Extension
 from setuptools.command.test import test as TestCommand
 from setuptools.command.sdist import sdist as SDistCommand
 from setuptools.command.build_ext import build_ext as BuildExtCommand
-import numpy
+# import numpy
 import platform
 import os
 import sys
@@ -42,7 +42,8 @@ src_path = sdd_path / "src"
 csrc_path = here / "pysdd" / "src"
 c_files_paths = src_path.glob("**/*.c")
 c_dirs_paths = set(p.parent for p in src_path.glob("**/*.c"))
-print("Found c file directories: ", ", ".join([str(p) for p in c_dirs_paths]))
+all_c_file_paths = [str(p) for p in c_files_paths]# + [str(p) for p in csrc_path.glob("*.c")]
+print("Found c files: ", ", ".join([str(p) for p in all_c_file_paths]))
 
 os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
@@ -51,17 +52,18 @@ os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
 
 ext_modules = cythonize([
     Extension(
-        "pysdd.sdd", ["pysdd/sdd.pyx"] + [str(p) for p in c_files_paths],
-                     # [str(csrc_path / "io_wrapper.c")],
+        "pysdd.sdd", ["pysdd/sdd.pyx"] + all_c_file_paths,
                     #str(csrc_path / "cli.c")],
                     # os.path.join(src_path, "main.c"),
                     # os.path.join(src_path, "fnf", "compiler-manual.c"),
                     # os.path.join(src_path, "fnf", "compiler-auto.c")],
-        extra_objects=[str(lib_path / "libsdd.a")],
-        include_dirs=[numpy.get_include()]
-    )])
+        extra_objects=[str(lib_path / "libsdd.a")]
+        # include_dirs=[numpy.get_include()]
+    )],
+    gdb_debug=True)
 
-install_requires = ['numpy', 'cython']
+# install_requires = ['numpy', 'cython']
+install_requires = ['cython']
 tests_require = ['pytest']
 
 with open(os.path.join(here, 'README.rst'), 'r') as f:

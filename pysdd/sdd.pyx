@@ -14,7 +14,7 @@ from cpython cimport array
 
 import os
 import tempfile
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 import io
 import cython
 
@@ -31,7 +31,7 @@ cdef class SddNode:
         self._name = "?"
 
     @staticmethod
-    cdef create(sddapi_c.SddNode* node, SddManager manager):
+    cdef wrap(sddapi_c.SddNode* node, SddManager manager):
         wrapper = SddNode(manager)
         wrapper._sddnode = node
         if sddapi_c.sdd_node_is_literal(node):
@@ -88,12 +88,13 @@ cdef class SddNode:
         nodes = sddapi_c.sdd_node_elements(self._sddnode)
         # do no free memory of nodes
         m = self.size()
-        primes = [SddNode.create(nodes[i], self._manager) for i in range(0, 2*m, 2)]
-        subs = [SddNode.create(nodes[i], self._manager) for i in range(1, 2*m, 2)]
+        primes = [SddNode.wrap(nodes[i], self._manager) for i in range(0, 2 * m, 2)]
+        subs = [SddNode.wrap(nodes[i], self._manager) for i in range(1, 2 * m, 2)]
         return zip(primes, subs)
 
     def wmc(self, log_mode=True):
-        return WmcManager(self, log_mode, self._manager)
+        """Create a WmcManager to perform Weighted Model Counting with this node as root."""
+        return WmcManager(self, log_mode)
 
 
     ## Manual Garbage Collection (Sec 5.4)
@@ -141,6 +142,20 @@ cdef class SddNode:
 cdef class SddManager:
     cdef sddapi_c.SddManager* _sddmanager
     cdef bint _auto_gc_and_minimize
+    cdef public object cnf_filename
+    cdef public object dnf_filename
+    cdef public object vtree_filename
+    cdef public object sdd_filename
+    cdef public object output_vtree_filename
+    cdef public object output_vtree_dot_filename
+    cdef public object output_sdd_filename
+    cdef public object output_sdd_dot_filename
+    cdef int minimize_cardinality
+    cdef public object initial_vtree_type
+    cdef int vtree_search_mode
+    cdef int post_search
+    cdef int verbose
+    cdef public object root
 
     ## Creating managers (Sec 5.1.1)
 
@@ -155,23 +170,83 @@ cdef class SddManager:
         :param vtree: The manager copies the input vtree. Any manipulations performed by
             the manager are done on its own copy, and does not a?ect the input vtree.
         """
-        pass
 
     def __cinit__(self, long var_count=1, bint auto_gc_and_minimize=True, Vtree vtree=None):
+        self.cnf_filename = None
+        self.dnf_filename = None
+        self.vtree_filename = None
+        self.sdd_filename = None
+        self.output_vtree_filename = None
+        self.output_vtree_dot_filename = None
+        self.output_sdd_filename = None
+        self.output_sdd_dot_filename = None
+        self.initial_vtree_type = "balanced".encode()
+        self.root = None
+        self.minimize_cardinality = 0
+        self.vtree_search_mode = -1
+        self.post_search = 0
+        self.verbose = 0
         if vtree is not None:
             self._sddmanager = sddapi_c.sdd_manager_new(vtree._vtree)
             self._auto_gc_and_minimize = False
             if self._sddmanager is NULL:
-                raise MemoryError()
+                raise MemoryError("Could not create SddManager")
         else:
             self._sddmanager = sddapi_c.sdd_manager_create(var_count, auto_gc_and_minimize)
             self._auto_gc_and_minimize = auto_gc_and_minimize
             if self._sddmanager is NULL:
-                raise MemoryError()
+                raise MemoryError("Could not create SddManager")
+        # Since 2.0 you have to set options and initialize values to avoid segfault
+        self.save_options()
 
     def __dealloc__(self):
         if self._sddmanager is not NULL:
             sddapi_c.sdd_manager_free(self._sddmanager)
+
+    @staticmethod
+    def from_vtree(Vtree vtree):
+        return SddManager(vtree=vtree)
+
+    def save_options(self):
+        cdef compiler_c.SddCompilerOptions options
+        if self.cnf_filename is None:
+            options.cnf_filename = NULL
+        else:
+            options.cnf_filename = self.cnf_filename
+        if self.dnf_filename is None:
+            options.dnf_filename = NULL
+        else:
+            options.dnf_filename = self.dnf_filename
+        if self.vtree_filename is None:
+            options.vtree_filename = NULL
+        else:
+            options.vtree_filename = self.vtree_filename
+        if self.sdd_filename is None:
+            options.sdd_filename = NULL
+        else:
+            options.sdd_filename = self.sdd_filename
+        if self.output_vtree_filename is None:
+            options.output_vtree_filename = NULL
+        else:
+            options.output_vtree_filename = self.output_vtree_filename
+        if self.output_vtree_dot_filename is None:
+            options.output_vtree_dot_filename = NULL
+        else:
+            options.output_vtree_dot_filename = self.output_vtree_dot_filename
+        if self.output_sdd_filename is None:
+            options.output_sdd_filename = NULL
+        else:
+            options.output_sdd_filename = self.output_sdd_filename
+        if self.output_sdd_dot_filename is None:
+            options.output_sdd_dot_filename = NULL
+        else:
+            options.output_sdd_dot_filename = self.output_sdd_dot_filename
+        options.minimize_cardinality = self.minimize_cardinality
+        options.initial_vtree_type = self.initial_vtree_type
+        options.vtree_search_mode = self.vtree_search_mode
+        options.post_search = self.post_search
+        options.verbose = self.verbose
+        sddapi_c.sdd_manager_set_options(&options, self._sddmanager)
 
     def add_var_before_first(self):
         """Let v be the leftmost leaf node in the vtree. A new leaf node labeled with variable n + 1 is created and
@@ -202,27 +277,30 @@ cdef class SddManager:
 
     def true(self):
         """Returns an SDD representing the function true."""
-        return SddNode.create(sddapi_c.sdd_manager_true(self._sddmanager), self)
+        return SddNode.wrap(sddapi_c.sdd_manager_true(self._sddmanager), self)
 
     def false(self):
         """Returns an SDD representing the function false."""
-        return SddNode.create(sddapi_c.sdd_manager_false(self._sddmanager), self)
+        return SddNode.wrap(sddapi_c.sdd_manager_false(self._sddmanager), self)
 
     def literal(self, lit):
         """Returns an SDD representing a literal.
 
-        The variable literal is of the form ±i, where i is an index of a variable, which ranges from 1 to the number
-        of variables in the manager. If literal is positive, then the SDD representing the positive literal of the
-        i-th variable is returned. If literal is negative, then the SDD representing the negative literal is returned.
+        Returns an SDD representing a literal. The variable literal is of the form ±i, where i is an index of
+        a variable, which ranges from 1 to the number of variables in the manager. If literal is positive, then
+        the SDD representing the positive literal of the i-th variable is returned. If literal is negative, then
+        the SDD representing the negative literal is returned.
+
+        :param lit: Literal (number)
         """
         if lit == 0:
             raise ValueError("Literal 0 does not exist")
         if lit > self.var_count():
             raise ValueError("Number of available literals is {} < {}".format(self.var_count(), lit))
         cdef long literal_c = lit
-        if self.is_var_used(literal_c) == 0:
-            return None
-        return SddNode.create(sddapi_c.sdd_manager_literal(literal_c, self._sddmanager), self)
+        # if self.is_var_used(literal_c) == 0:
+        #     return None # TODO in version 2.0 this is 0 if the variable is not yet in a formula
+        return SddNode.wrap(sddapi_c.sdd_manager_literal(literal_c, self._sddmanager), self)
 
 
     ## Automatic Garbage Collection and SDD Minimization (Sec 5.1.3)
@@ -243,13 +321,19 @@ cdef class SddManager:
         sddapi_c.sdd_manager_print(self._sddmanager)
 
     def var_count(self):
+        """Returns the number of SDD variables currently associated with the manager."""
         return sddapi_c.sdd_manager_var_count(self._sddmanager)
 
-    def vtree(self):
-        return Vtree.create(sddapi_c.sdd_manager_vtree_copy(self._sddmanager))
+    def vtree_copy(self):
+        return Vtree.wrap(sddapi_c.sdd_manager_vtree_copy(self._sddmanager))
 
     def is_var_used(self, sddapi_c.SddLiteral var):
-        """Returns 1 if var is referenced by a decision SDD node (dead or alive); returns 0 otherwise."""
+        """Returns 1 if var is referenced by a decision SDD node (dead or alive); returns 0 otherwise.
+
+        :param var: Literal (number)
+        """
+        if var == 0:
+            raise ValueError("Literal 0 does not exist")
         return sddapi_c.sdd_manager_is_var_used(var, self._sddmanager)
 
 
@@ -261,25 +345,25 @@ cdef class SddManager:
         if self._auto_gc_and_minimize:
             raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
                                    "is active")
-        return SddNode.create(sddapi_c.sdd_apply(node1._sddnode, node2._sddnode, op, self._sddmanager), self)
+        return SddNode.wrap(sddapi_c.sdd_apply(node1._sddnode, node2._sddnode, op, self._sddmanager), self)
 
     def conjoin(self, SddNode node1, SddNode node2):
         if self._auto_gc_and_minimize:
             raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
                                    "is active")
-        return SddNode.create(sddapi_c.sdd_conjoin(node1._sddnode, node2._sddnode, self._sddmanager), self)
+        return SddNode.wrap(sddapi_c.sdd_conjoin(node1._sddnode, node2._sddnode, self._sddmanager), self)
 
     def disjoin(self, SddNode node1, SddNode node2):
         if self._auto_gc_and_minimize:
             raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
                                    "is active")
-        return SddNode.create(sddapi_c.sdd_disjoin(node1._sddnode, node2._sddnode, self._sddmanager), self)
+        return SddNode.wrap(sddapi_c.sdd_disjoin(node1._sddnode, node2._sddnode, self._sddmanager), self)
 
     def negate(self, SddNode node):
         if self._auto_gc_and_minimize:
             raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
                                    "is active")
-        return SddNode.create(sddapi_c.sdd_negate(node._sddnode, self._sddmanager), self)
+        return SddNode.wrap(sddapi_c.sdd_negate(node._sddnode, self._sddmanager), self)
 
 
     ## Size and Count (Sec 5.2.2)
@@ -297,9 +381,14 @@ cdef class SddManager:
         sddapi_c.sdd_save_as_dot(filename, node._sddnode)
 
     def read(self, char* filename):
-        return SddNode.create(sddapi_c.sdd_read(filename, self._sddmanager), self)
+        return SddNode.wrap(sddapi_c.sdd_read(filename, self._sddmanager), self)
 
-    def dot(self, SddNode node):
+    def dot(self, SddNode node=None):
+        if node is None:
+            if self.root is None:
+                raise ValueError("No root node is known, pass the root node as argument")
+            else:
+                node = self.root
         fname = None
         cdef bytes fname_b
         cdef char* fname_c
@@ -324,11 +413,15 @@ cdef class SddManager:
         # cli.initialize_manager_search_state(self._sddmanager)
         sddapi_c.sdd_vtree_free(vtree)
         # TODO: Add interruption to compilation (e.g. for timeouts)
-        if auto_minimization == 1:
-            rnode = SddNode.create(compiler_c.fnf_to_sdd_auto(cnf._fnf, self._sddmanager), self)
-        else:
-            rnode = SddNode.create(compiler_c.fnf_to_sdd_manual(cnf._fnf, self._sddmanager), self)
+        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(cnf._fnf, self._sddmanager), self)
+        self.root = rnode
         self.auto_gc_and_minimize_off()
+        return rnode
+
+    def read_cnf_file(self, filename):
+        cdef Fnf cnf = Fnf.from_cnf_file(filename)
+        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(cnf._fnf, self._sddmanager), self)
+        self.root = rnode
         return rnode
 
     def cnf_from_string(self, cnf, char* vtree_type="balanced", int auto_minimization=1):
@@ -348,58 +441,31 @@ cdef class SddManager:
         # TODO: Capture stdout
         sddapi_c.sdd_manager_minimize(self._sddmanager)
 
-    def set_lr_time_limit(self, sddapi_c.SddSize time_limit):
-        sddapi_c.sdd_manager_set_lr_time_limit(time_limit, self._sddmanager)
-
-    def set_rr_time_limit(self, sddapi_c.SddSize time_limit):
-        sddapi_c.sdd_manager_set_rr_time_limit(time_limit, self._sddmanager)
-
-    def set_sw_time_limit(self, sddapi_c.SddSize time_limit):
-        sddapi_c.sdd_manager_set_sw_time_limit(time_limit, self._sddmanager)
-
-    def set_lr_size_limit(self, float size_limit):
-        sddapi_c.sdd_manager_set_lr_size_limit(size_limit, self._sddmanager)
-
-    def set_rr_size_limit(self, float size_limit):
-        sddapi_c.sdd_manager_set_rr_size_limit(size_limit, self._sddmanager)
-
-    def set_sw_size_limit(self, float size_limit):
-        sddapi_c.sdd_manager_set_sw_size_limit(size_limit, self._sddmanager)
-
-    def set_rr_cartesian_product_limit(self,  int cartesian_product_limit):
-        sddapi_c.sdd_manager_set_rr_cartesian_product_limit(cartesian_product_limit, self._sddmanager)
-
-    def set_sw_cartesian_product_limit(self,  int cartesian_product_limit):
-        sddapi_c.sdd_manager_set_sw_cartesian_product_limit(cartesian_product_limit, self._sddmanager)
-
-    def set_convergence_threshold(self, float threshold):
-        sddapi_c.sdd_manager_set_convergence_threshold(threshold, self._sddmanager)
-
 
     ## Printing
 
     def __str__(self):
         f = io.StringIO()
-        with redirect_stdout(f):
+        with redirect_stderr(f):
             sddapi_c.sdd_manager_print(self._sddmanager)
         return f.getvalue()
 
 
 cdef class Fnf:
     cdef compiler_c.Fnf* _fnf
-    cdef bint _is_a_cnf
-    cdef bint _is_a_dnf
+    cdef public bint _type_cnf
+    cdef public bint _type_dnf
 
     def __cinit__(self):
-        _is_a_cnf = False
-        _is_a_dnf = False
+        self._type_cnf = False
+        self._type_dnf = False
 
     def __dealloc__(self):
         if self._fnf is not NULL:
-            fnf_c.free_fnf_wrapper(self._fnf)
+            fnf_c.free_fnf(self._fnf)
 
     @staticmethod
-    cdef create(compiler_c.Fnf* fnf):
+    cdef wrap(compiler_c.Fnf* fnf, cnf=False, dnf=False):
         rfnf = Fnf()
         rfnf._fnf = fnf
         return rfnf
@@ -416,26 +482,26 @@ cdef class Fnf:
     ## CNF/DNF to SDD Compiler (Sec 6)
 
     def read_cnf(self, char* filename):
-        self._fnf =  io_c.read_cnf_wrapper(filename)
-        self._is_a_cnf = True
+        self._fnf =  io_c.read_cnf(filename)
+        self._type_cnf = True
         print("Read CNF: vars={} clauses={}".format(self.var_count, self.litset_count))
 
     @staticmethod
     def from_cnf_file(char* filename):
-        fnf = Fnf.create(io_c.read_cnf_wrapper(filename))
-        fnf._is_a_cnf = True
+        fnf = Fnf.wrap(io_c.read_cnf(filename))
+        fnf._type_cnf = True
         print("Read CNF: vars={} clauses={}".format(fnf.var_count, fnf.litset_count))
         return fnf
 
     def read_dnf(self, char* filename):
-        self._fnf =  io_c.read_dnf_wrapper(filename)
-        self._is_a_dnf = True
+        self._fnf =  io_c.read_dnf(filename)
+        self._type_dnf = True
         print("Read CNF: vars={} clauses={}".format(self.var_count, self.litset_count))
 
     @staticmethod
     def from_dnf_file(char* filename):
-        fnf = Fnf.create(io_c.read_dnf_wrapper(filename))
-        fnf._is_a_dnf = True
+        fnf = Fnf.wrap(io_c.read_dnf(filename))
+        fnf._type_dnf = True
         print("Read CNF: vars={} clauses={}".format(fnf.var_count, fnf.litset_count))
         return fnf
 
@@ -445,12 +511,12 @@ cdef class Vtree:
     cdef sddapi_c.Vtree* _vtree
 
     ## Creating Vtrees (Sec 5.3.1)
-    def __init__(self, var_count=None, type="balanced", var_order=None, filename=None):
+    def __init__(self, var_count=None, var_order=None, tree_type="balanced", filename=None):
         """
         Returns a vtree over a given number of variables.
 
         :param var_count: Number of variables
-        :param type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical", or
+        :param tree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical", or
             "balanced".
         :param var_order: The left-to-right variable ordering is given in array var_order. The contents of array
             var_order must be a permutation of the integers from 1 to var count.
@@ -458,27 +524,45 @@ cdef class Vtree:
         """
         pass
 
-    def __cinit__(self, var_count=None, char* type="balanced", var_order=None, filename=None):
+    def __cinit__(self, var_count=None, var_order=None, tree_type="balanced", filename=None):
         cdef long[:] var_order_c
         cdef long var_count_c
+        cdef char* type_c
+        cdef char* filename_c
+        if type(tree_type) == str:
+            tree_type = tree_type.encode()
+            type_c = tree_type
+        elif type(tree_type) == bytes:
+            type_c = tree_type
+        else:
+            raise ValueError("Invalid type for tree_type")
         #cdef bytes type_b = type.encode()
         #cdef char* type_c = type_b
-        if var_count is not None:
+        if var_count is not None and filename is not None:
+            raise ValueError("Error: Arguments var_count and filename cannot be given together")
+        elif var_count is not None:
             var_count_c = var_count
             if var_order is None:
-                self._vtree = sddapi_c.sdd_vtree_new(var_count_c, type)
+                self._vtree = sddapi_c.sdd_vtree_new(var_count_c, type_c)
             else:
                 if isinstance(var_order, array.array):
                     var_order_c = var_order
                 else:
                     var_order_c = array.array('l', var_order)
-                self._vtree = sddapi_c.sdd_vtree_new_with_var_order(var_count_c, &var_order_c[0], type)
+                self._vtree = sddapi_c.sdd_vtree_new_with_var_order(var_count_c, &var_order_c[0], type_c)
                 if self._vtree is NULL:
-                    raise MemoryError()
+                    raise MemoryError("Could not create Vtree")
         elif filename is not None:
-            self._vtree = sddapi_c.sdd_vtree_read(filename)
+            if type(filename) == str:
+                filename = filename.encode()
+                filename_c = filename
+            elif type(filename) == bytes:
+                filename_c = filename
+            else:
+                raise ValueError("Unknown type for filename: " + str(type(filename)))
+            self._vtree = sddapi_c.sdd_vtree_read(filename_c)
             if self._vtree is NULL:
-                raise MemoryError()
+                raise MemoryError("Could not create Vtree")
 
     def __dealloc__(self):
         """Frees the memory of a vtree."""
@@ -486,7 +570,12 @@ cdef class Vtree:
             sddapi_c.sdd_vtree_free(self._vtree)
 
     @staticmethod
-    cdef create(sddapi_c.Vtree* vtree):
+    def from_file(filename):
+        """Create Vtree from file."""
+        return Vtree(filename=filename)
+
+    @staticmethod
+    cdef wrap(sddapi_c.Vtree* vtree):
         rvtree = Vtree()
         rvtree._vtree = vtree
         return rvtree
@@ -565,13 +654,13 @@ cdef class Vtree:
         return sddapi_c.sdd_vtree_is_leaf(self._vtree)
 
     def left(self):
-        return Vtree.create(sddapi_c.sdd_vtree_left(self._vtree))
+        return Vtree.wrap(sddapi_c.sdd_vtree_left(self._vtree))
 
     def right(self):
-        return Vtree.create(sddapi_c.sdd_vtree_right(self._vtree))
+        return Vtree.wrap(sddapi_c.sdd_vtree_right(self._vtree))
 
     def parent(self):
-        return Vtree.create(sddapi_c.sdd_vtree_parent(self._vtree))
+        return Vtree.wrap(sddapi_c.sdd_vtree_parent(self._vtree))
 
 
     ## Edit Operations (Sec 5.3.5)
@@ -611,19 +700,6 @@ cdef class Vtree:
         """
         return sddapi_c.sdd_vtree_swap(self._vtree, sddmanager._sddmanager, limited)
 
-    def set_size_limit_context(self, SddManager sddmanager):
-        """Declares a limit on the size of live SDD nodes in vtree v.
-
-        Sets the reference point s to the current size of live SDD nodes in vtree v. Vtree operations constrained by
-        this limit are assumed to be applied to vtree v.
-        """
-        sddapi_c.sdd_manager_set_size_limit_context(self._vtree, sddmanager._sddmanager)
-
-    def update_size_limit_context(self, SddManager sddmanager):
-        """Updates the reference point s to the current size of live SDD nodes in vtree v.
-        """
-        sddapi_c.sdd_manager_update_size_limit_context(sddmanager._sddmanager)
-
 
     ## Misc Functions (Sec 5.3.7)
 
@@ -639,7 +715,7 @@ cdef class Vtree:
         """Returns the lowest common ancestor (lca) of vtree nodes vtree1 and vtree2, assuming that root is a common
         ancestor of these two nodes.
         """
-        return Vtree.create(sddapi_c.sdd_vtree_lca(vtree1._vtree, vtree2._vtree, root._vtree))
+        return Vtree.wrap(sddapi_c.sdd_vtree_lca(vtree1._vtree, vtree2._vtree, root._vtree))
 
     def var_count(self):
         """Returns the number of variables contained in the vtree."""
@@ -676,7 +752,7 @@ cdef class WmcManager:
 
     ## Weighted Model Counting (Sec 5.6)
 
-    def __init__(self, node, log_mode, sddmanager):
+    def __init__(self, node, log_mode=1):
         """
         Creates a WMC manager for the SDD rooted at node and initializes literal weights. When log mode =6 0, all
         computations done by the manager will be in natural log-space. Literal weights are initialized to 0 in
@@ -705,8 +781,8 @@ cdef class WmcManager:
         """
         pass
 
-    def __cinit__(self, SddNode node, bint log_mode, SddManager sddmanager):
-        self._wmcmanager = sddapi_c.wmc_manager_new(node._sddnode, log_mode, sddmanager._sddmanager)
+    def __cinit__(self, SddNode node, bint log_mode=1):
+        self._wmcmanager = sddapi_c.wmc_manager_new(node._sddnode, log_mode, node._manager._sddmanager)
         if self._wmcmanager is NULL:
             raise MemoryError()
 

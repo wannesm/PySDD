@@ -18,18 +18,14 @@ cdef extern from "sddapi.h":
 
     ctypedef unsigned short BoolOp
 
-    struct vtree_t:
+    ctypedef struct Vtree:
         pass
-    ctypedef vtree_t Vtree
-    struct sdd_node_t:
+    ctypedef struct SddNode:
         pass
-    ctypedef sdd_node_t SddNode
-    struct sdd_manager_t:
+    ctypedef struct SddManager:
         pass
-    ctypedef sdd_manager_t SddManager
-    struct wmc_manager_t:
+    ctypedef struct WmcManager:
         pass
-    ctypedef wmc_manager_t WmcManager
 
     ctypedef Vtree* SddVtreeSearchFunc(Vtree*, SddManager*);
 
@@ -160,10 +156,6 @@ cdef extern from "sddapi.h":
     int sdd_vtree_rotate_right(Vtree* vtree, SddManager* manager, int limited);
     int sdd_vtree_swap(Vtree* vtree, SddManager* manager, int limited);
 
-    #// LIMITS FOR VTREE/SDD EDIT OPERATIONS
-    void sdd_manager_set_size_limit_context(Vtree* vtree, SddManager* manager);
-    void sdd_manager_update_size_limit_context(SddManager* manager);
-
     #// VTREE STATE
     int sdd_vtree_bit(const Vtree* vtree);
     void sdd_vtree_set_bit(int bit, Vtree* vtree);
@@ -184,15 +176,6 @@ cdef extern from "sddapi.h":
     #// MINIMIZATION
     void sdd_manager_minimize(SddManager* manager);
     Vtree* sdd_vtree_minimize(Vtree* vtree, SddManager* manager);
-    void sdd_manager_set_lr_time_limit(SddSize time_limit, SddManager* manager);
-    void sdd_manager_set_rr_time_limit(SddSize time_limit, SddManager* manager);
-    void sdd_manager_set_sw_time_limit(SddSize time_limit, SddManager* manager);
-    void sdd_manager_set_lr_size_limit(float size_limit, SddManager* manager);
-    void sdd_manager_set_rr_size_limit(float size_limit, SddManager* manager);
-    void sdd_manager_set_sw_size_limit(float size_limit, SddManager* manager);
-    void sdd_manager_set_rr_cartesian_product_limit(int cartesian_product_limit, SddManager* manager);
-    void sdd_manager_set_sw_cartesian_product_limit(int cartesian_product_limit, SddManager* manager);
-    void sdd_manager_set_convergence_threshold(float threshold, SddManager* manager);
 
     #// WMC
     WmcManager* wmc_manager_new(SddNode* node, int log_mode, SddManager* manager);

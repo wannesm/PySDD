@@ -14,6 +14,13 @@ Compilation
 * Run `make build`
 
 
+-----------------
+Memory management
+-----------------
+
+Automatic memory management is not implemented. Use the SDD library's ref and deref commands.
+
+
 -------
 Contact
 -------

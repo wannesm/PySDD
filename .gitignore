@@ -4,13 +4,8 @@ pysdd/lib/sdd*
 build
 pysdd/sdd.c
 pysdd/*.so
-
-
-
-
-
-
-
-
+.ipynb_checkpoints
+examples/output
+.python-version
 
 

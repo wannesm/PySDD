@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+from pysdd.sdd import SddManager, Vtree
+
+
+def main():
+    # set up vtree and manager
+    var_count = 4
+    var_order = [2,1,4,3]
+    tree_type = "balanced"
+
+    vtree = Vtree(var_count, var_order, tree_type)
+    manager = SddManager.from_vtree(vtree)
+
+    # construct a formula (A^B)v(B^C)v(C^D)
+    print("constructing SDD ... ")
+    f_a = manager.literal(1)
+    f_b = manager.literal(2)
+    f_c = manager.literal(3)
+    f_d = manager.literal(4)
+
+    alpha = manager.false()
+
+    beta = f_a * f_b
+    alpha = alpha + beta
+    beta = f_b * f_c
+    alpha = alpha + beta
+    beta = f_c * f_d
+    alpha = alpha + beta
+    print("done")
+
+    print("saving sdd and vtree ... ")
+    with open("output/sdd.dot", "w") as out:
+        print(alpha.dot(), file=out)
+    with open("output/vtree.dot", "w") as out:
+        print(vtree.dot(), file=out)
+    print("done")
+
+
+if __name__ == "__main__":
+    main()
+
