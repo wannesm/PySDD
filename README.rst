@@ -13,7 +13,7 @@ Dependencies
 
 * Python >=3.6
 * Cython
-* SDD package: http://reasoning.cs.ucla.edu/sdd/
+* SDD package >=2.0: http://reasoning.cs.ucla.edu/sdd/
 
 
 -----------
@@ -64,7 +64,7 @@ The SDD and Vtree are visualized using Graphviz DOT:
 
 
 
-More examples are available in the `examples` and `docs` directories.
+More examples are available in the ``examples`` and ``docs`` directories.
 
 
 -----------------
