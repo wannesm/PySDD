@@ -40,6 +40,7 @@ The following example builds an SDD for the formula ``a^b v b^c v c^d``.
 
 .. code-block:: python
 
+    from pysdd.sdd import SddManager, Vtree, WmcManager
     vtree = Vtree(var_count=4, var_order=[2,1,4,3], vtree_type="balanced")
     sdd = SddManager.from_vtree(vtree)
     a, b, c, d = [manager.literal(i) for i in range(1, 5)]
@@ -49,7 +50,7 @@ The following example builds an SDD for the formula ``a^b v b^c v c^d``.
 
     # Model Counting
     wmc = formula.wmc(log_mode=False)
-    print(f"Model Count: {wmc.propagate()})
+    print(f"Model Count: {wmc.propagate()}")
     wmc.set_literal_weight(a, 0.5)
     print(f"Weighted Model Count: {wmc.propagate()}")
 
@@ -73,7 +74,8 @@ More examples are available in the ``examples`` and ``docs`` directories.
 Command Line Interface
 ----------------------
 
-A Python CLI application is include, ``pysdd-cli.py``, that mimicks the original sdd binary.
+A Python CLI application is included, ``pysdd-cli.py``, that mimicks the
+original sdd binary.
 
 .. code-block:: shell
 
