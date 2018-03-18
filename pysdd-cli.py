@@ -57,7 +57,7 @@ def main(argv=None):
         print(f"read time                : {secs:.3f} sec")
         weights = read_weights(options.sdd_filename)
 
-    wmc = create_wmc(node, weights, args) if weights is not None else None
+    wmc = create_wmc(node, weights, args)
 
     print_node(node, manager, wmc)
     if options.verbose:
@@ -70,7 +70,7 @@ def main(argv=None):
         c2 = time.time()
         min_card = manager.minimum_cardinality(node)
         print("")
-        wmc = create_wmc(node, weights, args) if weights is not None else None
+        wmc = create_wmc(node, weights, args)
         print_node(node, manager, wmc)
         print(f" min cardinality        : {min_card}   {c2-c1:.3f} sec")
 
@@ -84,7 +84,7 @@ def main(argv=None):
         manager.minimize_limited()
         c2 = time.time()
         print(f" dynamic vtree time      : {c2-c1:.3f} sec")
-        wmc = create_wmc(node, weights, args) if weights is not None else None
+        wmc = create_wmc(node, weights, args)
         print_node(node, manager, wmc)
         node.deref()
         if options.verbose:
@@ -111,10 +111,11 @@ def main(argv=None):
         print("done")
 
     print("done")
-    # TODO: add weighted model counting
 
 
 def create_wmc(node, weights, args):
+    if weights is None:
+        return None
     wmc = node.wmc(log_mode=args.log_mode)
     for i in range(len(weights)):
         l = (i // 2) + 1
