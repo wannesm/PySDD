@@ -69,8 +69,10 @@ cdef extern from "sddapi.h":
     SddNode* sdd_exists(SddLiteral var, SddNode* node, SddManager* manager);
     SddNode* sdd_forall(SddLiteral var, SddNode* node, SddManager* manager);
     SddNode* sdd_minimize_cardinality(SddNode* node, SddManager* manager);
+    SddNode* sdd_global_minimize_cardinality(SddNode* node, SddManager* manager);
     SddLiteral sdd_minimum_cardinality(SddNode* node);
     SddModelCount sdd_model_count(SddNode* node, SddManager* manager);
+    SddModelCount sdd_global_model_count(SddNode* node, SddManager* manager);
 
     #// SDD NAVIGATION
     int sdd_node_is_true(SddNode* node);
@@ -176,6 +178,8 @@ cdef extern from "sddapi.h":
     #// MINIMIZATION
     void sdd_manager_minimize(SddManager* manager);
     Vtree* sdd_vtree_minimize(Vtree* vtree, SddManager* manager);
+    void sdd_manager_minimize_limited(SddManager* manager);
+    Vtree* sdd_vtree_minimize_limited(Vtree* vtree, SddManager* manager);
 
     #// WMC
     WmcManager* wmc_manager_new(SddNode* node, int log_mode, SddManager* manager);

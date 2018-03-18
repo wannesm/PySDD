@@ -44,6 +44,9 @@ cdef class SddNode:
             wrapper._name = "Decision"
         return wrapper
 
+    def manager(self):
+        return self._manager
+
     def is_literal(self):
         return sddapi_c.sdd_node_literal(self._sddnode)
 
@@ -80,8 +83,17 @@ cdef class SddNode:
     def __neg__(SddNode node):
         return node._manager.negate(node)
 
+    def model_count(self):
+        return self._manager.model_count(self)
+
+    def global_model_count(self):
+        return self._manager.global_model_count(self)
+
     def size(self):
         return sddapi_c.sdd_size(self._sddnode)
+
+    def count(self):
+        return sddapi_c.sdd_count(self._sddnode)
 
     def elements(self):
         cdef sddapi_c.SddNode** nodes;
@@ -131,6 +143,12 @@ cdef class SddNode:
         #print(t)
         print("{0:x}".format(<unsigned int>&self._sddnode))
 
+    def save(self, char* filename):
+        return self._manager.save(filename, self)
+
+    def save_as_dot(self, char* filename):
+        return self._manager.save_as_dot(filename, self)
+
     def dot(self):
         return self._manager.dot(self)
 
@@ -142,19 +160,7 @@ cdef class SddNode:
 cdef class SddManager:
     cdef sddapi_c.SddManager* _sddmanager
     cdef bint _auto_gc_and_minimize
-    cdef public object cnf_filename
-    cdef public object dnf_filename
-    cdef public object vtree_filename
-    cdef public object sdd_filename
-    cdef public object output_vtree_filename
-    cdef public object output_vtree_dot_filename
-    cdef public object output_sdd_filename
-    cdef public object output_sdd_dot_filename
-    cdef int minimize_cardinality
-    cdef public object initial_vtree_type
-    cdef int vtree_search_mode
-    cdef int post_search
-    cdef int verbose
+    cdef CompilerOptions options
     cdef public object root
 
     ## Creating managers (Sec 5.1.1)
@@ -172,20 +178,8 @@ cdef class SddManager:
         """
 
     def __cinit__(self, long var_count=1, bint auto_gc_and_minimize=True, Vtree vtree=None):
-        self.cnf_filename = None
-        self.dnf_filename = None
-        self.vtree_filename = None
-        self.sdd_filename = None
-        self.output_vtree_filename = None
-        self.output_vtree_dot_filename = None
-        self.output_sdd_filename = None
-        self.output_sdd_dot_filename = None
-        self.initial_vtree_type = "balanced".encode()
+        self.options = CompilerOptions()
         self.root = None
-        self.minimize_cardinality = 0
-        self.vtree_search_mode = -1
-        self.post_search = 0
-        self.verbose = 0
         if vtree is not None:
             self._sddmanager = sddapi_c.sdd_manager_new(vtree._vtree)
             self._auto_gc_and_minimize = False
@@ -197,7 +191,7 @@ cdef class SddManager:
             if self._sddmanager is NULL:
                 raise MemoryError("Could not create SddManager")
         # Since 2.0 you have to set options and initialize values to avoid segfault
-        self.save_options()
+        self.set_options()
 
     def __dealloc__(self):
         if self._sddmanager is not NULL:
@@ -207,46 +201,11 @@ cdef class SddManager:
     def from_vtree(Vtree vtree):
         return SddManager(vtree=vtree)
 
-    def save_options(self):
-        cdef compiler_c.SddCompilerOptions options
-        if self.cnf_filename is None:
-            options.cnf_filename = NULL
-        else:
-            options.cnf_filename = self.cnf_filename
-        if self.dnf_filename is None:
-            options.dnf_filename = NULL
-        else:
-            options.dnf_filename = self.dnf_filename
-        if self.vtree_filename is None:
-            options.vtree_filename = NULL
-        else:
-            options.vtree_filename = self.vtree_filename
-        if self.sdd_filename is None:
-            options.sdd_filename = NULL
-        else:
-            options.sdd_filename = self.sdd_filename
-        if self.output_vtree_filename is None:
-            options.output_vtree_filename = NULL
-        else:
-            options.output_vtree_filename = self.output_vtree_filename
-        if self.output_vtree_dot_filename is None:
-            options.output_vtree_dot_filename = NULL
-        else:
-            options.output_vtree_dot_filename = self.output_vtree_dot_filename
-        if self.output_sdd_filename is None:
-            options.output_sdd_filename = NULL
-        else:
-            options.output_sdd_filename = self.output_sdd_filename
-        if self.output_sdd_dot_filename is None:
-            options.output_sdd_dot_filename = NULL
-        else:
-            options.output_sdd_dot_filename = self.output_sdd_dot_filename
-        options.minimize_cardinality = self.minimize_cardinality
-        options.initial_vtree_type = self.initial_vtree_type
-        options.vtree_search_mode = self.vtree_search_mode
-        options.post_search = self.post_search
-        options.verbose = self.verbose
-        sddapi_c.sdd_manager_set_options(&options, self._sddmanager)
+    def set_options(self, options=None):
+        if options is not None:
+            self.options = options
+        self.options.copy_options_to_c()
+        sddapi_c.sdd_manager_set_options(&self.options._options, self._sddmanager)
 
     def add_var_before_first(self):
         """Let v be the leftmost leaf node in the vtree. A new leaf node labeled with variable n + 1 is created and
@@ -331,6 +290,11 @@ cdef class SddManager:
     def vtree_copy(self):
         return Vtree.wrap(sddapi_c.sdd_manager_vtree_copy(self._sddmanager))
 
+    def vtree(self):
+        vtree = Vtree.wrap(sddapi_c.sdd_manager_vtree(self._sddmanager))
+        vtree.is_ref = True
+        return vtree
+
     def is_var_used(self, sddapi_c.SddLiteral var):
         """Returns 1 if var is referenced by a decision SDD node (dead or alive); returns 0 otherwise.
 
@@ -369,6 +333,19 @@ cdef class SddManager:
                                    "is active")
         return SddNode.wrap(sddapi_c.sdd_negate(node._sddnode, self._sddmanager), self)
 
+    def global_minimize_cardinality(self, SddNode node):
+        rnode = SddNode.wrap(sddapi_c.sdd_global_minimize_cardinality(node._sddnode, self._sddmanager), self)
+        self.root = rnode
+        return rnode
+
+    def minimum_cardinality(self, SddNode node):
+        return sddapi_c.sdd_minimum_cardinality(node._sddnode)
+
+    def model_count(self, SddNode node):
+        return sddapi_c.sdd_model_count(node._sddnode, self._sddmanager)
+
+    def global_model_count(self, SddNode node):
+        return sddapi_c.sdd_global_model_count(node._sddnode, self._sddmanager)
 
     ## Size and Count (Sec 5.2.2)
 
@@ -393,8 +370,11 @@ cdef class SddManager:
     def shared_save_as_dot(self, char* filename):
         sddapi_c.sdd_shared_save_as_dot(filename, self._sddmanager)
 
-    def read(self, char* filename):
+    def read_sdd_file(self, char* filename):
         return SddNode.wrap(sddapi_c.sdd_read(filename, self._sddmanager), self)
+
+    def save(self, char* filename, SddNode node):
+        sddapi_c.sdd_save(filename, node._sddnode)
 
     def dot(self, SddNode node=None):
         if node is None:
@@ -448,6 +428,10 @@ cdef class SddManager:
             return SddManager.from_cnf_file(fname_c, vtree_type)
         return None
 
+    def fnf_to_sdd(self, Fnf fnf):
+        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(fnf._fnf, self._sddmanager), self)
+        return rnode
+
 
     ## Manual Garbage Collection (Sec 5.4)
 
@@ -464,6 +448,8 @@ cdef class SddManager:
         # TODO: Capture stdout
         sddapi_c.sdd_manager_minimize(self._sddmanager)
 
+    def minimize_limited(self):
+        sddapi_c.sdd_manager_minimize_limited(self._sddmanager)
 
     ## Printing
 
@@ -532,6 +518,7 @@ cdef class Fnf:
 @cython.embedsignature(True)
 cdef class Vtree:
     cdef sddapi_c.Vtree* _vtree
+    cdef public bint is_ref  # Ref does not manage memory
 
     ## Creating Vtrees (Sec 5.3.1)
     def __init__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None):
@@ -552,6 +539,7 @@ cdef class Vtree:
         cdef long var_count_c
         cdef char* vtree_type_c
         cdef char* filename_c
+        self.is_ref = False
         if type(vtree_type) == str:
             vtree_type = vtree_type.encode()
             vtree_type_c = vtree_type
@@ -589,7 +577,7 @@ cdef class Vtree:
 
     def __dealloc__(self):
         """Frees the memory of a vtree."""
-        if self._vtree is not NULL:
+        if not self.is_ref and self._vtree is not NULL:
             sddapi_c.sdd_vtree_free(self._vtree)
 
     @staticmethod
@@ -889,3 +877,99 @@ cdef class WmcManager:
         else:
             literal_c = literal
         return literal_c
+
+
+cdef class CompilerOptions:
+    cdef compiler_c.SddCompilerOptions _options
+    cdef public object cnf_filename
+    cdef public object dnf_filename
+    cdef public object vtree_filename
+    cdef public object sdd_filename
+    cdef public object output_vtree_filename
+    cdef public object output_vtree_dot_filename
+    cdef public object output_sdd_filename
+    cdef public object output_sdd_dot_filename
+    cdef public int minimize_cardinality
+    cdef public object initial_vtree_type
+    cdef public int vtree_search_mode
+    cdef public int post_search
+    cdef public int verbose
+
+    def __init__(self, cnf_filename = None, dnf_filename = None, vtree_filename = None, sdd_filename = None,
+                  output_vtree_filename = None, output_vtree_dot_filename = None, output_sdd_filename = None,
+                  output_sdd_dot_filename = None, initial_vtree_type = "balanced".encode(),
+                  minimize_cardinality = 0, vtree_search_mode = -1, post_search = 0, verbose = 0):
+        pass
+
+    def __cinit__(self, cnf_filename = None, dnf_filename = None, vtree_filename = None, sdd_filename = None,
+                  output_vtree_filename = None, output_vtree_dot_filename = None, output_sdd_filename = None,
+                  output_sdd_dot_filename = None, initial_vtree_type = "balanced".encode(),
+                  minimize_cardinality = 0, vtree_search_mode = -1, post_search = 0, verbose = 0):
+        self.cnf_filename = cnf_filename
+        self.dnf_filename = dnf_filename
+        self.vtree_filename = vtree_filename
+        self.sdd_filename = sdd_filename
+        self.output_vtree_filename = output_vtree_filename
+        self.output_vtree_dot_filename = output_vtree_dot_filename
+        self.output_sdd_filename = output_sdd_filename
+        self.output_sdd_dot_filename = output_sdd_dot_filename
+        self.initial_vtree_type = initial_vtree_type
+        self.minimize_cardinality = minimize_cardinality
+        self.vtree_search_mode = vtree_search_mode
+        self.post_search = post_search
+        self.verbose = verbose
+
+    def copy_options_to_c(self):
+        if self.cnf_filename is None:
+            self._options.cnf_filename = NULL
+        else:
+            self._options.cnf_filename = self.cnf_filename
+        if self.dnf_filename is None:
+            self._options.dnf_filename = NULL
+        else:
+            self._options.dnf_filename = self.dnf_filename
+        if self.vtree_filename is None:
+            self._options.vtree_filename = NULL
+        else:
+            self._options.vtree_filename = self.vtree_filename
+        if self.sdd_filename is None:
+            self._options.sdd_filename = NULL
+        else:
+            self._options.sdd_filename = self.sdd_filename
+        if self.output_vtree_filename is None:
+            self._options.output_vtree_filename = NULL
+        else:
+            self._options.output_vtree_filename = self.output_vtree_filename
+        if self.output_vtree_dot_filename is None:
+            self._options.output_vtree_dot_filename = NULL
+        else:
+            self._options.output_vtree_dot_filename = self.output_vtree_dot_filename
+        if self.output_sdd_filename is None:
+            self._options.output_sdd_filename = NULL
+        else:
+            self._options.output_sdd_filename = self.output_sdd_filename
+        if self.output_sdd_dot_filename is None:
+            self._options.output_sdd_dot_filename = NULL
+        else:
+            self._options.output_sdd_dot_filename = self.output_sdd_dot_filename
+        self._options.minimize_cardinality  = self.minimize_cardinality
+        self._options.vtree_search_mode  = self.vtree_search_mode
+        self._options.post_search  = self.post_search
+        self._options.verbose  = self.verbose
+
+    def __str__(self):
+        r = "CompilerOptions:\n"
+        r += "  cnf_filename: " + str(self.cnf_filename) + "\n"
+        r += "  dnf_filename: " + str(self.dnf_filename) + "\n"
+        r += "  vtree_filename: " + str(self.vtree_filename) + "\n"
+        r += "  sdd_filename: " + str(self.sdd_filename) + "\n"
+        r += "  output_vtree_filename: " + str(self.output_vtree_filename) + "\n"
+        r += "  output_vtree_dot_filename: " + str(self.output_vtree_dot_filename) + "\n"
+        r += "  output_sdd_filename: " + str(self.output_sdd_filename) + "\n"
+        r += "  output_sdd_dot_filename: " + str(self.output_sdd_dot_filename) + "\n"
+        r += "  initial_vtree_type: " + str(self.initial_vtree_type) + "\n"
+        r += "  minimize_cardinality: " + str(self.minimize_cardinality) + "\n"
+        r += "  vtree_search_mode: " + str(self.vtree_search_mode) + "\n"
+        r += "  post_search: " + str(self.post_search) + "\n"
+        r += "  verbose: " + str(self.verbose) + "\n"
+        return r
