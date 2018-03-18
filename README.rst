@@ -36,7 +36,7 @@ Python package
 
 The wrapper can be used as a Python package and allows for interactive use.
 
-The following example builds an SDD for the formula ``a^b v b^c v c^d``.
+The following example builds an SDD for the formula ``a∧b ∨ b∧c ∨  c∧d``.
 
 .. code-block:: python
 
