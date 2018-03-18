@@ -159,13 +159,13 @@ cdef class SddNode:
 @cython.embedsignature(True)
 cdef class SddManager:
     cdef sddapi_c.SddManager* _sddmanager
-    cdef bint _auto_gc_and_minimize
+    cdef bint _auto_gc_and_minimize  # TODO: replace by manager->auto_gc_and_search_on (should be identical)
     cdef CompilerOptions options
     cdef public object root
 
     ## Creating managers (Sec 5.1.1)
 
-    def __init__(self, var_count=1, auto_gc_and_minimize=True, vtree=None):
+    def __init__(self, var_count=1, auto_gc_and_minimize=False, vtree=None):
         """
         Creates a new SDD manager, either given a vtree or using a balanced vtree over the given number of variables.
 
@@ -177,7 +177,7 @@ cdef class SddManager:
             the manager are done on its own copy, and does not a?ect the input vtree.
         """
 
-    def __cinit__(self, long var_count=1, bint auto_gc_and_minimize=True, Vtree vtree=None):
+    def __cinit__(self, long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
         self.options = CompilerOptions()
         self.root = None
         if vtree is not None:
@@ -399,15 +399,15 @@ cdef class SddManager:
     def from_cnf_file(char* filename, char* vtree_type="balanced"):
         """Create an SDD from the given CNF file."""
         cdef Fnf cnf = Fnf.from_cnf_file(filename)
-        vtree = Vtree(var_count=cnf.var_count, tree_type=vtree_type)
+        vtree = Vtree(var_count=cnf.var_count, vtree_type=vtree_type)
         sdd = SddManager(vtree=vtree)
         sdd.auto_gc_and_minimize_off()  # Having this on while building triggers segfault
         # cli.initialize_manager_search_state(self._sddmanager)  # not required anymore in 2.0?
         # TODO: Add interruption to compilation (e.g. for timeouts)
         rnode = SddNode.wrap(compiler_c.fnf_to_sdd(cnf._fnf, sdd._sddmanager), sdd)
         sdd.root = rnode
-        sdd.auto_gc_and_minimize_off()
-        return rnode
+        # sdd.auto_gc_and_minimize_off()
+        return sdd, rnode
 
     def read_cnf_file(self, filename):
         """Replace the SDD by an SDD representing the theory in the given CNF file."""
@@ -426,7 +426,7 @@ cdef class SddManager:
             with open(fname, "w") as ofile:
                 ofile.write(cnf)
             return SddManager.from_cnf_file(fname_c, vtree_type)
-        return None
+        return None, None
 
     def fnf_to_sdd(self, Fnf fnf):
         rnode = SddNode.wrap(compiler_c.fnf_to_sdd(fnf._fnf, self._sddmanager), self)
@@ -546,7 +546,7 @@ cdef class Vtree:
         elif type(vtree_type) == bytes:
             vtree_type_c = vtree_type
         else:
-            raise ValueError("Invalid type for tree_type")
+            raise ValueError("Invalid type for vtree_type")
         #cdef bytes type_b = type.encode()
         #cdef char* type_c = type_b
         if var_count is not None and filename is not None:
