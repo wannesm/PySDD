@@ -9,10 +9,10 @@ here = Path(__file__).parent
 
 def main():
     # Start from a given CNF and VTREE file
-    vtree = Vtree.from_file(bytes(here / "simple.vtree"))
+    vtree = Vtree.from_file(bytes(here / "input" / "simple.vtree"))
     sdd = SddManager.from_vtree(vtree)
     print(f"Created an SDD with {sdd.var_count()} variables")
-    root = sdd.read_cnf_file(bytes(here / "simple.cnf"))
+    root = sdd.read_cnf_file(bytes(here / "input" / "simple.cnf"))
 
     # Model Counting
     wmc = root.wmc(log_mode=True)
