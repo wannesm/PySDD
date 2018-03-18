@@ -6,6 +6,10 @@ Python wrapper package to interactively use Sententical Decision Diagrams (SDD).
 
 *This is a beta version, API might change*
 
+Citing this work:
+
+.. image:: https://zenodo.org/badge/125235210.svg
+   :target: https://zenodo.org/badge/latestdoi/125235210
 
 ------------
 Dependencies
