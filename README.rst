@@ -125,6 +125,9 @@ Other programming languages
 * C: http://reasoning.cs.ucla.edu/sdd/
 * Java: https://github.com/jessa/JSDD
 
+This package is inspired by the SDD wrapper used in the probabilistic
+programming language `ProbLog <https://dtai.cs.kuleuven.be/problog/>`_.
+
 
 -------
 Contact
