@@ -158,6 +158,10 @@ cdef extern from "sddapi.h":
     int sdd_vtree_rotate_right(Vtree* vtree, SddManager* manager, int limited);
     int sdd_vtree_swap(Vtree* vtree, SddManager* manager, int limited);
 
+    #// LIMITS FOR VTREE/SDD EDIT OPERATIONS
+    void sdd_manager_init_vtree_size_limit(Vtree* vtree, SddManager* manager);
+    void sdd_manager_update_vtree_size_limit(SddManager* manager);
+
     #// VTREE STATE
     int sdd_vtree_bit(const Vtree* vtree);
     void sdd_vtree_set_bit(int bit, Vtree* vtree);
@@ -180,6 +184,16 @@ cdef extern from "sddapi.h":
     Vtree* sdd_vtree_minimize(Vtree* vtree, SddManager* manager);
     void sdd_manager_minimize_limited(SddManager* manager);
     Vtree* sdd_vtree_minimize_limited(Vtree* vtree, SddManager* manager);
+
+    void sdd_manager_set_vtree_search_convergence_threshold(float threshold, SddManager* manager);
+
+    void sdd_manager_set_vtree_search_time_limit(float time_limit, SddManager* manager);
+    void sdd_manager_set_vtree_fragment_time_limit(float time_limit, SddManager* manager);
+    void sdd_manager_set_vtree_operation_time_limit(float time_limit, SddManager* manager);
+    void sdd_manager_set_vtree_apply_time_limit(float time_limit, SddManager* manager);
+    void sdd_manager_set_vtree_operation_memory_limit(float memory_limit, SddManager* manager);
+    void sdd_manager_set_vtree_operation_size_limit(float size_limit, SddManager* manager);
+    void sdd_manager_set_vtree_cartesian_product_limit(SddSize size_limit, SddManager* manager);
 
     #// WMC
     WmcManager* wmc_manager_new(SddNode* node, int log_mode, SddManager* manager);

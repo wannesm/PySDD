@@ -17,12 +17,12 @@ def main():
   alpha.ref()
   print("minimizing sdd size ... ", end="")
   manager.minimize()  # see also manager.minimize_limited()
-  print("done!");
+  print("done!")
   print(f"  sdd size = {alpha.size()}")
   alpha.deref()
 
   # augment the SDD
-  print("augmenting sdd ...");
+  print("augmenting sdd ...")
   beta = alpha * (manager.l(4) + manager.l(5))
   print(f"  sdd size = {beta.size()}")
 
@@ -30,7 +30,7 @@ def main():
   beta.ref()
   print("minimizing sdd ... ", end="")
   manager.minimize()
-  print("done!");
+  print("done!")
   print(f"  sdd size = {beta.size()}")
   beta.deref()
 

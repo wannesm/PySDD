@@ -291,9 +291,7 @@ cdef class SddManager:
         return Vtree.wrap(sddapi_c.sdd_manager_vtree_copy(self._sddmanager))
 
     def vtree(self):
-        vtree = Vtree.wrap(sddapi_c.sdd_manager_vtree(self._sddmanager))
-        vtree.is_ref = True
-        return vtree
+        return Vtree.wrap(sddapi_c.sdd_manager_vtree(self._sddmanager), is_ref=True)
 
     def is_var_used(self, sddapi_c.SddLiteral var):
         """Returns 1 if var is referenced by a decision SDD node (dead or alive); returns 0 otherwise.
@@ -360,6 +358,9 @@ cdef class SddManager:
 
     def dead_size(self):
         return sddapi_c.sdd_manager_dead_size(self._sddmanager)
+
+    def dead_count(self):
+        return sddapi_c.sdd_manager_dead_count(self._sddmanager)
 
 
     ## File I/O (Sec 5.2.3)
@@ -450,6 +451,37 @@ cdef class SddManager:
 
     def minimize_limited(self):
         sddapi_c.sdd_manager_minimize_limited(self._sddmanager)
+
+    def init_vtree_size_limit(self, Vtree vtree):
+        sddapi_c.sdd_manager_init_vtree_size_limit(vtree._vtree, self._sddmanager)
+
+    def update_vtree_size_limit(self):
+        sddapi_c.sdd_manager_update_vtree_size_limit(self._sddmanager)
+
+    def set_vtree_search_convergence_threshold(self, float threshold):
+        sddapi_c.sdd_manager_set_vtree_search_convergence_threshold(threshold, self._sddmanager)
+
+    def set_vtree_search_time_limit(self, float time_limit):
+        sddapi_c.sdd_manager_set_vtree_search_time_limit(time_limit, self._sddmanager)
+
+    def set_vtree_fragment_time_limit(self, float time_limit):
+        sddapi_c.sdd_manager_set_vtree_fragment_time_limit(time_limit, self._sddmanager)
+
+    def set_vtree_operation_time_limit(self, float time_limit):
+        sddapi_c.sdd_manager_set_vtree_operation_time_limit(time_limit, self._sddmanager)
+
+    def set_vtree_apply_time_limit(self, float time_limit):
+        sddapi_c.sdd_manager_set_vtree_apply_time_limit(time_limit, self._sddmanager)
+
+    def set_vtree_operation_memory_limit(self, float memory_limit):
+        sddapi_c.sdd_manager_set_vtree_operation_memory_limit(memory_limit, self._sddmanager)
+
+    def set_vtree_operation_size_limit(self, float size_limit):
+        sddapi_c.sdd_manager_set_vtree_operation_size_limit(size_limit, self._sddmanager)
+
+    def set_vtree_cartesian_product_limit(self, sddapi_c.SddSize size_limit):
+        sddapi_c.sdd_manager_set_vtree_cartesian_product_limit(size_limit, self._sddmanager)
+
 
     ## Printing
 
@@ -586,9 +618,18 @@ cdef class Vtree:
         return Vtree(filename=filename)
 
     @staticmethod
-    cdef wrap(sddapi_c.Vtree* vtree):
+    cdef wrap(sddapi_c.Vtree* vtree, is_ref=False):
+        """Transform a C Vtree to a Python Vtree.
+        
+        :param vtree: C-pointer to vtree
+        :param is_ref: True if memory should not be managed by this Python object
+        :return: Python object for Vtree
+        """
+        if vtree == NULL:
+            return None
         rvtree = Vtree()
         rvtree._vtree = vtree
+        rvtree.is_ref = is_ref
         return rvtree
 
 
@@ -663,16 +704,26 @@ cdef class Vtree:
     ## Navigation (Sec 5.3.4)
 
     def is_leaf(self):
+        """Returns 1 if vtree is a leaf node, and 0 otherwise."""
         return sddapi_c.sdd_vtree_is_leaf(self._vtree)
 
     def left(self):
-        return Vtree.wrap(sddapi_c.sdd_vtree_left(self._vtree))
+        """Returns the left child of a vtree node
+        (returns NULL if the vtree is a leaf node).
+        """
+        return Vtree.wrap(sddapi_c.sdd_vtree_left(self._vtree), is_ref=True)
 
     def right(self):
-        return Vtree.wrap(sddapi_c.sdd_vtree_right(self._vtree))
+        """Returns the right child of a vtree node
+        (returns NULL if the vtree is a leaf node).
+        """
+        return Vtree.wrap(sddapi_c.sdd_vtree_right(self._vtree), is_ref=True)
 
     def parent(self):
-        return Vtree.wrap(sddapi_c.sdd_vtree_parent(self._vtree))
+        """Returns the parent of a vtree node
+        (return NULL if the vtree is a root node).
+        """
+        return Vtree.wrap(sddapi_c.sdd_vtree_parent(self._vtree), is_ref=True)
 
 
     ## Edit Operations (Sec 5.3.5)
@@ -747,15 +798,15 @@ cdef class Vtree:
         """
         return sddapi_c.sdd_vtree_position(self._vtree)
 
-    def _location(self, SddManager manager):
+    def location(self, SddManager manager):
         """Returns the location of the pointer to the vtree root.
 
         This location can be used to access the new root of the vtree, which may have changed due to rotating some
         of the vtree nodes.
         """
-        # TODO, this function returns a pointer to a vtree node. Who should be responsible for memory?
-        pass
-
+        # cdef Vtree** vtreepp;
+        sddapi_c.sdd_vtree_location(self._vtree, manager._sddmanager)
+        # TODO: Pointer Pointer not supported by Cython. Is this function really necessary?
 
 
 @cython.embedsignature(True)
