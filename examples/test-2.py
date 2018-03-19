@@ -14,13 +14,13 @@ def main():
   x = [None] + [manager.literal(i) for i in range(1,5)]
 
   # construct the term X_1 ^ X_2 ^ X_3 ^ X_4
-  alpha =  x[1] *  x[2] * x[3] * x[4]
+  alpha =  x[1] &  x[2] & x[3] & x[4]
 
   # construct the term ~X_1 ^ X_2 ^ X_3 ^ X_4
-  beta  = -x[1] *  x[2] * x[3] * x[4]
+  beta  = ~x[1] &  x[2] & x[3] & x[4]
 
   # construct the term ~X_1 ^ ~X_2 ^ X_3 ^ X_4
-  gamma = -x[1] * -x[2] * x[3] * x[4]
+  gamma = ~x[1] & ~x[2] & x[3] & x[4]
 
   print("== before referencing:")
   print(f"  live sdd size = {manager.live_size()}")

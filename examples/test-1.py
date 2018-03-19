@@ -14,7 +14,7 @@ def main():
     # construct a formula (A^B)v(B^C)v(C^D)
     print("constructing SDD ... ")
     a, b, c, d = [manager.literal(i) for i in range(1, 5)]
-    alpha = (a * b) + (b * c) + (c * d)
+    alpha = (a & b) | (b & c) | (c & d)
     print("done")
 
     print("saving sdd and vtree ... ")

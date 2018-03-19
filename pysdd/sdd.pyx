@@ -71,16 +71,25 @@ cdef class SddNode:
     def __mul__(SddNode left, SddNode right):
         return left._manager.conjoin(left, right)
 
+    def __and__(SddNode left, SddNode right):
+        return left._manager.conjoin(left, right)
+
     def disjoin(self, SddNode other):
         return self._manager.disjoin(self, other)
 
     def __add__(SddNode left, SddNode right):
         return left._manager.disjoin(left, right)
 
+    def __or__(SddNode left, SddNode right):
+        return left._manager.disjoin(left, right)
+
     def negate(self):
         return self._manager.negate(self)
 
     def __neg__(SddNode node):
+        return node._manager.negate(node)
+
+    def __invert__(SddNode node):
         return node._manager.negate(node)
 
     def model_count(self):

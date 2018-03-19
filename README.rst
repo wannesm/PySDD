@@ -46,7 +46,7 @@ The following example builds an SDD for the formula ``a∧b ∨ b∧c ∨  c∧d
     a, b, c, d = [manager.literal(i) for i in range(1, 5)]
 
     # Build SDD for formula
-    formula = (a * b) + (b * c) + (c * d)
+    formula = (a & b) | (b & c) | (c & d)
 
     # Model Counting
     wmc = formula.wmc(log_mode=False)
