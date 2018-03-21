@@ -167,6 +167,8 @@ cdef class SddNode:
 
 @cython.embedsignature(True)
 cdef class SddManager:
+    """Represention of a Sentential Decision Diagram.
+    """
     cdef sddapi_c.SddManager* _sddmanager
     cdef bint _auto_gc_and_minimize  # TODO: replace by manager->auto_gc_and_search_on (should be identical)
     cdef CompilerOptions options

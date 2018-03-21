@@ -69,7 +69,7 @@ The SDD and Vtree are visualized using Graphviz DOT:
 
 More examples are available in the ``examples`` directory.
 An interactive Jupyter notebook is available in
-`docs/examples.ipynb <docs/examples.ipynb>`_
+`notebooks/examples.ipynb <notebooks/examples.ipynb>`_
 
 
 ----------------------

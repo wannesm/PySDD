@@ -11,3 +11,12 @@ clean:
 .PHONY: build
 build:
 	python3 setup.py build_ext --inplace
+
+.PHONY: docs
+docs:
+	cd docs; make html
+
+.PHONY: view-docs
+view-docs: docs
+	open docs/_build/html/index.html
+

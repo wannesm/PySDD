@@ -8,5 +8,7 @@ pysdd/*.so
 examples/output
 .python-version
 cython_debug
-
+*.swo
+*.swp
+_build
 
