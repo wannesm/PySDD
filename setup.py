@@ -8,16 +8,16 @@ Usage: python3 setup.py build_ext --inplace
 """
 from setuptools import setup, Command
 from setuptools.extension import Extension
-from setuptools.command.test import test as TestCommand
-from setuptools.command.sdist import sdist as SDistCommand
-from setuptools.command.build_ext import build_ext as BuildExtCommand
-# import numpy
 import platform
 import os
 import sys
 import re
 from pathlib import Path
-from Cython.Build import cythonize
+
+try:
+    from Cython.Build import cythonize
+except ImportError:
+    sys.exit("Cython is required to build PySDD.")
 
 here = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -77,7 +77,7 @@ setup(
     author='Wannes Meert',
     author_email='wannes.meert@cs.kuleuven.be',
     url='https://github.com/wannesm/PySDD',
-    packages=["sdd"],
+    packages=["pysdd"],
     install_requires=install_requires,
     tests_require=tests_require,
     license='Apache 2.0',
@@ -87,5 +87,6 @@ setup(
         'Programming Language :: Python :: 3'
     ),
     keywords='sdd, knowledge compilation',
-    ext_modules=ext_modules
+    ext_modules=ext_modules,
+    zip_safe=False
 )
