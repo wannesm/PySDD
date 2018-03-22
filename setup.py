@@ -80,6 +80,7 @@ setup(
     packages=["pysdd"],
     install_requires=install_requires,
     tests_require=tests_require,
+    python_requires='>=3.6',
     license='Apache 2.0',
     classifiers=(
         'Intended Audience :: Developers',
