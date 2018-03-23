@@ -99,7 +99,8 @@ setup(
     classifiers=(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence'
     ),
     keywords='sdd, knowledge compilation',
     ext_modules=ext_modules,
