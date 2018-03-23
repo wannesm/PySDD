@@ -34,6 +34,7 @@ sdd_version = "2.0"
 libwrapper_path = here / "pysdd" / "lib"
 sdd_path = libwrapper_path / f"sdd-{sdd_version}"
 lib_path = sdd_path / "lib"
+print(f"Platform: {platform.platform()}")
 if "Darwin" in platform.platform():
     lib_path = lib_path / "Darwin"
     libsdd_path = lib_path / "libsdd.a"
@@ -41,7 +42,7 @@ elif "Linux" in platform.platform():
     lib_path = lib_path / "Linux"
     libsdd_path = lib_path / "libsdd.a"
 else:
-    libsdd = lib_path / "libsdd.a"
+    libsdd_path = lib_path / "libsdd.a"
 inc_path = sdd_path / "include"
 src_path = sdd_path / "src"
 csrc_path = here / "pysdd" / "src"
