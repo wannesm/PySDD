@@ -57,7 +57,7 @@ os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
 
 ext_modules = cythonize([
     Extension(
-        "pysdd.sdd", ["pysdd/sdd.pyx"] + all_c_file_paths,
+        "pysdd.sdd", [here / "pysdd" / "sdd.pyx"] + all_c_file_paths,
                     #str(csrc_path / "cli.c")],
                     # os.path.join(src_path, "main.c"),
                     # os.path.join(src_path, "fnf", "compiler-manual.c"),
@@ -71,7 +71,7 @@ ext_modules = cythonize([
 install_requires = ['cython']
 tests_require = ['pytest']
 
-with open(os.path.join(here, 'README.rst'), 'r') as f:
+with (here / 'README.rst').open('r') as f:
     long_description = f.read()
 
 setup(
