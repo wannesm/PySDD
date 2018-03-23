@@ -20,6 +20,8 @@ try:
 except ImportError:
     sys.exit("Cython is required to build PySDD.")
 
+build_type = "debug"
+#build_type = "optimized"
 here = Path(os.path.abspath(os.path.dirname(__file__)))
 
 with (here / "pysdd" / "__init__.py").open('r') as fd:
@@ -56,14 +58,20 @@ os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
 # print("-I: " + str(os.environ["CPPFLAGS"]))
 
+if build_type == "debug":
+    extra_compile_args = ["-march=native", "-O0", "-g"]
+else:
+    extra_compile_args = ["-march=native", "-O2"]
+
 ext_modules = cythonize([
     Extension(
-        "pysdd.sdd", [here / "pysdd" / "sdd.pyx"] + all_c_file_paths,
+        "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
                     #str(csrc_path / "cli.c")],
                     # os.path.join(src_path, "main.c"),
                     # os.path.join(src_path, "fnf", "compiler-manual.c"),
                     # os.path.join(src_path, "fnf", "compiler-auto.c")],
-        extra_objects=[str(libsdd_path)]
+        extra_objects=[str(libsdd_path)],
+        extra_compile_args=extra_compile_args
         # include_dirs=[numpy.get_include()]
     )],
     gdb_debug=True)

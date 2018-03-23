@@ -24,9 +24,13 @@ The changed files are already included in this repository. Do not overwrite
 them with the original files.
 
 * Download the package from http://reasoning.cs.ucla.edu/sdd/
-* Install the library in this package in directoy ``pysdd/lib/libsdd-2.0``
+* Install the library in this package in directoy ``pysdd/lib/sdd-2.0``
   without overwriting the already available files
 * Run ``python3 setup.py build_ext --inplace`` or ``make build``
+
+For some Linux platforms, it might be necessary to recompile the libsdd-2.0 code with
+the gcc option ``-fPIC`` and replace the ``pysdd/lib/sdd-2.0/lib/Linux/libsdd.a``
+library with your newly compiled version.
 
 
 --------------
