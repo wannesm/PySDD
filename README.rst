@@ -6,6 +6,8 @@ Python wrapper package to interactively use Sententical Decision Diagrams (SDD).
 
 *This is a beta version, API might change*
 
+Full documentation available on http://pysdd.readthedocs.io.
+
 ------------
 Dependencies
 ------------
