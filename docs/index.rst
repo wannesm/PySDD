@@ -15,6 +15,7 @@ Source available on https://github.com/wannesm/PySDD.
    usage/installation
    usage/package
    usage/cli
+   usage/references
    usage/contact
 
 
