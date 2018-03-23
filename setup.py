@@ -14,6 +14,7 @@ import sys
 import re
 from pathlib import Path
 
+
 try:
     from Cython.Build import cythonize
 except ImportError:
@@ -21,7 +22,7 @@ except ImportError:
 
 here = Path(os.path.abspath(os.path.dirname(__file__)))
 
-with open('pysdd/__init__.py', 'r') as fd:
+with (here / "pysdd" / "__init__.py").open('r') as fd:
     wrapper_version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 if not wrapper_version:
