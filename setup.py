@@ -35,8 +35,12 @@ sdd_path = libwrapper_path / f"sdd-{sdd_version}"
 lib_path = sdd_path / "lib"
 if "Darwin" in platform.platform():
     lib_path = lib_path / "Darwin"
+    libsdd_path = lib_path / "libsdd.a"
 elif "Linux" in platform.platform():
     lib_path = lib_path / "Linux"
+    libsdd_path = lib_path / "libsdd.so"
+else:
+    libsdd = lib_path / "libsdd.a"
 inc_path = sdd_path / "include"
 src_path = sdd_path / "src"
 csrc_path = here / "pysdd" / "src"
@@ -57,7 +61,7 @@ ext_modules = cythonize([
                     # os.path.join(src_path, "main.c"),
                     # os.path.join(src_path, "fnf", "compiler-manual.c"),
                     # os.path.join(src_path, "fnf", "compiler-auto.c")],
-        extra_objects=[str(lib_path / "libsdd.a")]
+        extra_objects=[str(libsdd_path)]
         # include_dirs=[numpy.get_include()]
     )],
     gdb_debug=True)
