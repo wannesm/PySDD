@@ -38,7 +38,7 @@ if "Darwin" in platform.platform():
     libsdd_path = lib_path / "libsdd.a"
 elif "Linux" in platform.platform():
     lib_path = lib_path / "Linux"
-    libsdd_path = lib_path / "libsdd.so"
+    libsdd_path = lib_path / "libsdd.a"
 else:
     libsdd = lib_path / "libsdd.a"
 inc_path = sdd_path / "include"
