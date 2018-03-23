@@ -119,15 +119,25 @@ Use the SDD library's garbage collection commands (e.g. ref, deref) to
 perform memory management.
 
 
----------------------------
-Other programming languages
----------------------------
-
-* C: http://reasoning.cs.ucla.edu/sdd/
-* Java: https://github.com/jessa/JSDD
+----------
+References
+----------
 
 This package is inspired by the SDD wrapper used in the probabilistic
 programming language `ProbLog <https://dtai.cs.kuleuven.be/problog/>`_.
+
+References:
+
+* Wannes Meert, PySDD,
+  in `Recent Trends in Knowledge Compilation
+  <http://drops.dagstuhl.de/opus/volltexte/2018/8589/pdf/dagrep_v007_i009_p062_17381.pdf>`_,
+  Report from Dagstuhl Seminar 17381, Sep 2017.
+  Eds. A. Darwiche, P. Marquis, D. Suciu, S. Szeider.
+
+Other languages:
+
+* C: http://reasoning.cs.ucla.edu/sdd/
+* Java: https://github.com/jessa/JSDD
 
 
 -------
