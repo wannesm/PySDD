@@ -168,6 +168,20 @@ cdef class SddNode:
 @cython.embedsignature(True)
 cdef class SddManager:
     """Represention of a Sentential Decision Diagram.
+
+    The creation and manipulation of SDDs are maintained by an SDD manager.
+    The use of an SDD manager is analogous to the use of managers in OBDD packages
+    such as CUDD [10]. For a discussion on the design and implementation of such
+    systems, see [7].
+
+    To declare an SDD manager, one provides an initial vtree. By declaring an
+    initial vtree, we also declare an initial number of variables. See the section
+    on creating vtrees, for a few ways to specify an initial vtree.
+
+    Note that variables are referred to by an index. If there are n variables
+    in an SDD manager, then the variables are referred to as 1, . . . , n. Literals
+    are referred to by signed indices. For example, given the i-th variable, we
+    refer to its positive literal by i and its negative literal by −i.
     """
     cdef sddapi_c.SddManager* _sddmanager
     cdef bint _auto_gc_and_minimize  # TODO: replace by manager->auto_gc_and_search_on (should be identical)
@@ -209,6 +223,11 @@ cdef class SddManager:
 
     @staticmethod
     def from_vtree(Vtree vtree):
+        """Creates a new SDD manager, given a vtree.
+
+        The manager copies the input vtree. Any manipulations performed by the manager are done on its own copy,
+        and does not aﬀect the input vtree.
+        """
         return SddManager(vtree=vtree)
 
     def set_options(self, options=None):
@@ -279,10 +298,19 @@ cdef class SddManager:
     ## Automatic Garbage Collection and SDD Minimization (Sec 5.1.3)
 
     def auto_gc_and_minimize_on(self):
+        """Activates automatic garbage collection and automatic SDD minimization."""
         sddapi_c.sdd_manager_auto_gc_and_minimize_on(self._sddmanager)
 
     def auto_gc_and_minimize_off(self):
+        """Deactivates automatic garbage collection and automatic SDD minimization."""
         sddapi_c.sdd_manager_auto_gc_and_minimize_off(self._sddmanager)
+
+    def is_auto_gc_and_minimize_on(self):
+        """Is automatic garbage collection and automatic SDD minimization is activated?"""
+        cdef int rval = sddapi_c.sdd_manager_is_auto_gc_and_minimize_on(self._sddmanager)
+        if rval == 1:
+            return True
+        return False
 
 
     ## Size and Count (Sec 5.1.4)
@@ -439,36 +467,58 @@ cdef class SddManager:
         """Returns the global model count of an SDD (i.e., with respect to the manager variables)."""
         return sddapi_c.sdd_global_model_count(node._sddnode, self._sddmanager)
 
-    ## Size and Count (Sec 5.2.2)
+    ## Size and Count (Sec 5.2.2 and Sec 5.1.4)
 
     def size(self):
+        """Returns the size of all SDD nodes in the manager."""
         return sddapi_c.sdd_manager_size(self._sddmanager)
 
     def count(self):
+        """Returns the node count of all SDD nodes in the manager."""
         return sddapi_c.sdd_manager_count(self._sddmanager)
 
     def live_size(self):
+        """Returns the size of all live SDD nodes in the manager."""
         return sddapi_c.sdd_manager_live_size(self._sddmanager)
 
     def dead_size(self):
+        """Returns the size of all dead SDD nodes in the manager."""
         return sddapi_c.sdd_manager_dead_size(self._sddmanager)
 
+    def live_count(self):
+        """Returns the node count of all live SDD nodes in the manager."""
+        return sddapi_c.sdd_manager_live_count(self._sddmanager)
+
     def dead_count(self):
+        """Returns the node count of all dead SDD nodes in the manager."""
         return sddapi_c.sdd_manager_dead_count(self._sddmanager)
 
 
     ## File I/O (Sec 5.2.3)
 
     def save_as_dot(self, char* filename, SddNode node):
+        """Saves an SDD to ﬁle, formatted for use with Graphviz dot."""
         sddapi_c.sdd_save_as_dot(filename, node._sddnode)
 
     def shared_save_as_dot(self, char* filename):
+        """Saves the SDD of the manager’s vtree (a shared SDD), formatted for use with Graphviz dot."""
         sddapi_c.sdd_shared_save_as_dot(filename, self._sddmanager)
 
     def read_sdd_file(self, char* filename):
+        """Reads an SDD from ﬁle.
+
+        The read SDD is guaranteed to be equivalent to the one in the ﬁle, but may have a diﬀerent
+        structure depending on the current vtree of the manager. SDD minimization will not be
+        performed when reading an SDD from ﬁle, even if auto SDD minimization is active.
+        """
         return SddNode.wrap(sddapi_c.sdd_read(filename, self._sddmanager), self)
 
     def save(self, char* filename, SddNode node):
+        """Saves an SDD to ﬁle.
+
+        Typically, one also saves the corresponding vtree to ﬁle. This allows one to read the SDD
+        back using the same vtree.
+        """
         sddapi_c.sdd_save(filename, node._sddnode)
 
     def dot(self, SddNode node=None):
@@ -539,9 +589,19 @@ cdef class SddManager:
     ## Manual SDD Minimization (Sec 5.5)
 
     def minimize(self):
+        """Performs global garbage collection and then tries to minimize the size of a manager’s SDD.
+
+        This function calls sdd vtree search on the manager’s vtree.
+        """
         # TODO: Add interruption to minimization (e.g. for timeouts)
         # TODO: Capture stdout
         sddapi_c.sdd_manager_minimize(self._sddmanager)
+
+    def vtree_minimize(self, Vtree vtree):
+        """Performs local garbage collection on vtree and then tries to minimize the size of the SDD of
+        vtree by searching for a diﬀerent vtree. Returns the root of the resulting vtree.
+        """
+        return Vtree.wrap(sddapi_c.sdd_vtree_minimize(vtree._vtree, self._sddmanager))
 
     def minimize_limited(self):
         sddapi_c.sdd_manager_minimize_limited(self._sddmanager)
@@ -556,30 +616,77 @@ cdef class SddManager:
         sddapi_c.sdd_manager_set_vtree_search_convergence_threshold(threshold, self._sddmanager)
 
     def set_vtree_search_time_limit(self, float time_limit):
+        """Set the time limits for the vtree search algorithm.
+
+        A vtree operation is either a rotation or a swap. Times are in seconds and correspond to CPU time.
+        Default values, in order, are 180, 60, 30, and 10 seconds.
+        """
         sddapi_c.sdd_manager_set_vtree_search_time_limit(time_limit, self._sddmanager)
 
     def set_vtree_fragment_time_limit(self, float time_limit):
+        """Set the time limits for the vtree search algorithm.
+
+        A vtree operation is either a rotation or a swap. Times are in seconds and correspond to CPU time.
+        Default values, in order, are 180, 60, 30, and 10 seconds.
+        """
         sddapi_c.sdd_manager_set_vtree_fragment_time_limit(time_limit, self._sddmanager)
 
     def set_vtree_operation_time_limit(self, float time_limit):
+        """Set the time limits for the vtree search algorithm.
+
+        A vtree operation is either a rotation or a swap. Times are in seconds and correspond to CPU time.
+        Default values, in order, are 180, 60, 30, and 10 seconds.
+        """
         sddapi_c.sdd_manager_set_vtree_operation_time_limit(time_limit, self._sddmanager)
 
     def set_vtree_apply_time_limit(self, float time_limit):
+        """Set the time limits for the vtree search algorithm.
+
+        A vtree operation is either a rotation or a swap. Times are in seconds and correspond to CPU time.
+        Default values, in order, are 180, 60, 30, and 10 seconds.
+        """
         sddapi_c.sdd_manager_set_vtree_apply_time_limit(time_limit, self._sddmanager)
 
     def set_vtree_operation_memory_limit(self, float memory_limit):
+        """Sets the relative memory limit for rotation and swap operations. Default value is 3.0."""
         sddapi_c.sdd_manager_set_vtree_operation_memory_limit(memory_limit, self._sddmanager)
 
     def set_vtree_operation_size_limit(self, float size_limit):
+        """Sets the relative size limit for rotation and swap operations.
+
+        Default value is 1.2. A size limit l is relative to the size s of an SDD for a given vtree
+        (s is called the reference size). Hence, using this size limit requires calling the following
+        functions to set and update the reference size s, otherwise the behavior is not deﬁned.
+        """
         sddapi_c.sdd_manager_set_vtree_operation_size_limit(size_limit, self._sddmanager)
 
+    def init_vtree_size_limit(self, Vtree vtree):
+        """Declares the size s of current SDD for vtree as the reference size for the relative size limit l.
+
+        That is, a rotation or swap operation will fail if the SDD size grows to larger than s × l.
+        """
+        sddapi_c.sdd_manager_init_vtree_size_limit(vtree._vtree, self._sddmanager)
+
+    def update_vtree_size_limit(self):
+        """Updates the reference size for relative size limits.
+
+        It is preferrable to invoke this function, as it is more eﬃcent than the function sdd manager
+        init vtree size limit as it does not directly recompute the size of vtree.
+        """
+        sddapi_c.sdd_manager_update_vtree_size_limit(self._sddmanager)
+
     def set_vtree_cartesian_product_limit(self, sddapi_c.SddSize size_limit):
+        """Sets the absolute size limit on the size of a cartesian product for right rotation and swap operations.
+
+        Default value is 8, 192.
+        """
         sddapi_c.sdd_manager_set_vtree_cartesian_product_limit(size_limit, self._sddmanager)
 
 
     ## Printing
 
     def __str__(self):
+        """Prints various statistics that are collected by an SDD manager."""
         f = io.StringIO()
         with redirect_stderr(f):
             sddapi_c.sdd_manager_print(self._sddmanager)
@@ -901,6 +1008,22 @@ cdef class Vtree:
         # cdef Vtree** vtreepp;
         sddapi_c.sdd_vtree_location(self._vtree, manager._sddmanager)
         # TODO: Pointer Pointer not supported by Cython. Is this function really necessary?
+
+
+    ## Manual SDD Minimization (Sec 5.5)
+
+    def minimize(self, SddManager manager):
+        """Performs local garbage collection on vtree and then tries to minimize the size of the SDD of
+        vtree by searching for a diﬀerent vtree. Returns the root of the resulting vtree.
+        """
+        return Vtree.wrap(sddapi_c.sdd_vtree_minimize(self._vtree, manager._sddmanager))
+
+    def init_vtree_size_limit(self, SddManager manager):
+        """Declares the size s of current SDD for vtree as the reference size for the relative size limit l.
+
+        That is, a rotation or swap operation will fail if the SDD size grows to larger than s × l.
+        """
+        sddapi_c.sdd_manager_init_vtree_size_limit(self._vtree, manager._sddmanager)
 
 
 @cython.embedsignature(True)

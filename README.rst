@@ -17,6 +17,15 @@ Dependencies
 * SDD package >=2.0: http://reasoning.cs.ucla.edu/sdd/
 
 
+------------
+Installation
+------------
+
+.. code-block:: shell
+
+   $ pip install git+https://github.com/wannesm/PySDD.git#egg=PySDD
+
+
 -----------
 Compilation
 -----------
@@ -162,7 +171,13 @@ Contact
 License
 -------
 
-Copyright 2018, KU Leuven and Regents of the University of California.
+Python SDD wrapper:
 
-The Python SDD wrapper is licensed under the Apache License, Version 2.0.
+Copyright 2017-2018, KU Leuven and Regents of the University of California.
+Licensed under the Apache License, Version 2.0.
 
+
+SDD package:
+
+Copyright 2013-2018, Regents of the University of California
+Licensed under the Apache License, Version 2.0.

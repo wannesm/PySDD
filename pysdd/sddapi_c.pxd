@@ -38,12 +38,17 @@ cdef extern from "sddapi.h":
     SddManager* sdd_manager_create(SddLiteral var_count, int auto_gc_and_minimize);
     void sdd_manager_free(SddManager* manager);
     void sdd_manager_print(SddManager* manager);
+
     void sdd_manager_auto_gc_and_minimize_on(SddManager* manager);
     void sdd_manager_auto_gc_and_minimize_off(SddManager* manager);
+    int sdd_manager_is_auto_gc_and_minimize_on(SddManager* manager);
+
     void sdd_manager_set_minimize_function(SddVtreeSearchFunc func, SddManager* manager);
     void sdd_manager_unset_minimize_function(SddManager* manager);
+
     void* sdd_manager_options(SddManager* manager);
     void sdd_manager_set_options(void* options, SddManager* manager);
+
     int sdd_manager_is_var_used(SddLiteral var, SddManager* manager);
     Vtree* sdd_manager_vtree_of_var(const SddLiteral var, const SddManager* manager);
     Vtree* sdd_manager_lca_of_literals(int count, SddLiteral* literals, SddManager* manager);
