@@ -67,7 +67,10 @@ cdef extern from "sddapi.h":
     SddNode* sdd_negate(SddNode* node, SddManager* manager);
     SddNode* sdd_condition(SddLiteral lit, SddNode* node, SddManager* manager);
     SddNode* sdd_exists(SddLiteral var, SddNode* node, SddManager* manager);
+    SddNode* sdd_exists_multiple(int* exists_map, SddNode* node, SddManager* manager);
+    SddNode* sdd_exists_multiple_static(int* exists_map, SddNode* node, SddManager* manager);
     SddNode* sdd_forall(SddLiteral var, SddNode* node, SddManager* manager);
+
     SddNode* sdd_minimize_cardinality(SddNode* node, SddManager* manager);
     SddNode* sdd_global_minimize_cardinality(SddNode* node, SddManager* manager);
     SddLiteral sdd_minimum_cardinality(SddNode* node);

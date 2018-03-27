@@ -14,7 +14,7 @@ build:
 
 .PHONY: docs
 docs:
-	cd docs; make html
+	export PYTHONPATH=..; cd docs; make html
 
 .PHONY: view-docs
 view-docs: docs

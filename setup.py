@@ -71,7 +71,8 @@ ext_modules = cythonize([
                     # os.path.join(src_path, "fnf", "compiler-manual.c"),
                     # os.path.join(src_path, "fnf", "compiler-auto.c")],
         extra_objects=[str(libsdd_path)],
-        extra_compile_args=extra_compile_args
+        extra_compile_args=extra_compile_args,
+        cython_directives={"embedsignature": True}
         # include_dirs=[numpy.get_include()]
     )],
     gdb_debug=True)

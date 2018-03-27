@@ -4,7 +4,7 @@ PySDD
 
 Python wrapper package to interactively use Sententical Decision Diagrams (SDD).
 
-*This is a beta version, API might change*
+*This is a beta version, not yet all functions in sddapi.h are available.*
 
 Full documentation available on http://pysdd.readthedocs.io.
 

@@ -177,8 +177,7 @@ cdef class SddManager:
     ## Creating managers (Sec 5.1.1)
 
     def __init__(self, var_count=1, auto_gc_and_minimize=False, vtree=None):
-        """
-        Creates a new SDD manager, either given a vtree or using a balanced vtree over the given number of variables.
+        """Creates a new SDD manager, either given a vtree or using a balanced vtree over the given number of variables.
 
         :param var_count: Number of variables
         :param auto_gc_and_minimize: Automatic garbage collection
@@ -304,6 +303,19 @@ cdef class SddManager:
     def vtree(self):
         return Vtree.wrap(sddapi_c.sdd_manager_vtree(self._sddmanager), is_ref=True)
 
+    def vtree_of_var(self, sddapi_c.SddLiteral var):
+        """Returns the leaf node of a manager’s vtree, which is associated with var."""
+        return Vtree.wrap(sddapi_c.sdd_manager_vtree_of_var(var, self._sddmanager), is_ref=True)
+
+    def lca_of_literals(self, sddapi_c.SddLiteral[:] literals):
+        """Returns the smallest vtree which contains the variables of literals, where count is the number of literals.
+        
+        If we view the variable of each literal as a leaf vtree node, the function will then return
+        the lowest common ancestor (lca) of these leaf nodes.
+        """
+        cdef int count = len(literals)
+        return Vtree.wrap(sddapi_c.sdd_manager_lca_of_literals(count, &literals[0], self._sddmanager))
+
     def is_var_used(self, sddapi_c.SddLiteral var):
         """Returns 1 if var is referenced by a decision SDD node (dead or alive); returns 0 otherwise.
 
@@ -313,47 +325,118 @@ cdef class SddManager:
             raise ValueError("Literal 0 does not exist")
         return sddapi_c.sdd_manager_is_var_used(var, self._sddmanager)
 
+    def var_order(self):
+        """Return an array var order (whose length will be equal the number of variables in the manager)
+        with the left-to-right variable ordering of the manager’s vtree.
+        """
+        cdef array.array var_order = array.array('d', [0]*self.var_count())
+        sddapi_c.sdd_manager_var_order(var_order.data.as_longs, self._sddmanager)
+        return var_order
 
     ## Queries and Transformations (Sec 5.2.1)
     # To avoid invalidating a WMC manager, the user should refrain from performing the SDD operations of Section 5.2.1
     # when auto garbage collection and SDD minimization is active.
 
     def apply(self, SddNode node1, SddNode node2, sddapi_c.BoolOp op):
+        """Returns the result of combining two SDDs, where op can be CONJOIN (0) or DISJOIN (1)."""
         if self._auto_gc_and_minimize:
             raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
                                    "is active")
         return SddNode.wrap(sddapi_c.sdd_apply(node1._sddnode, node2._sddnode, op, self._sddmanager), self)
 
     def conjoin(self, SddNode node1, SddNode node2):
+        """Returns the result of applying the corresponding Boolean operation on the given SDDs."""
         if self._auto_gc_and_minimize:
             raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
                                    "is active")
         return SddNode.wrap(sddapi_c.sdd_conjoin(node1._sddnode, node2._sddnode, self._sddmanager), self)
 
     def disjoin(self, SddNode node1, SddNode node2):
+        """Returns the result of applying the corresponding Boolean operation on the given SDDs."""
         if self._auto_gc_and_minimize:
             raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
                                    "is active")
         return SddNode.wrap(sddapi_c.sdd_disjoin(node1._sddnode, node2._sddnode, self._sddmanager), self)
 
     def negate(self, SddNode node):
+        """Returns the result of applying the corresponding Boolean operation on the given SDDs."""
         if self._auto_gc_and_minimize:
             raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
                                    "is active")
         return SddNode.wrap(sddapi_c.sdd_negate(node._sddnode, self._sddmanager), self)
 
+    def condition(self, sddapi_c.SddLiteral lit, SddNode node):
+        """Returns the result of conditioning an SDD on a literal, where a literal is a positive or negative integer."""
+        return SddNode.wrap(sddapi_c.sdd_condition(lit, node._sddnode, self._sddmanager), self)
+
+    def exists(self, sddapi_c.SddLiteral var, SddNode node):
+        """Returns the result of existentially (universally) quantifying out a variable from an SDD."""
+        return SddNode.wrap(sddapi_c.sdd_exists(var, node._sddnode, self._sddmanager), self)
+
+    def forall(self, sddapi_c.SddLiteral var, SddNode node):
+        """Returns the result of existentially (universally) quantifying out a variable from an SDD."""
+        return SddNode.wrap(sddapi_c.sdd_forall(var, node._sddnode, self._sddmanager), self)
+
+    def exists_multiple(self, int[:] exists_map, SddNode node):
+        """Returns the result of existentially quantifying out a set of variables from an SDD.
+
+        This function is expected to be more eﬃcient than existentially quantifying out variables one
+        at a time. The array exists map speciﬁes the variables to be existentially quantiﬁed out.
+        The length of exists map is expected to be n + 1, where n is the number of variables in the
+        manager. exists map[i] should be 1 if variable i is to be quantiﬁed out; otherwise, exists
+        map[i] should be 0. exists map[0] is unused.
+        """
+        if len(exists_map) != self.var_count() + 1:
+            raise ValueError(f"Length exists_map is expected to be equal to the number of variables "
+                             f"in the manager ({self.var_count() + 1}) but {len(exists_map)} is given.")
+        return SddNode.wrap(sddapi_c.sdd_exists_multiple(&exists_map[0], node._sddnode, self._sddmanager), self)
+
+    def exists_multiple_static(self, int[:] exists_map, SddNode node):
+        """This is the same as sdd exists multiple, except that SDD minimization is never performed when
+        quantifying out variables.
+
+        This can be more eﬃcient than deactivating automatic SDD minimization and calling sdd exists multiple.
+
+        A model of an SDD is a truth assignment of the SDD variables which also satisﬁes the SDD. The
+        cardinality of a truth assignment is the number of variables assigned the value true. An SDD may
+        not mention all variables in the SDD manager. An SDD model can be converted into a global model
+        by including the missing variables, while setting their values arbitrarily.
+        """
+        if len(exists_map) != self.var_count() + 1:
+            raise ValueError(f"Length exists_map is expected to be equal to the number of variables "
+                             f"in the manager ({self.var_count() + 1}) but {len(exists_map)} is given.")
+        return SddNode.wrap(sddapi_c.sdd_exists_multiple_static(&exists_map[0], node._sddnode, self._sddmanager), self)
+
+    def minimize_cardinality(self, SddNode node):
+        """Returns the SDD whose models are the minimum-cardinality models of the given SDD
+        (i.e. with respect to the SDD variables).
+        """
+        rnode = SddNode.wrap(sddapi_c.sdd_minimize_cardinality(node._sddnode, self._sddmanager), self)
+        self.root = rnode
+        return rnode
+
     def global_minimize_cardinality(self, SddNode node):
+        """Returns the SDD whose models are the minimum-cardinality global models of the given SDD
+        (i.e., with respect to the manager variables).
+        """
         rnode = SddNode.wrap(sddapi_c.sdd_global_minimize_cardinality(node._sddnode, self._sddmanager), self)
         self.root = rnode
         return rnode
 
     def minimum_cardinality(self, SddNode node):
+        """Returns the minimum-cardinality of an SDD.
+
+        The smallest cardinality attained by any of its models. The minimum-cardinality of an SDD is the
+        same whether or not we consider the global models of the SDD.
+        """
         return sddapi_c.sdd_minimum_cardinality(node._sddnode)
 
     def model_count(self, SddNode node):
+        """Returns the model count of an SDD (i.e., with respect to the SDD variables)."""
         return sddapi_c.sdd_model_count(node._sddnode, self._sddmanager)
 
     def global_model_count(self, SddNode node):
+        """Returns the global model count of an SDD (i.e., with respect to the manager variables)."""
         return sddapi_c.sdd_global_model_count(node._sddnode, self._sddmanager)
 
     ## Size and Count (Sec 5.2.2)
