@@ -25,6 +25,7 @@ Examples
 .. toctree::
     examples/build_formula.rst
     examples/model_counting.rst
+    examples/cli_examples.rst
 
 
 Classes
