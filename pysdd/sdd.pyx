@@ -63,6 +63,7 @@ cdef class SddNode:
         return sddapi_c.sdd_node_is_false(self._sddnode)
 
     def is_decision(self):
+        """The node is a decision node."""
         return sddapi_c.sdd_node_is_decision(self._sddnode)
 
     def conjoin(self, SddNode other):
@@ -99,18 +100,29 @@ cdef class SddNode:
         return self._manager.global_model_count(self)
 
     def size(self):
-        return sddapi_c.sdd_size(self._sddnode)
-
-    def count(self):
-        return sddapi_c.sdd_count(self._sddnode)
+        return sddapi_c.sdd_node_size(self._sddnode)
 
     def elements(self):
+        """Returns an array containing the elements of an SDD node.
+
+        :returns: A list of pairs [(prime, sub)]
+
+        Internal working:
+        If the node has m elements, the array will be of size 2m, with primes appearing at locations
+        0, 2, . . . , 2m − 2 and their corresponding subs appearing at locations 1, 3, . . . , 2m − 1.
+        Assumes that sdd node is decision(node) returns 1. Moreover, the returned array should not be
+        freed.
+        """
         cdef sddapi_c.SddNode** nodes;
         nodes = sddapi_c.sdd_node_elements(self._sddnode)
-        # do no free memory of nodes
+        # do not free memory of nodes
         m = self.size()
-        primes = [SddNode.wrap(nodes[i], self._manager) for i in range(0, 2 * m, 2)]
-        subs = [SddNode.wrap(nodes[i], self._manager) for i in range(1, 2 * m, 2)]
+        primes = []
+        for i in range(0, 2 * m, 2):
+            primes.append(SddNode.wrap(nodes[i], self._manager))
+        subs = []
+        for i in range(1, 2 * m, 2):
+            subs.append(SddNode.wrap(nodes[i], self._manager))
         return zip(primes, subs)
 
     def wmc(self, log_mode=True):
@@ -163,6 +175,14 @@ cdef class SddNode:
 
     def __str__(self):
         return "SddNode({})".format(self._name)
+
+    def __format__(self, format_spec):
+        if format_spec:
+            format = "{:" + format_spec + "}"
+            format = format.format(self.__str__())
+        else:
+            format = self.__str__()
+        return format
 
 
 @cython.embedsignature(True)
@@ -1029,6 +1049,7 @@ cdef class Vtree:
 @cython.embedsignature(True)
 cdef class WmcManager:
     cdef sddapi_c.WmcManager* _wmcmanager
+    cdef public SddNode node
 
     ## Weighted Model Counting (Sec 5.6)
 
@@ -1063,6 +1084,7 @@ cdef class WmcManager:
 
     def __cinit__(self, SddNode node, bint log_mode=1):
         self._wmcmanager = sddapi_c.wmc_manager_new(node._sddnode, log_mode, node._manager._sddmanager)
+        self.node = node
         if self._wmcmanager is NULL:
             raise MemoryError()
 
