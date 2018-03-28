@@ -44,6 +44,13 @@ cdef class SddNode:
             wrapper._name = "Decision"
         return wrapper
 
+    @property
+    def id(self):
+        """A unique id for a node."""
+        # TODO: It would be better to use the node id but this is not exposed.
+        cdef unsigned int address = <unsigned int>self._sddnode
+        return address
+
     def manager(self):
         return self._manager
 
@@ -187,7 +194,14 @@ cdef class SddNode:
 
 @cython.embedsignature(True)
 cdef class SddManager:
-    """Represention of a Sentential Decision Diagram.
+    """Creates a new SDD manager, either given a vtree or using a balanced vtree over the given number of variables.
+
+    :param var_count: Number of variables
+    :param auto_gc_and_minimize: Automatic garbage collection
+        Automatic garbage collection and automatic SDD minimization are activated in the created manager when
+        auto gc and minimize is not 0.
+    :param vtree: The manager copies the input vtree. Any manipulations performed by
+        the manager are done on its own copy, and does not a?ect the input vtree.
 
     The creation and manipulation of SDDs are maintained by an SDD manager.
     The use of an SDD manager is analogous to the use of managers in OBDD packages
@@ -210,16 +224,8 @@ cdef class SddManager:
 
     ## Creating managers (Sec 5.1.1)
 
-    def __init__(self, var_count=1, auto_gc_and_minimize=False, vtree=None):
-        """Creates a new SDD manager, either given a vtree or using a balanced vtree over the given number of variables.
-
-        :param var_count: Number of variables
-        :param auto_gc_and_minimize: Automatic garbage collection
-            Automatic garbage collection and automatic SDD minimization are activated in the created manager when
-            auto gc and minimize is not 0.
-        :param vtree: The manager copies the input vtree. Any manipulations performed by
-            the manager are done on its own copy, and does not a?ect the input vtree.
-        """
+    def __init__(self, long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
+        pass
 
     def __cinit__(self, long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
         self.options = CompilerOptions()
@@ -770,21 +776,21 @@ cdef class Fnf:
 
 @cython.embedsignature(True)
 cdef class Vtree:
+    """Returns a vtree over a given number of variables.
+
+    :param var_count: Number of variables
+    :param vtree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical", or
+        "balanced".
+    :param var_order: The left-to-right variable ordering is given in array var_order. The contents of array
+        var_order must be a permutation of the integers from 1 to var count.
+    :return: None
+    """
     cdef sddapi_c.Vtree* _vtree
     cdef public bint is_ref  # Ref does not manage memory
 
     ## Creating Vtrees (Sec 5.3.1)
-    def __init__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None):
-        """
-        Returns a vtree over a given number of variables.
 
-        :param var_count: Number of variables
-        :param vtree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical", or
-            "balanced".
-        :param var_order: The left-to-right variable ordering is given in array var_order. The contents of array
-            var_order must be a permutation of the integers from 1 to var count.
-        :return: None
-        """
+    def __init__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None):
         pass
 
     def __cinit__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None):
@@ -1048,38 +1054,39 @@ cdef class Vtree:
 
 @cython.embedsignature(True)
 cdef class WmcManager:
+    """Creates a WMC manager for the SDD rooted at node and initializes literal weights.
+
+    When log mode =6 0, all
+    computations done by the manager will be in natural log-space. Literal weights are initialized to 0 in
+    log-mode and to 1 otherwise. A number of functions are given below for passing values to, or recovering
+    values from, a WMC manager. In log-mode, all these values are in natural logs. Finally, a WMC manager may
+    become invalid if garbage collection or SDD minimization takes place.
+
+    Note: To avoid invalidating a WMC manager, the user should refrain from performing the SDD operations like
+    queries and transformations when auto garbage collection and SDD minimization is active.
+
+    Background:
+
+    Weighted model counting (WMC) is performed with respect to a given SDD and literal weights, and is based on
+    the following definitions:
+
+    * The weight of a variable instantiation is the product of weights assigned to its literals.
+    * The weighted model count of the SDD is the sum of weights attained by its models. Here, a model is an
+      instantiation (of all variables in the manager) that satis?es the SDD.
+    * The weighted model count of a literal is the sum of weights attained by its models that are also models of
+      the given SDD.
+    * The probability of a literal is the ratio of its weighted model count over the one for the given SDD.
+
+    To facilitate the computation of weighted model counts with respect to changing literal weights, a WMC manager
+    is created for the given SDD. This manager stores the weights of literals, allowing one to change them, and
+    to recompute the corresponding weighted model count each time the weights change.
+    """
     cdef sddapi_c.WmcManager* _wmcmanager
     cdef public SddNode node
 
     ## Weighted Model Counting (Sec 5.6)
 
-    def __init__(self, node, log_mode=1):
-        """
-        Creates a WMC manager for the SDD rooted at node and initializes literal weights. When log mode =6 0, all
-        computations done by the manager will be in natural log-space. Literal weights are initialized to 0 in
-        log-mode and to 1 otherwise. A number of functions are given below for passing values to, or recovering
-        values from, a WMC manager. In log-mode, all these values are in natural logs. Finally, a WMC manager may
-        become invalid if garbage collection or SDD minimization takes place.
-
-        Note: To avoid invalidating a WMC manager, the user should refrain from performing the SDD operations like
-        queries and transformations when auto garbage collection and SDD minimization is active.
-
-        Background:
-
-        Weighted model counting (WMC) is performed with respect to a given SDD and literal weights, and is based on
-        the following definitions:
-
-        * The weight of a variable instantiation is the product of weights assigned to its literals.
-        * The weighted model count of the SDD is the sum of weights attained by its models. Here, a model is an
-          instantiation (of all variables in the manager) that satis?es the SDD.
-        * The weighted model count of a literal is the sum of weights attained by its models that are also models of
-          the given SDD.
-        * The probability of a literal is the ratio of its weighted model count over the one for the given SDD.
-
-        To facilitate the computation of weighted model counts with respect to changing literal weights, a WMC manager
-        is created for the given SDD. This manager stores the weights of literals, allowing one to change them, and
-        to recompute the corresponding weighted model count each time the weights change.
-        """
+    def __init__(self, SddNode node, bint log_mode=1):
         pass
 
     def __cinit__(self, SddNode node, bint log_mode=1):
