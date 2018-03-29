@@ -34,6 +34,7 @@ def test_wmc1(verbose=False):
     # assert wmc_result == pytest.approx(wmcs_result)
 
 
+@pytest.mark.skip(reason="Takes too long to generate the figure and is the same test as test_wmc1")
 def test_wmc2(verbose=False):
     vtree = Vtree(var_count=4, var_order=[2, 1, 4, 3], vtree_type="balanced")
     sdd = SddManager.from_vtree(vtree)

@@ -14,6 +14,9 @@ from .sdd import WmcManager
 class WmcStochastic(WmcManager):
     """Weighted Model Counting using Stochastic Computing.
 
+    This is an example implementation on how you can create your own Weighted Model Counting
+    algorithm on top of the PySDD library.
+
     This class is a demonstration how stochastic computing [1,2] could be used for weighted model counting
     given an SDD datastructure. The basic concept is that instead of propagating floating point numbers
     through the SDD, only True and False samples are passed through. Each leaf generates samples from
@@ -24,6 +27,11 @@ class WmcStochastic(WmcManager):
     disjunction or addition is replaced with a MUX gate. Since a MUX gate rescales the result of
     the addition back to the range [0,1], we need to keep track of scaling factors to tune the MUX
     gates in the network.
+
+    While Stochastic Computing has some advantages, like small circuit surface, cheap hardware, and
+    robust against noise, it also has some significant disadvantages. For high precision computation
+    it needs an exponential large number of bits (2^n for an n-bit binary number) and the random
+    number generator is expensive.
 
     [1] Von Neumann, John. "Probabilistic logics and the synthesis of reliable organisms from unreliable
     components." Automata studies 34 (1956): 43-98.
@@ -37,10 +45,19 @@ class WmcStochastic(WmcManager):
         self.compute_scalings()
 
     def propagate_normal(self):
+        """Comparison to normal weighted model counting given an SDD.
+
+        Note that this simple example does not perform smoothing and will thus not
+        return a correct result for non-smoothed SDDs. For a correct weighted model
+        counter smoothing should also be implemented.
+        """
         return self.depth_first_normal(self.node)
 
     def depth_first_normal(self, node):
-        # TODO: This ignores smoothing
+        """Depth first search to compute the WMC.
+
+        This does not yet perform smoothing!
+        """
         if node.is_decision():
             rvalue = 0
             for prime, sub in node.elements():
@@ -59,6 +76,7 @@ class WmcStochastic(WmcManager):
         return rvalue
 
     def propagate(self, bitlength=100):
+        """Weighted Model Counting using Stochastic Computation."""
         nb_pos, nb_neg, scaling = self.propagate_counts(bitlength)
         return (nb_pos / (nb_pos + nb_neg)) * scaling
 
@@ -73,8 +91,12 @@ class WmcStochastic(WmcManager):
         return nb_pos, nb_neg, scaling
 
     def counting_df(self, node):
-        """Depth-first counting."""
-        # TODO: This ignores smoothing
+        """Depth-first counting using Stochastic Computing.
+
+        Missing from this example to enable a full features WMC:
+        - Smoothing should be included.
+        - Subtrees that always have zero or one as values should be pruned to increase the resolution.
+        """
         if node.is_decision():
             rcounts = []
             for prime, sub in node.elements():
@@ -111,11 +133,15 @@ class WmcStochastic(WmcManager):
             raise Exception(f"Unknown node type: {node}")
 
     def compute_scalings(self):
+        """Compute all the scaling factors.
+
+        This is a pre-processing step to set up the scaling necessary to make the MUX gates compute
+        correct results.
+        """
         self.compute_scalings_df(self.node)
 
     def compute_scalings_df(self, node):
-        """Depth-first scaling."""
-        # TODO: This ignores smoothing
+        """Computing all the scaling factors using depth-first search."""
         if node.is_decision():
             scalings = []
             for prime, sub in node.elements():
