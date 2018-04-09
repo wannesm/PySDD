@@ -1,0 +1,1 @@
+global-include *.pyx *.pxd *.c *.h *.so *.a
