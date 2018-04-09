@@ -105,6 +105,9 @@ setup(
     packages=["pysdd"],
     install_requires=install_requires,
     tests_require=tests_require,
+    package_data={
+        '': ['*.pyx', '*.pxd'],
+    },
     python_requires='>=3.6',
     license='Apache 2.0',
     classifiers=(
