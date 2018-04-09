@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
 """
-__author__ = "Wannes Meert"
-__copyright__ = "Copyright 2017 KU Leuven, DTAI Research Group"
-__license__ = "APL"
+setup.py
+~~~~~~~~
 
 Usage: python3 setup.py build_ext --inplace
+
+:author: Wannes Meert
+:copyright: Copyright 2017-2018 KU Leuven and Regents of the University of California.
+:license: Apache License, Version 2.0, see LICENSE for details.
 """
-from setuptools import setup, Command
+from setuptools import setup
 from setuptools.extension import Extension
 import platform
 import os
@@ -18,7 +22,7 @@ from pathlib import Path
 try:
     from Cython.Build import cythonize
 except ImportError:
-    sys.exit("Cython is required to build PySDD.")
+    cythonize = None
 
 build_type = "debug"
 #build_type = "optimized"
@@ -59,29 +63,35 @@ os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
 # print("-I: " + str(os.environ["CPPFLAGS"]))
 
 if build_type == "debug":
+    gdb_debug = True
     extra_compile_args = ["-march=native", "-O0", "-g"]
 else:
+    gdb_debug = False
     extra_compile_args = ["-march=native", "-O2"]
 
-ext_modules = cythonize([
-    Extension(
-        "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
-                    #str(csrc_path / "cli.c")],
-                    # os.path.join(src_path, "main.c"),
-                    # os.path.join(src_path, "fnf", "compiler-manual.c"),
-                    # os.path.join(src_path, "fnf", "compiler-auto.c")],
-        extra_objects=[str(libsdd_path)],
-        extra_compile_args=extra_compile_args,
-        cython_directives={"embedsignature": True}
-        # include_dirs=[numpy.get_include()]
-    )],
-    gdb_debug=True)
+if cythonize is not None:
+    ext_modules = cythonize([
+        Extension(
+            "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
+                        #str(csrc_path / "cli.c")],
+                        # os.path.join(src_path, "main.c"),
+                        # os.path.join(src_path, "fnf", "compiler-manual.c"),
+                        # os.path.join(src_path, "fnf", "compiler-auto.c")],
+            extra_objects=[str(libsdd_path)],
+            extra_compile_args=extra_compile_args,
+            cython_directives={"embedsignature": True}
+            # include_dirs=[numpy.get_include()]
+        )],
+        gdb_debug=gdb_debug)
+else:
+    ext_modules = []
+    print('Cython not yet available, skipping compilation')
 
 # install_requires = ['numpy', 'cython']
 install_requires = ['cython']
 tests_require = ['pytest']
 
-with (here / 'README.rst').open('r') as f:
+with (here / 'README.rst').open('r', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
