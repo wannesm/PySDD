@@ -1,8 +1,13 @@
+# -*- coding: UTF-8 -*-
 """
-sdd_c - SDD
+pysdd.sdd_c
+~~~~~~~~~~~
 
-__author__ = "Wannes Meert, Arthur Choi"
-__license__ = "APL"
+SDD Python interface.
+
+:author: Wannes Meert, Arthur Choi
+:copyright: Copyright 2017-2018 KU Leuven and Regents of the University of California.
+:license: Apache License, Version 2.0, see LICENSE for details.
 
 """
 cimport cython

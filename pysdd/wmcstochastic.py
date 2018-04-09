@@ -1,9 +1,13 @@
+# -*- coding: UTF-8 -*-
 """
-stochasticcomputing.py - Apply stochastic computing to SDD
+pysdd.wmcstochastic
+~~~~~~~~~~~~~~~~~~~
 
-__author__ = "Wannes Meert"
-__license__ = "APL"
+Apply stochastic computing to SDD
 
+:author: Wannes Meert
+:copyright: Copyright 2018 KU Leuven.
+:license: Apache License, Version 2.0, see LICENSE for details.
 """
 import random
 from itertools import accumulate
