@@ -26,7 +26,9 @@ except ImportError:
 
 build_type = "debug"
 #build_type = "optimized"
-here = Path(os.path.abspath(os.path.dirname(__file__)))
+# here = Path(os.path.abspath(os.path.dirname(__file__)))
+here = Path(__file__).parent
+print(here)
 
 with (here / "pysdd" / "__init__.py").open('r') as fd:
     wrapper_version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
