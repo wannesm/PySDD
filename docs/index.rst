@@ -10,6 +10,7 @@ Python package for Sentential Decision Diagrams (SDD).
 Source available on https://github.com/wannesm/PySDD.
 
 .. toctree::
+   :caption: Usage
    :maxdepth: 2
 
    usage/installation
@@ -19,19 +20,15 @@ Source available on https://github.com/wannesm/PySDD.
    usage/contact
 
 
-Examples
-========
-
 .. toctree::
+   :caption: Examples
     examples/build_formula.rst
     examples/model_counting.rst
     examples/cli_examples.rst
 
 
-Classes
-=======
-
 .. toctree::
+   :caption: Classes
    classes/SddManager
    classes/SddNode
    classes/Fnf
