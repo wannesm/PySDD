@@ -20,15 +20,19 @@ Source available on https://github.com/wannesm/PySDD.
    usage/contact
 
 
+
 .. toctree::
    :caption: Examples
-    examples/build_formula.rst
-    examples/model_counting.rst
-    examples/cli_examples.rst
+
+   examples/build_formula.rst
+   examples/model_counting.rst
+   git examples/cli_examples.rst
+
 
 
 .. toctree::
    :caption: Classes
+
    classes/SddManager
    classes/SddNode
    classes/Fnf
