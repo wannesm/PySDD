@@ -22,7 +22,8 @@ deploy: prepare_dist
 	@echo "Check whether repo is clean"
 	git diff-index --quiet HEAD
 	@echo "Add tag"
-	git tag "v$$(python3 setup.py --version)"
+	#git tag "v$$(python3 setup.py --version)"
+	versiontag=$$(python3 -c "import pysdd;print(pysdd.__version__)") && git tag "v$$versiontag"
 	@echo "Start uploading"
 	twine upload dist/*
 

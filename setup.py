@@ -14,7 +14,6 @@ from setuptools import setup
 from setuptools.extension import Extension
 import platform
 import os
-import sys
 import re
 from pathlib import Path
 
@@ -25,12 +24,12 @@ except ImportError:
     cythonize = None
 
 build_type = "debug"
-#build_type = "optimized"
+# build_type = "optimized"
 
 # here = Path(os.path.abspath(os.path.dirname(__file__)))
 # here = Path(__file__).parent
 here = Path(".")  # setup script requires relative paths
-print("Setup script for pysdd at location: " + str(here))
+# print("Setup script for pysdd at location: " + str(here))
 
 with (here / "pysdd" / "__init__.py").open('r') as fd:
     wrapper_version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
@@ -43,7 +42,7 @@ sdd_version = "2.0"
 libwrapper_path = here / "pysdd" / "lib"
 sdd_path = libwrapper_path / f"sdd-{sdd_version}"
 lib_path = sdd_path / "lib"
-print(f"Platform: {platform.platform()}")
+# print(f"Platform: {platform.platform()}")
 if "Darwin" in platform.platform():
     lib_path = lib_path / "Darwin"
     libsdd_path = lib_path / "libsdd.a"
@@ -57,8 +56,8 @@ src_path = sdd_path / "src"
 csrc_path = here / "pysdd" / "src"
 c_files_paths = src_path.glob("**/*.c")
 c_dirs_paths = set(p.parent for p in src_path.glob("**/*.c"))
-all_c_file_paths = [str(p) for p in c_files_paths]# + [str(p) for p in csrc_path.glob("*.c")]
-print("Found c files: ", ", ".join([str(p) for p in all_c_file_paths]))
+all_c_file_paths = [str(p) for p in c_files_paths]  # + [str(p) for p in csrc_path.glob("*.c")]
+# print("Found c files: ", ", ".join([str(p) for p in all_c_file_paths]))
 
 os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
@@ -76,10 +75,10 @@ if cythonize is not None:
     ext_modules = cythonize([
         Extension(
             "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
-                        #str(csrc_path / "cli.c")],
-                        # os.path.join(src_path, "main.c"),
-                        # os.path.join(src_path, "fnf", "compiler-manual.c"),
-                        # os.path.join(src_path, "fnf", "compiler-auto.c")],
+            # str(csrc_path / "cli.c")],
+            # os.path.join(src_path, "main.c"),
+            # os.path.join(src_path, "fnf", "compiler-manual.c"),
+            # os.path.join(src_path, "fnf", "compiler-auto.c")],
             extra_objects=[str(libsdd_path)],
             extra_compile_args=extra_compile_args,
             cython_directives={"embedsignature": True}
