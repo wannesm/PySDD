@@ -26,18 +26,19 @@ except ImportError:
 
 build_type = "debug"
 #build_type = "optimized"
+
 # here = Path(os.path.abspath(os.path.dirname(__file__)))
-here = Path(__file__).parent
-print(here)
+# here = Path(__file__).parent
+here = Path(".")  # setup script requires relative paths
+print("Setup script for pysdd at location: " + str(here))
 
 with (here / "pysdd" / "__init__.py").open('r') as fd:
     wrapper_version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-                        fd.read(), re.MULTILINE).group(1)
+                                fd.read(), re.MULTILINE).group(1)
 if not wrapper_version:
     raise RuntimeError('Cannot find version information')
 
 sdd_version = "2.0"
-
 
 libwrapper_path = here / "pysdd" / "lib"
 sdd_path = libwrapper_path / f"sdd-{sdd_version}"
@@ -104,6 +105,10 @@ setup(
     author='Wannes Meert',
     author_email='wannes.meert@cs.kuleuven.be',
     url='https://github.com/wannesm/PySDD',
+    project_urls={
+        'PySDD documentation': 'http://pysdd.readthedocs.io/en/latest/',
+        'PySDD source': 'https://github.com/wannesm/PySDD'
+    },
     packages=["pysdd"],
     install_requires=install_requires,
     tests_require=tests_require,
@@ -111,6 +116,10 @@ setup(
     package_data={
         '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a'],
     },
+    entry_points={
+        'console_scripts': [
+            'pysdd = pysdd.cli:main'
+        ]},
     python_requires='>=3.6',
     license='Apache 2.0',
     classifiers=(

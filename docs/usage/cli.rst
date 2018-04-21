@@ -2,8 +2,9 @@
 Command Line Interface
 ======================
 
-A Python CLI application is included, ``pysdd-cli.py``, that mimicks the
-original sdd binary.
+A Python CLI application is installed if you use pip, ``pysdd``. Or it can be used
+directly from the source directory where it is called ``pysdd-cli.py``.
+This script mimicks the original sdd binary and adds additional features (e.g. weighted model counting).
 
 .. code-block:: shell
 
