@@ -100,6 +100,7 @@ This script mimicks the original sdd binary and adds additional features (e.g. w
 
 .. code-block:: shell
 
+    $ pysdd -h
     $ ./pysdd-cli.py -h
     usage: pysdd-cli.py [-h] [-c FILE | -d FILE | -s FILE] [-v FILE] [-W FILE]
                     [-V FILE] [-R FILE] [-S FILE] [-m] [-t TYPE] [-r K] [-q]
