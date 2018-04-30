@@ -3,7 +3,7 @@
 pysdd.wmcstochastic
 ~~~~~~~~~~~~~~~~~~~
 
-Apply stochastic computing to SDD
+Apply stochastic computing to Sentential Decision Diagrams (SDD).
 
 :author: Wannes Meert
 :copyright: Copyright 2018 KU Leuven.
@@ -16,9 +16,9 @@ from .sdd import WmcManager
 
 
 class WmcStochastic(WmcManager):
-    """Weighted Model Counting using Stochastic Computing.
+    """Weighted Model Counting using Stochastic Computing and a Sentential Decision Diagram (SDD).
 
-    This is an example implementation on how you can create your own Weighted Model Counting
+    This is an example implementation on how you can write your own custom Weighted Model Counting
     algorithm on top of the PySDD library.
 
     This class is a demonstration how stochastic computing [1,2] could be used for weighted model counting
