@@ -3,11 +3,21 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PySDD's documentation!
-=================================
+PySDD documentation
+===================
 
 Python package for Sentential Decision Diagrams (SDD).
 Source available on https://github.com/wannesm/PySDD.
+
+The SDD can be thought of as a "data structure" for representing Boolean functions,
+since SDDs are canonical and support a number of efficient operations for constructing
+and manipulating Boolean functions.
+
+The open-source C SDD package allows users to construct, manipulate and optimize SDDs and
+is developed by Arthur Choi and Adnan Darwiche at
+`UCLA's Automated Reasoning Group <http://reasoning.cs.ucla.edu>`_.
+This Python wrapper is a collaboration between UCLA's Automated Reasoning Group and
+`KU Leuven's Artificial Intelligence research group (DTAI) <https://dtai.cs.kuleuven.be>`_.
 
 .. toctree::
    :caption: Usage
