@@ -571,26 +571,18 @@ cdef class SddManager:
                 result = ifile.read()
         return result
 
+    # Read CNF
+
     @staticmethod
     def from_cnf_file(char* filename, char* vtree_type="balanced"):
         """Create an SDD from the given CNF file."""
         cdef Fnf cnf = Fnf.from_cnf_file(filename)
-        vtree = Vtree(var_count=cnf.var_count, vtree_type=vtree_type)
-        sdd = SddManager(vtree=vtree)
-        sdd.auto_gc_and_minimize_off()  # Having this on while building triggers segfault
-        # cli.initialize_manager_search_state(self._sddmanager)  # not required anymore in 2.0?
-        # TODO: Add interruption to compilation (e.g. for timeouts)
-        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(cnf._fnf, sdd._sddmanager), sdd)
-        sdd.root = rnode
-        # sdd.auto_gc_and_minimize_off()
-        return sdd, rnode
+        return SddManager.from_fnf(cnf, vtree_type)
 
     def read_cnf_file(self, filename):
         """Replace the SDD by an SDD representing the theory in the given CNF file."""
         cdef Fnf cnf = Fnf.from_cnf_file(filename)
-        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(cnf._fnf, self._sddmanager), self)
-        self.root = rnode
-        return rnode
+        return self.fnf_to_sdd(cnf)
 
     @staticmethod
     def from_cnf_string(cnf, char* vtree_type="balanced"):
@@ -603,6 +595,49 @@ cdef class SddManager:
                 ofile.write(cnf)
             return SddManager.from_cnf_file(fname_c, vtree_type)
         return None, None
+
+
+    # Read DNF
+
+    @staticmethod
+    def from_dnf_file(char* filename, char* vtree_type="balanced"):
+        """Create an SDD from the given DNF file."""
+        cdef Fnf dnf = Fnf.from_dnf_file(filename)
+        return SddManager.from_fnf(dnf, vtree_type)
+
+    def read_dnf_file(self, filename):
+        """Replace the SDD by an SDD representing the theory in the given DNF file."""
+        cdef Fnf dnf = Fnf.from_dnf_file(filename)
+        return self.fnf_to_sdd(dnf)
+
+    @staticmethod
+    def from_dnf_string(dnf, char* vtree_type="balanced"):
+        """Create an SDD from the given DNF string."""
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            fname = os.path.join(tmpdirname, "program.dnf")
+            fname_b = fname.encode()
+            fname_c = fname_b
+            with open(fname, "w") as ofile:
+                ofile.write(dnf)
+            return SddManager.from_dnf_file(fname_c, vtree_type)
+        return None, None
+
+
+    # Read FNF
+
+    @staticmethod
+    def from_fnf(Fnf fnf, char* vtree_type="balanced"):
+        """Create an SDD from the given DNF file."""
+        vtree = Vtree(var_count=fnf.var_count, vtree_type=vtree_type)
+        sdd = SddManager(vtree=vtree)
+        sdd.auto_gc_and_minimize_off()  # Having this on while building triggers segfault
+        # cli.initialize_manager_search_state(self._sddmanager)  # not required anymore in 2.0?
+        # TODO: Add interruption to compilation (e.g. for timeouts)
+        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(fnf._fnf, sdd._sddmanager), sdd)
+        sdd.root = rnode
+        # sdd.auto_gc_and_minimize_off()
+        return sdd, rnode
+
 
     def fnf_to_sdd(self, Fnf fnf):
         rnode = SddNode.wrap(compiler_c.fnf_to_sdd(fnf._fnf, self._sddmanager), self)

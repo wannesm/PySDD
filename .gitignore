@@ -11,4 +11,5 @@ cython_debug
 *.swo
 *.swp
 _build
-
+*.egg-info
+dist

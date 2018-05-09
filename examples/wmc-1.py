@@ -13,6 +13,8 @@ def main():
     sdd = SddManager.from_vtree(vtree)
     print(f"Created an SDD with {sdd.var_count()} variables")
     root = sdd.read_cnf_file(bytes(here / "input" / "simple.cnf"))
+    # For DNF functions use `read_dnf_file`
+    # If the vtree is not given, you can use 'from_cnf_file`
 
     # Model Counting
     wmc = root.wmc(log_mode=True)
