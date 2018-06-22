@@ -144,17 +144,18 @@ def read_weights(nnf_path):
     with open(nnf_path, "r") as ifile:
         for line in ifile.readlines():
             if "c weights " in line:
-                weight_str = line[10:]
+                weight_str = line[10:].strip()
                 break
     if weight_str is None:
         return None
-    weights = [float(w) for w in weight_str.split(" ")]
+    weight_strs = weight_str.split(" ")
+    weights = [float(w) for w in weight_strs]
     return weights
 
 
 def print_node(node, wmc=None):
-    print(f" sdd size                : {node.size()}")
-    print(f" sdd node count          : {node.count()}")
+    print(f" sdd size                : {node.manager().size()}")
+    print(f" sdd node count          : {node.manager().count()}")
     c1 = time.time()
     mc = node.global_model_count()
     c2 = time.time()
