@@ -130,7 +130,7 @@ def create_wmc(node, weights, args):
         if (i % 2) == 1:
             lit = -lit
         w = weights[i]
-        wmc.set_literal_weight(node.manager().literal(lit), w)
+        wmc.set_literal_weight(node.manager.literal(lit), w)
     return wmc
 
 
@@ -154,8 +154,8 @@ def read_weights(nnf_path):
 
 
 def print_node(node, wmc=None):
-    print(f" sdd size                : {node.manager().size()}")
-    print(f" sdd node count          : {node.manager().count()}")
+    print(f" sdd size                : {node.manager.size()}")
+    print(f" sdd node count          : {node.manager.count()}")
     c1 = time.time()
     mc = node.global_model_count()
     c2 = time.time()

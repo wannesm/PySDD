@@ -56,26 +56,45 @@ cdef class SddNode:
         cdef unsigned int address = <unsigned int>self._sddnode
         return address
 
+    @property
     def manager(self):
         return self._manager
 
     def is_literal(self):
-        return sddapi_c.sdd_node_literal(self._sddnode)
+        """The node is a literal.
+
+        A functions that is useful for navigating the structure of an SDD (i.e., visiting all its nodes).
+        """
+        return sddapi_c.sdd_node_is_literal(self._sddnode)
 
     @property
     def literal(self):
+        """Returns the signed integer (i.e., variable index or the negation of a variable index) of an SDD
+        node representing a literal. Assumes that sdd node is literal(node) returns 1.
+        """
         if not self.is_literal():
             return 0
         return sddapi_c.sdd_node_literal(self._sddnode)
 
     def is_true(self):
+        """The node is a node representing true.
+
+        A functions that is useful for navigating the structure of an SDD (i.e., visiting all its nodes).
+        """
         return sddapi_c.sdd_node_is_true(self._sddnode)
 
     def is_false(self):
+        """The node is a node representing false.
+
+        A functions that is useful for navigating the structure of an SDD (i.e., visiting all its nodes).
+        """
         return sddapi_c.sdd_node_is_false(self._sddnode)
 
     def is_decision(self):
-        """The node is a decision node."""
+        """The node is a decision node.
+
+        A functions that is useful for navigating the structure of an SDD (i.e., visiting all its nodes).
+        """
         return sddapi_c.sdd_node_is_decision(self._sddnode)
 
     def conjoin(self, SddNode other):
@@ -112,6 +131,10 @@ cdef class SddNode:
         return self._manager.global_model_count(self)
 
     def size(self):
+        """Returns the size of an SDD node (the number of its elements).
+
+        Recall that the size is zero for terminal nodes (i.e., non-decision nodes).
+        """
         return sddapi_c.sdd_node_size(self._sddnode)
 
     def elements(self):
