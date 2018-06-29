@@ -159,7 +159,7 @@ cdef class SddNode:
         cdef sddapi_c.SddNode** nodes;
         nodes = sddapi_c.sdd_node_elements(self._sddnode)
         # do not free memory of nodes
-        m = self.size()
+        m = self.node_size()
         primes = []
         for i in range(0, 2 * m, 2):
             primes.append(SddNode.wrap(nodes[i], self._manager))
