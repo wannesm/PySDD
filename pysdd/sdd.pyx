@@ -130,12 +130,20 @@ cdef class SddNode:
     def global_model_count(self):
         return self._manager.global_model_count(self)
 
-    def size(self):
+    def node_size(self):
         """Returns the size of an SDD node (the number of its elements).
 
         Recall that the size is zero for terminal nodes (i.e., non-decision nodes).
         """
         return sddapi_c.sdd_node_size(self._sddnode)
+
+    def size(self):
+        """Returns the size of an SDD (rooted at node)."""
+        return sddapi_c.sdd_size(self._sddnode)
+
+    def count(self):
+        """Returns the node count of an SDD (rooted at node)."""
+        return sddapi_c.sdd_count(self._sddnode)
 
     def elements(self):
         """Returns an array containing the elements of an SDD node.
