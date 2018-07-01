@@ -168,6 +168,56 @@ cdef class SddNode:
             subs.append(SddNode.wrap(nodes[i], self._manager))
         return zip(primes, subs)
 
+    def vtree(self):
+        """Returns the vtree of an SDD node."""
+        return Vtree.wrap(sddapi_c.sdd_vtree_of(self._sddnode), is_ref=True)
+
+    @staticmethod
+    def _join_models(model1,model2):
+        """Concatenate two models."""
+        model = model1.copy()
+        model.update(model2)
+        return model
+
+    def models(self,Vtree vtree=None):
+        """A generator for the models of an SDD."""
+        if self.is_false():
+            raise ValueError("False has no models")
+        if vtree is None:
+            if self.is_true():
+                vtree = self.manager.vtree()
+            else:
+                vtree = self.vtree()
+        if vtree.is_leaf():
+            var = vtree.var()
+            if self.is_true():
+                yield {var:0}
+                yield {var:1}
+            elif self.is_literal():
+                sign = 0 if self.literal < 0 else 1
+                yield {var:sign}
+        else:
+            if self.is_true(): # sdd is true
+                for left in self.models(vtree.left()):
+                    for right in self.models(vtree.right()):
+                        yield SddNode._join_models(left,right)
+            elif self.vtree() == vtree:
+                for prime,sub in self.elements():
+                    if sub.is_false(): continue
+                    for left in prime.models(vtree.left()):
+                        for right in sub.models(vtree.right()):
+                            yield SddNode._join_models(left,right)
+            else: # fill in gap in vtree
+                true_sdd = self.manager.true()
+                if Vtree.is_sub(self.vtree(),vtree.left()):
+                    for left in self.models(vtree.left()):
+                        for right in true_sdd.models(vtree.right()):
+                            yield SddNode._join_models(left,right)
+                else:
+                   for left in true_sdd.models(vtree.left()):
+                        for right in self.models(vtree.right()):
+                            yield SddNode._join_models(left,right)
+
     def wmc(self, log_mode=True):
         """Create a WmcManager to perform Weighted Model Counting with this node as root."""
         return WmcManager(self, log_mode)
@@ -909,6 +959,9 @@ cdef class Vtree:
         """Frees the memory of a vtree."""
         if not self.is_ref and self._vtree is not NULL:
             sddapi_c.sdd_vtree_free(self._vtree)
+
+    def __eq__(self,Vtree other):
+        return self._vtree == other._vtree
 
     @staticmethod
     def from_file(filename):
