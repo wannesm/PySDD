@@ -49,12 +49,25 @@ cdef class SddNode:
             wrapper._name = "Decision"
         return wrapper
 
+
     @property
     def id(self):
-        """A unique id for a node."""
-        # TODO: It would be better to use the node id but this is not exposed.
-        cdef unsigned int address = <unsigned int>self._sddnode
-        return address
+        """Unique id of the SDD node.
+
+        Every SDD node has an ID. When an SDD node is garbage collected, its structure is not
+        freed but inserted into a gc-list. Moreover, this structure may be reused later by
+        another, newly created SDD node, which will have its own new ID.
+
+        :return: id
+        """
+        return sddapi_c.sdd_id(self._sddnode)
+
+    def garbage_collected(self):
+        """Returns true if the SDD node with the given ID has been garbage collected; returns false otherwise.
+
+        This function may be helpful for debugging.
+        """
+        return sddapi_c.sdd_garbage_collected(self._sddnode, self.id) == 1
 
     @property
     def manager(self):
@@ -172,6 +185,16 @@ cdef class SddNode:
         """Returns the vtree of an SDD node."""
         return Vtree.wrap(sddapi_c.sdd_vtree_of(self._sddnode), is_ref=True)
 
+    def copy(self, SddManager manager=None):
+        """Returns a copy of an SDD, with respect to a new manager dest manager.
+
+        The destination manager, and the manager associated with the SDD to be copied,
+        must have copies of the same vtree."""
+        cdef sddapi_c.SddManager* dest_manager = self._manager._sddmanager
+        if manager is not None:
+            dest_manager = manager._sddmanager
+        return SddNode.wrap(sddapi_c.sdd_copy(self._sddnode, dest_manager), self._manager)
+
     @staticmethod
     def _join_models(model1,model2):
         """Concatenate two models."""
@@ -276,6 +299,9 @@ cdef class SddNode:
         else:
             format = self.__str__()
         return format
+
+    def __eq__(SddNode self, SddNode other):
+        return self._sddnode == other._sddnode
 
 
 @cython.embedsignature(True)
@@ -960,7 +986,7 @@ cdef class Vtree:
         if not self.is_ref and self._vtree is not NULL:
             sddapi_c.sdd_vtree_free(self._vtree)
 
-    def __eq__(self,Vtree other):
+    def __eq__(Vtree self, Vtree other):
         return self._vtree == other._vtree
 
     @staticmethod
@@ -1031,7 +1057,8 @@ cdef class Vtree:
 
     def read(self, char* filename):
         """Reads a vtree from file."""
-        self._vtree = sddapi_c.sdd_vtree_read(filename)
+        cdef sddapi_c.Vtree* vtree_ptr = sddapi_c.sdd_vtree_read(filename)
+        self._vtree = vtree_ptr
 
     def save_as_dot(self, char* filename):
         sddapi_c.sdd_vtree_save_as_dot(filename, self._vtree)
