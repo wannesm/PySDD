@@ -17,6 +17,10 @@ prepare_dist:
 	rm -rf dist/*
 	python3 setup.py sdist bdist_wheel
 
+.PHONY: version
+version:
+	@python3 -c "import pysdd;print(pysdd.__version__)"
+
 .PHONY: deploy
 deploy: prepare_dist
 	@echo "Check whether repo is clean"
