@@ -196,13 +196,21 @@ cdef class SddNode:
         return SddNode.wrap(sddapi_c.sdd_copy(self._sddnode, dest_manager), self._manager)
 
     @staticmethod
-    def _join_models(model1,model2):
-        """Concatenate two models."""
+    def _join_models(model1, model2):
+        """Concatenate two models.
+
+        :param model1: Dictionary with variable and value assignment
+        :type model1: Dict[int, int]
+        :param model2: Dictionary with variable assignment
+        :type model1: Dict[int, int]
+
+        Assumes that both dictionaries do not share keys.
+        """
         model = model1.copy()
         model.update(model2)
         return model
 
-    def models(self,Vtree vtree=None):
+    def models(self, Vtree vtree=None):
         """A generator for the models of an SDD."""
         if self.is_false():
             raise ValueError("False has no models")
@@ -220,7 +228,7 @@ cdef class SddNode:
                 sign = 0 if self.literal < 0 else 1
                 yield {var:sign}
         else:
-            if self.is_true(): # sdd is true
+            if self.is_true():  # sdd is true
                 for left in self.models(vtree.left()):
                     for right in self.models(vtree.right()):
                         yield SddNode._join_models(left,right)
@@ -230,7 +238,7 @@ cdef class SddNode:
                     for left in prime.models(vtree.left()):
                         for right in sub.models(vtree.right()):
                             yield SddNode._join_models(left,right)
-            else: # fill in gap in vtree
+            else:  # fill in gap in vtree
                 true_sdd = self.manager.true()
                 if Vtree.is_sub(self.vtree(),vtree.left()):
                     for left in self.models(vtree.left()):
