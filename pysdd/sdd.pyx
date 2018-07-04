@@ -22,6 +22,7 @@ import tempfile
 from contextlib import redirect_stdout, redirect_stderr
 import io
 import cython
+import collections
 
 wrapper_version = "1.0"
 
@@ -300,6 +301,9 @@ cdef class SddNode:
     def __str__(self):
         return "SddNode({})".format(self._name)
 
+    def __repr__(self):
+        return self.__str__()
+
     def __format__(self, format_spec):
         if format_spec:
             format = "{:" + format_spec + "}"
@@ -425,7 +429,7 @@ cdef class SddManager:
         the SDD representing the positive literal of the i-th variable is returned. If literal is negative, then
         the SDD representing the negative literal is returned.
 
-        :param lit: Literal (number)
+        :param lit: Literal (integer number)
         """
         if lit == 0:
             raise ValueError("Literal 0 does not exist")
@@ -439,6 +443,33 @@ cdef class SddManager:
     def l(self, lit):
         """Short for literal(lit)"""
         return self.literal(lit)
+
+    def __getitem__(self, value):
+        """Python get item syntax to get literals.
+
+        Example: a = mysdd[1]
+                 a, b, c = mysdd[1:4]
+                 a, c = mysdd[(1,3)]
+        """
+        try:
+            if isinstance(value, collections.Iterable):
+                literals = [self.literal(lit) for lit in value]
+                return literals
+
+            if type(value) == int:
+                literal = self.literal(value)
+                return literal
+
+            if type(value) == slice:
+                start = value.start if value.start is not None else 1
+                stop = value.stop if value.stop is not None else self.var_count()
+                step = value.step if value.step is not None else 1
+                literals = [self.literal(lit) for lit in range(start, stop, step)]
+                return literals
+
+        except ValueError as err:
+                raise KeyError(str(err))
+        raise KeyError(f"Unknown type of key: {value} ({type(value)})")
 
 
     ## Automatic Garbage Collection and SDD Minimization (Sec 5.1.3)
