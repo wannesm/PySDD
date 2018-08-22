@@ -140,7 +140,9 @@ class WmcStochastic(WmcManager):
         """Compute all the scaling factors.
 
         This is a pre-processing step to set up the scaling necessary to make the MUX gates compute
-        correct results.
+        correct results. This is similar to the scaling operations that are also required for
+        performing computations with fixed-point integers
+        (https://en.wikipedia.org/wiki/Fixed-point_arithmetic#Operations).
         """
         self.compute_scalings_df(self.node)
 
