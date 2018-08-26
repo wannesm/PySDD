@@ -167,7 +167,7 @@ def print_node(node, wmc=None):
         print(f" sdd weighted model count: {mc}    {c2-c1:.3f} sec")
 
 
-def getopt(argv=None):
+def create_parser():
     def bytes_path(p):
         return bytes(Path(p))
 
@@ -219,6 +219,11 @@ def getopt(argv=None):
     parser.add_argument('--log_mode', action='store_true',
                         dest='log_mode', help='weights in log')
 
+    return parser
+
+
+def getopt(argv=None):
+    parser = create_parser()
     args = parser.parse_args(argv)
 
     if args.verbose:
