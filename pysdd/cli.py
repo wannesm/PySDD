@@ -155,7 +155,7 @@ def read_weights(nnf_path):
 
 def print_node(node, wmc=None):
     print(f" sdd size                : {node.size()}")
-    print(f" sdd node count          : {node.count()}")
+    print(f" sdd node count          : {nodeg .count()}")
     c1 = time.time()
     mc = node.global_model_count()
     c2 = time.time()
