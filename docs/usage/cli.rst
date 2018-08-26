@@ -2,13 +2,22 @@
 Command Line Interface
 ======================
 
-A Python CLI application is installed if you use pip, ``pysdd``. Or it can be used
-directly from the source directory where it is called ``pysdd-cli.py``.
-This script mimicks the original sdd binary and adds additional features (e.g. weighted model counting).
+A Python command line application is included with the package that can be used to
+perform SDD compilation and weighted model counting.
+This application mimicks the original sdd binary and adds additional features (e.g. weighted model counting).
+
+The command line is accessible using one of three possible methods:
+
+* After installation using pip, the binary ``pysdd`` is available in your path.
+* If the package is available in ``PYTHONPATH``, you can use ``python -m pysdd``.
+* Run the ``pysdd-cli.py`` script that is available in the repository.
+
+For example:
 
 .. code-block:: shell
 
     $ pysdd -h
+    $ python -m pysdd -h
     $ ./pysdd-cli.py -h
     usage: pysdd-cli.py [-h] [-c FILE | -d FILE | -s FILE] [-v FILE] [-W FILE]
                     [-V FILE] [-R FILE] [-S FILE] [-m] [-t TYPE] [-r K] [-q]

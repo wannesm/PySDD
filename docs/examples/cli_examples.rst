@@ -10,12 +10,12 @@ Given a DIMACS formatted CNF, ``examples/input/simple.cnf``:
 .. literalinclude:: ../../examples/input/simple.cnf
 
 
-You can use the ``pysdd-cli.py`` program to perform SDD compilation and 
+You can use the ``pysdd`` program to perform SDD compilation and
 weighted model counting:
 
 .. code-block:: none
 
-    $ ./pysdd-cli.py -c examples/input/simple.cnf -W output.vtree -R output.sdd
+    $ pysdd -c examples/input/simple.cnf -W output.vtree -R output.sdd
     reading cnf...
     Read CNF: vars=6 clauses=3
     creating initial vtree balanced
