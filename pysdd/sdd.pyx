@@ -251,7 +251,10 @@ cdef class SddNode:
                             yield SddNode._join_models(left,right)
 
     def wmc(self, log_mode=True):
-        """Create a WmcManager to perform Weighted Model Counting with this node as root."""
+        """Create a WmcManager to perform Weighted Model Counting with this node as root.
+
+        :param log_mode: Perform the computations in log mode or not (default = True)
+        """
         return WmcManager(self, log_mode)
 
 
@@ -444,6 +447,17 @@ cdef class SddManager:
         """Short for literal(lit)"""
         return self.literal(lit)
 
+    @property
+    def vars(self):
+        class SddManagerVars:
+            def __init__(self, mgr):
+                self._mgr = mgr
+
+            def __getitem__(self, value):
+                return self._mgr.get_vars(value)
+        return SddManagerVars(self)
+
+
     def __getitem__(self, value):
         """Python get item syntax to get literals.
 
@@ -451,8 +465,11 @@ cdef class SddManager:
                  a, b, c = mysdd[1:4]
                  a, c = mysdd[(1,3)]
         """
+        self.get_vars(value)
+
+    def get_vars(self, value):
         try:
-            if isinstance(value, collections.Iterable):
+            if isinstance(value, collections.abc.Iterable):
                 literals = [self.literal(lit) for lit in value]
                 return literals
 
