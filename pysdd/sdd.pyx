@@ -63,6 +63,9 @@ cdef class SddNode:
         """
         return sddapi_c.sdd_id(self._sddnode)
 
+    def __hash__(self):
+        return self.id
+
     def garbage_collected(self):
         """Returns true if the SDD node with the given ID has been garbage collected; returns false otherwise.
 
@@ -302,7 +305,7 @@ cdef class SddNode:
         return self._manager.dot(self)
 
     def __str__(self):
-        return "SddNode({})".format(self._name)
+        return "SddNode({},{})".format(self._name, self.id)
 
     def __repr__(self):
         return self.__str__()
