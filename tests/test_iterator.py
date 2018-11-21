@@ -1,4 +1,4 @@
-from pysdd.sdd import SddManager, Vtree, WmcManager
+from pysdd.sdd import SddManager, Vtree
 from pysdd.iterator import SddIterator
 import sys
 import os
@@ -26,7 +26,6 @@ def test_it1():
     # print(f"mc = {mc}")
     assert mc == 7.0
 
-    it = SddIterator(sdd)
     global counter
     counter = 0
 
@@ -54,20 +53,20 @@ def test_it1():
                 rvalue += prime * sub * smooth_factor
             return rvalue
 
-    mc, _variables = it.depth_first(f, func, smooth=True, cache=False)
+    it = SddIterator(sdd, smooth=True, cache=False)
+    mc, _variables = it.depth_first(f, func)
     # print(f"mc = {mc}")
     assert mc == 7
     # print(f"Counter = {counter}")
     assert counter == 17
 
     counter = 0
-    mc, _variables = it.depth_first(f, func, smooth=True, cache=True)
+    it = SddIterator(sdd, smooth=True, cache=True)
+    mc, _variables = it.depth_first(f, func)
     # print(f"mc = {mc}")
     assert mc == 7
     # print(f"Counter = {counter}")
     assert counter == 12, "Visited nodes {} != 12".format(counter)
-
-
 
 
 if __name__ == "__main__":

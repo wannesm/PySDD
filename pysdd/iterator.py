@@ -7,38 +7,44 @@ pysdd.iterator
 :copyright: Copyright 2017-2018 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
+from collections import deque
 
 
 class SddIterator:
-    def __init__(self, sdd):
-        self.sdd = sdd
-        self.cache = None
-
-    def depth_first(self, node, func, smooth=True, cache=True):
-        if cache:
-            self.cache = {}
-        else:
-            self.cache = None
-        return self.depth_first_rec(node, func, smooth=smooth)
-
-    def depth_first_rec(self, node, func, smooth=True):
-        """Recursive depth first iterator
+    def __init__(self, sdd, smooth=True, cache=True):
+        """Iterate over the SDD graph.
 
         Supports smoothing: An arithmetic circuit AC(X) is smooth iff
         (1) it contains at least one indicator for each variable in X, and
         (2) for every child c of '+'-node n, we have vars(n) = vars(c).
 
+        :param sdd: WmcManager
+        :param smooth: Perform smoothing while iterating over the graph
+        :param cache: Cache visited nodes
+        """
+        self.sdd = sdd
+        self.cache = cache
+        self._cache = None
+        self.smooth = smooth
+
+    def depth_first(self, node, func):
+        """Depth first iterator
+
         :param node: Start node
         :param func: Function to be called for each node:
         ``rvalue = func(node, [(prime, sub, variables)], variables)``
-        :param smooth: Apply smoothing
         :return:
         """
+        self._cache = {} if self.cache else None
+        return self.depth_first_rec(node, func)
+
+    def depth_first_rec(self, node, func):
+
         # print(f">{node}")
-        if self.cache is not None and node in self.cache:
+        if self._cache is not None and node in self._cache:
             # print(f"<{node}: From cache: {self.cache[node]}")
-            return self.cache[node]
-        variables = set() if smooth else None
+            return self._cache[node]
+        variables = set() if self.smooth else None
         if node.is_decision():
             rvalues = []
             for prime, sub in node.elements():
@@ -48,7 +54,7 @@ class SddIterator:
                 # rvalue += result
                 prime, prime_vars = self.depth_first_rec(prime, func)
                 sub, sub_vars = self.depth_first_rec(sub, func)
-                if smooth:
+                if self.smooth:
                     prime_vars.update(sub_vars)
                     variables.update(prime_vars)
                 else:
@@ -56,11 +62,11 @@ class SddIterator:
                 rvalues.append((prime, sub, prime_vars))
             rvalue = func(node, rvalues, variables)
         else:
-            if smooth and node.is_literal():
+            if self.smooth and node.is_literal():
                 variables.add(abs(node.literal))
             rvalue = func(node, None, variables)
-        if self.cache is not None:
-            self.cache[node] = (rvalue, variables)
+        if self._cache is not None:
+            self._cache[node] = (rvalue, variables)
         # print(f"<{node}: Computed: ({rvalue},{variables})")
         return rvalue, variables
 
