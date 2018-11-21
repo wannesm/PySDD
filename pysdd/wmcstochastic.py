@@ -44,6 +44,7 @@ class WmcStochastic(WmcManager):
 
     def __init__(self, node, log_mode=1):
         super().__init__(node, log_mode)
+        self.cache = dict()
         self.scalings = dict()
         self.or_cumweights = dict()
         self.compute_scalings()
@@ -101,6 +102,12 @@ class WmcStochastic(WmcManager):
         - Smoothing should be included.
         - Subtrees that always have zero or one as values should be pruned to increase the resolution.
         """
+        self.cache = dict()
+        return self.counting_df_rec(node)
+
+    def counting_df_rec(self, node):
+        if node in self.cache:
+            return self.cache[node]
         if node.is_decision():
             rcounts = []
             for prime, sub in node.elements():
@@ -119,22 +126,24 @@ class WmcStochastic(WmcManager):
                     break
             if choice is None:
                 choice = len(rcounts) - 1
-            return rcounts[choice]
+            rvalue = rcounts[choice]
         elif node.is_true():
-            return True
+            rvalue = True
         elif node.is_false():
-            return False
+            rvalue = False
         elif node.is_literal():
             w = self.literal_weight(node)
             if w > 1.0:
                 raise Exception(f"Stochastic WMC expects probabilities as weights, got {w} for {node}.")
             randval = random.random()
             if randval < w:
-                return True
+                rvalue = True
             else:
-                return False
+                rvalue = False
         else:
             raise Exception(f"Unknown node type: {node}")
+        self.cache[node] = rvalue
+        return rvalue
 
     def compute_scalings(self):
         """Compute all the scaling factors.
@@ -144,10 +153,13 @@ class WmcStochastic(WmcManager):
         performing computations with fixed-point integers
         (https://en.wikipedia.org/wiki/Fixed-point_arithmetic#Operations).
         """
+        self.cache = dict()
         self.compute_scalings_df(self.node)
 
     def compute_scalings_df(self, node):
         """Computing all the scaling factors using depth-first search."""
+        if node in self.cache:
+            return self.cache[node]
         if node.is_decision():
             scalings = []
             for prime, sub in node.elements():
@@ -160,15 +172,17 @@ class WmcStochastic(WmcManager):
             total_scaling = sum(scalings)
             self.or_cumweights[node.id] = list(accumulate(s / total_scaling for s in scalings))
             self.scalings[node.id] = total_scaling
-            return total_scaling
+            rvalue = total_scaling
         elif node.is_true():
             self.scalings[node.id] = 1
-            return 1
+            rvalue = 1
         elif node.is_false():
             self.scalings[node.id] = 1
-            return 1
+            rvalue = 1
         elif node.is_literal():
             self.scalings[node.id] = 1
-            return 1
+            rvalue = 1
         else:
             raise Exception(f"Unknown node type: {node}")
+        self.cache[node] = rvalue
+        return rvalue
