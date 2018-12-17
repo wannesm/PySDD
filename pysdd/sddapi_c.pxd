@@ -137,6 +137,7 @@ cdef extern from "sddapi.h":
     #// CREATING VTREES
     Vtree* sdd_vtree_new(SddLiteral var_count, const char* type);
     Vtree* sdd_vtree_new_with_var_order(SddLiteral var_count, SddLiteral* var_order, const char* type);
+    Vtree* sdd_vtree_new_X_constrained(SddLiteral var_count, SddLiteral* is_X_var, const char* type);
     void sdd_vtree_free(Vtree* vtree);
 
     #// VTREE FILE I/O
