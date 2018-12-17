@@ -985,22 +985,28 @@ cdef class Vtree:
     """Returns a vtree over a given number of variables.
 
     :param var_count: Number of variables
-    :param vtree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical", or
-        "balanced".
+    :param vtree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical", "balanced",
+        or "random".
     :param var_order: The left-to-right variable ordering is given in array var_order. The contents of array
         var_order must be a permutation of the integers from 1 to var count.
-    :return: None
+    :param is_X_var: The constrained variables X, specified as an array of size var_count+1.
+        For variables i where 1 =< i =< var_count,
+        if is_X_var[i] is 1 then i is an element of X,
+        and if it is 0 then i is not an element of X.
+    :param filename: The name of the file from which to create a vtree.
+    :return: A vtree
     """
     cdef sddapi_c.Vtree* _vtree
     cdef public bint is_ref  # Ref does not manage memory
 
     ## Creating Vtrees (Sec 5.3.1)
 
-    def __init__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None):
+    def __init__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None, is_X_var=None):
         pass
 
-    def __cinit__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None):
+    def __cinit__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None, is_X_var=None):
         cdef long[:] var_order_c
+        cdef long[:] is_X_var_c
         cdef long var_count_c
         cdef char* vtree_type_c
         cdef char* filename_c
@@ -1018,13 +1024,26 @@ cdef class Vtree:
             raise ValueError("Error: Arguments var_count and filename cannot be given together")
         elif var_count is not None:
             var_count_c = var_count
-            if var_order is None:
+
+            if var_order is not None and is_X_var is not None:
+                raise ValueError("Error: Arguments var_order and is_X_var cannot be given together")
+            elif var_order is None and is_X_var is None: # new
                 self._vtree = sddapi_c.sdd_vtree_new(var_count_c, vtree_type_c)
-            else:
+            elif var_order is None and is_X_var is not None: # new_X_constrained
+                if isinstance(is_X_var, array.array):
+                    is_X_var_c = is_X_var
+                else:
+                    is_X_var_c = array.array('l', is_X_var)
+
+                self._vtree = sddapi_c.sdd_vtree_new_X_constrained(var_count_c, &is_X_var_c[0], vtree_type_c)
+                if self._vtree is NULL:
+                    raise MemoryError("Could not create Vtree")
+            else: # new_with_var_order
                 if isinstance(var_order, array.array):
                     var_order_c = var_order
                 else:
                     var_order_c = array.array('l', var_order)
+
                 self._vtree = sddapi_c.sdd_vtree_new_with_var_order(var_count_c, &var_order_c[0], vtree_type_c)
                 if self._vtree is NULL:
                     raise MemoryError("Could not create Vtree")
@@ -1052,6 +1071,35 @@ cdef class Vtree:
     def from_file(filename):
         """Create Vtree from file."""
         return Vtree(filename=filename)
+
+    @staticmethod
+    def new_with_var_order(var_count, var_order, vtree_type):
+        """Returns a vtree over a given number of variables (var_count), whose left-to-right variable ordering is
+        given in array var_order.
+
+        :param var_count: Number of variables
+        :param var_order: The left-to-right variable ordering. The contents of the array must be a permutation of the
+            integers from 1 to var count.
+        :param vtree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical",
+        "balanced", or "random"
+        :return: a vtree ordered according to var_order
+        """
+        return Vtree(var_count=var_count, var_order=var_order, vtree_type=vtree_type)
+
+    @staticmethod
+    def new_with_X_constrained(var_count, is_X_var, vtree_type):
+        """Returns an X-constrained vtree over a given number of variables (var_count).
+
+        :param var_count: Number of variables
+        :param is_X_var: The constrained variables X, specified as an array of size var_count+1.
+            For variables i where 1 =< i =< var_count,
+            if is_X_var[i] is 1 then i is an element of X,
+            and if it is 0 then i is not an element of X.
+        :param vtree_type: The type of a vtree may be "right" (right linear), "left" (left linear), "vertical",
+        "balanced", or "random".
+        :return: an X-constrained vTree
+        """
+        return Vtree(var_count=var_count, is_X_var=is_X_var, vtree_type=vtree_type)
 
     @staticmethod
     cdef wrap(sddapi_c.Vtree* vtree, is_ref=False):
