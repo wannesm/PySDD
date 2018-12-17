@@ -56,7 +56,7 @@ def test_it1():
     it = SddIterator(sdd, smooth=True, cache=False)
     mc, _variables = it.depth_first(f, func)
     # print(f"mc = {mc}")
-    assert mc == 7
+    assert mc == 7, f"Expected 7 != {mc}"
     # print(f"Counter = {counter}")
     assert counter == 17
 

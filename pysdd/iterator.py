@@ -89,7 +89,10 @@ class SddIterator:
                 raise Exception("Expected a decision node for node {}".format(node))
             rvalue = 0
             for prime, sub, variables in rvalues:
-                variables = all_variables - variables
-                smooth_factor = 2**len(variables)
+                if all_variables is not None:
+                    variables = all_variables - variables
+                    smooth_factor = 2**len(variables)
+                else:
+                    smooth_factor = 1
                 rvalue += prime * sub * smooth_factor
             return rvalue
