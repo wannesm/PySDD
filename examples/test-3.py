@@ -10,7 +10,7 @@ def main():
   manager = SddManager.from_vtree(vtree)
 
   print("reading sdd from file ...")
-  alpha = manager.read("input/opt-swap.sdd".encode())
+  alpha = manager.read_sdd_file("input/opt-swap.sdd".encode())
   print(f"  sdd size = {alpha.size()}")
 
   # ref, perform the minimization, and then de-ref
