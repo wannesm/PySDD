@@ -21,6 +21,8 @@ def main():
   manager_vtree_right = manager_vtree.right()
 
   print("saving vtree & sdd ...")
+  if not Path("output").is_dir():
+      raise Exception(f"Directory 'output' does not exist")
   manager_vtree.save_as_dot("output/before-rotate-vtree.dot".encode())
   alpha.save_as_dot("output/before-rotate-sdd.dot".encode())
 
@@ -45,6 +47,8 @@ def main():
   manager_vtree = manager.vtree()
 
   print("saving vtree & sdd ...")
+  if not Path("output").is_dir():
+      raise Exception(f"Directory 'output' does not exist")
   manager_vtree.save_as_dot("output/after-rotate-vtree.dot".encode())
   alpha.save_as_dot("output/after-rotate-sdd.dot".encode())
 
