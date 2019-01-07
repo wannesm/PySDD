@@ -468,7 +468,7 @@ cdef class SddManager:
                  a, b, c = mysdd[1:4]
                  a, c = mysdd[(1,3)]
         """
-        self.get_vars(value)
+        return self.get_vars(value)
 
     def get_vars(self, value):
         try:
