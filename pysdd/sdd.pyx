@@ -605,7 +605,7 @@ cdef class SddManager:
     def exists_multiple(self, int[:] exists_map, SddNode node):
         """Returns the result of existentially quantifying out a set of variables from an SDD.
 
-        This function is expected to be more eﬃcient than existentially quantifying out variables one
+        This function is expected to be more efficient than existentially quantifying out variables one
         at a time. The array exists map speciﬁes the variables to be existentially quantiﬁed out.
         The length of exists map is expected to be n + 1, where n is the number of variables in the
         manager. exists map[i] should be 1 if variable i is to be quantiﬁed out; otherwise, exists
@@ -663,6 +663,15 @@ cdef class SddManager:
     def global_model_count(self, SddNode node):
         """Returns the global model count of an SDD (i.e., with respect to the manager variables)."""
         return sddapi_c.sdd_global_model_count(node._sddnode, self._sddmanager)
+
+    def rename_variables(self, SddNode node, sddapi_c.SddLiteral[:] variable_map):
+        """Returns an SDD which is obtained by renaming variables in the SDD node.  The array variable_map has size n+1, where n is the number of variables in the manager.  A variable i, 1 <= i <= n, that appears in the given SDD is renamed into variable variable_map[i] (variable_map[0] is not used)."""
+
+        if len(variable_map) != self.var_count() + 1:
+            raise ValueError(f"Length variable_map is expected to be equal to the number of variables "
+                             f"in the manager ({self.var_count() + 1}) but {len(variable_map)} is given.")
+        return SddNode.wrap(sddapi_c.sdd_rename_variables(node._sddnode, &variable_map[0], self._sddmanager), self)
+
 
     ## Size and Count (Sec 5.2.2 and Sec 5.1.4)
 
