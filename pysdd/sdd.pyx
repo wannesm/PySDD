@@ -141,6 +141,9 @@ cdef class SddNode:
     def __invert__(SddNode node):
         return node._manager.negate(node)
 
+    def condition(SddNode node, lit):
+        return node._manager.condition(lit, node)
+
     def model_count(self):
         return self._manager.model_count(self)
 
@@ -601,9 +604,16 @@ cdef class SddManager:
                                    "is active")
         return SddNode.wrap(sddapi_c.sdd_negate(node._sddnode, self._sddmanager), self)
 
-    def condition(self, sddapi_c.SddLiteral lit, SddNode node):
+    def condition(self, lit, SddNode node):
         """Returns the result of conditioning an SDD on a literal, where a literal is a positive or negative integer."""
-        return SddNode.wrap(sddapi_c.sdd_condition(lit, node._sddnode, self._sddmanager), self)
+        cdef sddapi_c.SddLiteral lit_int
+        if type(lit) == int:
+            lit_int = lit
+        elif isinstance(lit, SddNode) and lit.is_literal():
+            lit_int = lit.literal
+        else:
+            raise Exception(f"Incorrect literal type ({type(lit)}), expects int or SddNode")
+        return SddNode.wrap(sddapi_c.sdd_condition(lit_int, node._sddnode, self._sddmanager), self)
 
     def exists(self, sddapi_c.SddLiteral var, SddNode node):
         """Returns the result of existentially (universally) quantifying out a variable from an SDD."""
