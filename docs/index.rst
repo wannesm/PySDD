@@ -36,7 +36,8 @@ This Python wrapper is a collaboration between UCLA's Automated Reasoning Group 
 
    examples/build_formula.rst
    examples/model_counting.rst
-   git examples/cli_examples.rst
+   examples/conditioning.rst
+   examples/cli_examples.rst
 
 
 
