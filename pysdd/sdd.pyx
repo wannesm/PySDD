@@ -609,10 +609,13 @@ cdef class SddManager:
         cdef sddapi_c.SddLiteral lit_int
         if type(lit) == int:
             lit_int = lit
-        elif isinstance(lit, SddNode) and lit.is_literal():
-            lit_int = lit.literal
+        elif isinstance(lit, SddNode):
+            if lit.is_literal():
+                lit_int = lit.literal
+            else:
+                raise ValueError(f"SddNode needs to represent a literal")
         else:
-            raise Exception(f"Incorrect literal type ({type(lit)}), expects int or SddNode")
+            raise TypeError(f"Incorrect literal type ({type(lit)}), expects int or an SddNode")
         return SddNode.wrap(sddapi_c.sdd_condition(lit_int, node._sddnode, self._sddmanager), self)
 
     def exists(self, sddapi_c.SddLiteral var, SddNode node):
