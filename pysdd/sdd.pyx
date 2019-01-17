@@ -454,7 +454,18 @@ cdef class SddManager:
     def vars(self):
         class SddManagerVars:
             def __init__(self, mgr):
+                self._i = 1
                 self._mgr = mgr
+
+            def __iter__(self):
+                return self
+
+            def __next__(self):
+                if self._i > self._mgr.var_count():
+                    raise StopIteration()
+                result = self._mgr.get_vars(self._i)
+                self._i += 1
+                return result
 
             def __getitem__(self, value):
                 return self._mgr.get_vars(value)
