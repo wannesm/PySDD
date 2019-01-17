@@ -26,10 +26,7 @@ except ImportError:
 build_type = "debug"
 # build_type = "optimized"
 
-# here = Path(os.path.abspath(os.path.dirname(__file__)))
-# here = Path(__file__).parent
 here = Path(".")  # setup script requires relative paths
-# print("Setup script for pysdd at location: " + str(here))
 
 with (here / "pysdd" / "__init__.py").open('r') as fd:
     wrapper_version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
@@ -62,7 +59,6 @@ all_c_file_paths = [str(p) for p in c_files_paths]  # + [str(p) for p in csrc_pa
 os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
-# print("-I: " + str(os.environ["CPPFLAGS"]))
 
 if build_type == "debug":
     gdb_debug = True
@@ -75,15 +71,11 @@ if cythonize is not None:
     ext_modules = cythonize([
         Extension(
             "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
-            # str(csrc_path / "cli.c")],
-            # os.path.join(src_path, "main.c"),
-            # os.path.join(src_path, "fnf", "compiler-manual.c"),
-            # os.path.join(src_path, "fnf", "compiler-auto.c")],
             extra_objects=[str(libsdd_path)],
-            extra_compile_args=extra_compile_args,
-            cython_directives={"embedsignature": True}
+            extra_compile_args=extra_compile_args
             # include_dirs=[numpy.get_include()]
         )],
+        compiler_directives={'embedsignature': True},
         gdb_debug=gdb_debug)
 else:
     ext_modules = []
@@ -121,12 +113,12 @@ setup(
         ]},
     python_requires='>=3.6',
     license='Apache 2.0',
-    classifiers=(
+    classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering :: Artificial Intelligence'
-    ),
+    ],
     keywords='sdd, knowledge compilation',
     ext_modules=ext_modules,
     zip_safe=False
