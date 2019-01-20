@@ -24,6 +24,11 @@ import io
 import cython
 import collections
 
+MYPY = False
+if MYPY:
+    from typing import List
+
+
 wrapper_version = "1.0"
 
 
@@ -307,8 +312,40 @@ cdef class SddNode:
     def dot(self):
         return self._manager.dot(self)
 
+    def dot2(self):
+        return self._manager.dot2(self)
+
+    def dot2int(self, visited):
+        # type: (SddNode) -> List[str]
+        if self in visited:
+            return []
+        visited.add(self)
+        if self.vtree() is not None:
+            vtree_node = self.vtree().position()
+        else:
+            vtree_node = "n"
+        if self.is_false():
+            return ["{} [shape=rectangle, label=\"Var: False\\nId:{} Vp:{}\"];".format(self.id, self.id, vtree_node)]
+        if self.is_true():
+            return ["{} [shape=rectangle, label=\"Var: True\\nId:{} Vp:{}\"];".format(self.id, self.id, vtree_node)]
+        if self.is_literal():
+            return ["{} [shape=rectangle, label=\"Var: {}\\nId:{} Vp:{}\"];".format(self.id, self.literal, self.id, vtree_node)]
+        if self.is_decision():
+            s = ["{} [label=\"+\\nId:{} Vp:{}\"];".format(self.id, self.id, vtree_node)]
+            for idx, (prime, sub) in enumerate(self.elements()):
+                ps_id = "ps_{}_{}".format(self.id, idx)
+                s += [
+                    "{} [shape=point, label=\"*\"];".format(ps_id),
+                    "{} -> {} [arrowhead=none];".format(self.id, ps_id),
+                    "{} -> {};".format(ps_id, prime.id),
+                    "{} -> {};".format(ps_id, sub.id),
+                ]
+                s += prime.dot2int(visited)
+                s += sub.dot2int(visited)
+            return s
+
     def __str__(self):
-        return "SddNode({},{})".format(self._name, self.id)
+        return "SddNode(name={},id={})".format(self._name, self.id)
 
     def __repr__(self):
         return self.__str__()
@@ -770,6 +807,22 @@ cdef class SddManager:
                 result = ifile.read()
         return result
 
+    def dot2(self, SddNode node=None):
+        if node is None:
+            if self.root is None:
+                raise ValueError("No root node is known, pass the root node as argument")
+            else:
+                node = self.root
+        s = [
+            "digraph sdd {"
+        ]
+        visited = set()
+        s += node.dot2int(visited)
+        s += [
+            "}"
+        ]
+        return "\n".join(s)
+
     # Read CNF
 
     @staticmethod
@@ -1218,6 +1271,31 @@ cdef class Vtree:
                 result = ifile.read()
         return result
 
+    def dot2(self):
+        s = [
+            "digraph vtree {"
+        ]
+        s += self.dot2int()
+        s += [
+            "}"
+        ]
+        return "\n".join(s)
+
+    def dot2int(self):
+        s = []
+        left = self.left()
+        right = self.right()
+        if left is None and right is None:
+            s += ["{} [label=\"{} ({})\",shape=\"plaintext\"];".format(self.position(), self.position(), self.var())]
+        else:
+            s += ["{} [label=\"{}\",shape=\"plaintext\"];".format(self.position(), self.position())]
+        if left is not None:
+            s += ["{} -> {} [arrowhead=none];".format(self.position(), left.position())]
+            s += left.dot2int()
+        if right is not None:
+            s += ["{} -> {} [arrowhead=none];".format(self.position(), right.position())]
+            s += right.dot2int()
+        return s
 
     ## Navigation (Sec 5.3.4)
 
@@ -1299,13 +1377,17 @@ cdef class Vtree:
         return Vtree.wrap(sddapi_c.sdd_vtree_lca(vtree1._vtree, vtree2._vtree, root._vtree))
 
     def var_count(self):
+        # type: () -> int
         """Returns the number of variables contained in the vtree."""
         return sddapi_c.sdd_vtree_var_count(self._vtree)
 
     def var(self):
+        # type: () -> int
         """Returns the variable associated with a vtree node.
 
          If the vtree node is a leaf, and returns 0 otherwise.
+
+         :return: variable
          """
         return sddapi_c.sdd_vtree_var(self._vtree)
 

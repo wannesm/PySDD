@@ -17,56 +17,23 @@ def test_it1():
     a, b, c, d = sdd.vars[:5]
     f = ((a & b) | (c & d))
     if directory:
-        dot_fn = directory / "sdd.dot"
-        with dot_fn.open("w") as out:
-            print(f.dot(), file=out)
+        with (directory / "sdd.gv").open("w") as out:
+            print(f.dot2(), file=out)
+        with (directory / "vtree.gv").open("w") as out:
+            print(sdd.vtree().dot2(), file=out)
 
     wmc = f.wmc(log_mode=False)
     mc = wmc.propagate()
     # print(f"mc = {mc}")
     assert mc == 7.0
 
-    global counter
-    counter = 0
+    it = SddIterator(sdd, smooth=True)
+    mc = it.depth_first(f, SddIterator.func_modelcounting)
+    assert mc == 7, "MC {} != 7".format(mc)
 
-    def func(node, rvalues, all_variables):
-        global counter
-        counter += 1
-        if rvalues is None:
-            # Leaf
-            if node.is_true():
-                return 1
-            elif node.is_false():
-                return 0
-            elif node.is_literal():
-                return 1
-            else:
-                raise Exception("Unknown leaf type for node {}".format(node))
-        else:
-            # Decision node
-            if not node.is_decision():
-                raise Exception("Expected a decision node for node {}".format(node))
-            rvalue = 0
-            for prime, sub, variables in rvalues:
-                variables = all_variables - variables
-                smooth_factor = 2**len(variables)
-                rvalue += prime * sub * smooth_factor
-            return rvalue
-
-    it = SddIterator(sdd, smooth=True, cache=False)
-    mc, _variables = it.depth_first(f, func)
-    # print(f"mc = {mc}")
-    assert mc == 7, f"Expected 7 != {mc}"
-    # print(f"Counter = {counter}")
-    assert counter == 17
-
-    counter = 0
-    it = SddIterator(sdd, smooth=True, cache=True)
-    mc, _variables = it.depth_first(f, func)
-    # print(f"mc = {mc}")
-    assert mc == 7
-    # print(f"Counter = {counter}")
-    assert counter == 12, "Visited nodes {} != 12".format(counter)
+    it = SddIterator(sdd, smooth=False)
+    mc = it.depth_first(f, SddIterator.func_modelcounting)
+    assert mc == 3, "MC (non-smooth) {} != 3".format(mc)
 
 
 if __name__ == "__main__":
