@@ -1,5 +1,6 @@
 from pysdd.sdd import SddManager, Vtree
 from pysdd.iterator import SddIterator
+from pysdd.io import sdd_to_dot, vtree_to_dot
 import sys
 import os
 import logging
@@ -17,10 +18,17 @@ def test_it1():
     a, b, c, d = sdd.vars[:5]
     f = ((a & b) | (c & d))
     if directory:
-        with (directory / "sdd.gv").open("w") as out:
-            print(f.dot2(), file=out)
-        with (directory / "vtree.gv").open("w") as out:
-            print(sdd.vtree().dot2(), file=out)
+        litnamemap = {1: 'a', 2: 'b', 3: 'c', 4: 'd'}
+        for key, val in list(litnamemap.items()):
+            litnamemap[-key] = f"¬{val}"
+        with (directory / "sdd1.gv").open("w") as out:
+            print(f.dot(), file=out)
+        with (directory / "sdd2.gv").open("w") as out:
+            print(sdd_to_dot(f, litnamemap=litnamemap, show_id=True), file=out)
+        with (directory / "vtree1.gv").open("w") as out:
+            print(sdd.vtree().dot(), file=out)
+        with (directory / "vtree2.gv").open("w") as out:
+            print(vtree_to_dot(sdd.vtree(), litnamemap=litnamemap, show_id=True), file=out)
 
     wmc = f.wmc(log_mode=False)
     mc = wmc.propagate()
