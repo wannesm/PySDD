@@ -69,7 +69,8 @@ class SddIterator:
 
         :param node: Start node
         :param func: Function to be called for each node:
-        ``rvalue = func(node, [(prime, sub, variables)], variables)``
+        ``rvalue = func(node, [(prime_rvalue, sub_rvalue, prime_vars, sub_vars)],
+                        expected_prime_vars, expected_sub_vars)``
         :return:
         """
         self._wmc_cache = dict()

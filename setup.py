@@ -23,8 +23,8 @@ try:
 except ImportError:
     cythonize = None
 
-build_type = "debug"
-# build_type = "optimized"
+# build_type = "debug"
+build_type = "optimized"
 
 here = Path(".")  # setup script requires relative paths
 
