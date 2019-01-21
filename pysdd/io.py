@@ -87,9 +87,6 @@ def vtree_to_dot(vtree, litnamemap=None, show_id=False):
     s = [
         "digraph vtree {"
     ]
-    if show_id:
-        s += [f"start [shape=plaintext,style=invis];",
-              f"start -> {vtree.position()} [penwidth=0,arrowhead=none,headlabel=\"{vtree.position()}\"];"]
     s += _vtree_to_dot_int(vtree, litnamemap, show_id)
     s += [
         "}"
@@ -105,22 +102,19 @@ def _vtree_to_dot_int(vtree, litnamemap=None, show_id=False):
         name = vtree.var()
         if litnamemap is not None:
             name = litnamemap.get(name, name)
-        s += [f"{vtree.position()} [label=\"{name}\",shape=\"box\"];"]
-    else:
-        if show_id:
-            s += ["{} [label=\"{}\",shape=\"point\"];".format(vtree.position(), vtree.position())]
-        else:
-            s += [f"{vtree.position()} [shape=\"point\"];"]
-    if left is not None:
         extra_options = ""
         if show_id:
-            extra_options = f",headclip=true,headlabel=\"{left.position()}\""
-        s += [f"{vtree.position()} -> {left.position()} [arrowhead=none{extra_options}];"]
+            extra_options += f",xlabel=\"{vtree.position()}\""
+        s += [f"{vtree.position()} [label=\"{name}\",shape=\"box\"{extra_options}];"]
+    else:
+        extra_options = ""
+        if show_id:
+            extra_options += f",xlabel=\"{vtree.position()}\""
+        s += [f"{vtree.position()} [shape=\"point\"{extra_options}];"]
+    if left is not None:
+        s += [f"{vtree.position()} -> {left.position()} [arrowhead=none];"]
         s += _vtree_to_dot_int(left, litnamemap, show_id)
     if right is not None:
-        extra_options = ""
-        if show_id:
-            extra_options = f",headclip=true,headlabel=\"     {right.position()}\""
-        s += [f"{vtree.position()} -> {right.position()} [arrowhead=none{extra_options}];"]
+        s += [f"{vtree.position()} -> {right.position()} [arrowhead=none];"]
         s += _vtree_to_dot_int(right, litnamemap, show_id)
     return s
