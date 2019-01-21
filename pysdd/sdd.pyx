@@ -26,7 +26,7 @@ import collections
 
 MYPY = False
 if MYPY:
-    from typing import List
+    from typing import List, Optional, Dict
 
 
 wrapper_version = "1.0"
@@ -312,11 +312,11 @@ cdef class SddNode:
     def dot(self):
         return self._manager.dot(self)
 
-    def dot2(self):
-        return self._manager.dot2(self)
+    def dot2(self, litnamemap=None):
+        return self._manager.dot2(self, litnamemap)
 
-    def dot2int(self, visited):
-        # type: (SddNode) -> List[str]
+    def dot2int(self, visited, litnamemap=None):
+        # type: (SddNode, Optional[Dict[int, str]]) -> List[str]
         if self in visited:
             return []
         visited.add(self)
@@ -329,7 +329,11 @@ cdef class SddNode:
         if self.is_true():
             return ["{} [shape=rectangle, label=\"Var: True\\nId:{} Vp:{}\"];".format(self.id, self.id, vtree_node)]
         if self.is_literal():
-            return ["{} [shape=rectangle, label=\"Var: {}\\nId:{} Vp:{}\"];".format(self.id, self.literal, self.id, vtree_node)]
+            if litnamemap is not None:
+                name = litnamemap[self.literal]
+            else:
+                name = self.literal
+            return ["{} [shape=rectangle, label=\"Var: {}\\nId:{} Vp:{}\"];".format(self.id, name, self.id, vtree_node)]
         if self.is_decision():
             s = ["{} [label=\"+\\nId:{} Vp:{}\"];".format(self.id, self.id, vtree_node)]
             for idx, (prime, sub) in enumerate(self.elements()):
@@ -340,8 +344,8 @@ cdef class SddNode:
                     "{} -> {};".format(ps_id, prime.id),
                     "{} -> {};".format(ps_id, sub.id),
                 ]
-                s += prime.dot2int(visited)
-                s += sub.dot2int(visited)
+                s += prime.dot2int(visited, litnamemap)
+                s += sub.dot2int(visited, litnamemap)
             return s
 
     def __str__(self):
@@ -807,7 +811,7 @@ cdef class SddManager:
                 result = ifile.read()
         return result
 
-    def dot2(self, SddNode node=None):
+    def dot2(self, SddNode node=None, litnamemap=None):
         if node is None:
             if self.root is None:
                 raise ValueError("No root node is known, pass the root node as argument")
@@ -817,7 +821,7 @@ cdef class SddManager:
             "digraph sdd {"
         ]
         visited = set()
-        s += node.dot2int(visited)
+        s += node.dot2int(visited, litnamemap)
         s += [
             "}"
         ]
