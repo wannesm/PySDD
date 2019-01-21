@@ -15,7 +15,7 @@ if MYPY:
 
 
 def sdd_to_dot(node, litnamemap=None, show_id=False):
-    """Generate Graphviz DOT string for SDD with given root."""
+    """Generate (alternative) Graphviz DOT string for SDD with given root."""
     if node is None:
         raise ValueError("No root node given")
     s = [
@@ -83,7 +83,7 @@ def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False):
 
 
 def vtree_to_dot(vtree, litnamemap=None, show_id=False):
-    """Generate Graphviz DOT string for given Vtree."""
+    """Generate (alternative) Graphviz DOT string for given Vtree."""
     s = [
         "digraph vtree {"
     ]
