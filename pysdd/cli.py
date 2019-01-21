@@ -7,7 +7,7 @@ pysdd-cli
 PySDD command line interface.
 
 :author: Wannes Meert, Arthur Choi
-:copyright: Copyright 2018 KU Leuven and Regents of the University of California.
+:copyright: Copyright 2019 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
 from pathlib import Path
@@ -167,6 +167,16 @@ def print_node(node, wmc=None):
         print(f" sdd weighted model count: {mc}    {c2-c1:.3f} sec")
 
 
+class CustomHelpFormatter(argparse.HelpFormatter):
+
+    def _format_text(self, text):
+        text = super()._format_text(text)
+        if "Copyright" in text:
+            a, b = text.split("Copyright")
+            text = a + "\n\n" + super()._format_text("Copyright" + b)
+        return text
+
+
 def create_parser():
     def bytes_path(p):
         return bytes(Path(p))
@@ -175,9 +185,11 @@ def create_parser():
         return s.encode()
 
     epilog = ("Weighted Model Counting is performed if the NNF file containts a line formatted as follows: "
-              "\"c weights PW_1 NW_1 ... PW_n NW_n\".")
+              "\"c weights PW_1 NW_1 ... PW_n NW_n\"."
+              "Copyright 2017-2019, Regents of the University of California and KU Leuven")
     parser = argparse.ArgumentParser(description='Sentential Decision Diagram, Compiler',
-                                     epilog=epilog)
+                                     epilog=epilog,
+                                     formatter_class=CustomHelpFormatter)
     input_group = parser.add_mutually_exclusive_group()
     input_group.add_argument('-c', metavar='FILE', type=bytes_path,
                              dest='cnf_filename', help='set input CNF file')

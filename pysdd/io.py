@@ -4,17 +4,18 @@ pysdd.io
 ~~~~~~~~
 
 :author: Wannes Meert, Arthur Choi
-:copyright: Copyright 2017-2018 KU Leuven and Regents of the University of California.
+:copyright: Copyright 2017-2019 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
-from .sdd import SddNode
-
 MYPY = False
 if MYPY:
+    from .sdd import SddNode, Vtree
     from typing import List, Optional, Dict, Set
+    LitNameMap = Dict[int, str]
 
 
 def sdd_to_dot(node, litnamemap=None, show_id=False):
+    # type: (SddNode, Optional[LitNameMap], bool) -> str
     """Generate (alternative) Graphviz DOT string for SDD with given root."""
     if node is None:
         raise ValueError("No root node given")
@@ -29,8 +30,8 @@ def sdd_to_dot(node, litnamemap=None, show_id=False):
     return "\n".join(s)
 
 
-def _format_sddnode_label(node, name=None, litnamemap=None, show_id=False):
-    # type: (SddNode, Optional[str], Optional[Dict[int, str]], bool) -> str
+def _format_sddnode_label(node, name=None, litnamemap=None):
+    # type: (SddNode, Optional[str], Optional[LitNameMap]) -> str
     if name is not None:
         pass
     elif node.is_true():
@@ -45,6 +46,7 @@ def _format_sddnode_label(node, name=None, litnamemap=None, show_id=False):
 
 
 def _format_sddnode_xlabel(node):
+    # type: (SddNode) -> str
     if node.vtree() is not None:
         vtree_pos = node.vtree().position()
     else:
@@ -53,18 +55,18 @@ def _format_sddnode_xlabel(node):
 
 
 def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False):
-    # type: (SddNode, Set[SddNode], Optional[Dict[int, str]], bool) -> List[str]
+    # type: (SddNode, Set[SddNode], Optional[LitNameMap], bool) -> List[str]
     if node in visited:
         return []
     visited.add(node)
     if node.is_false() or node.is_true() or node.is_literal():
-        label = _format_sddnode_label(node, None, litnamemap, show_id)
+        label = _format_sddnode_label(node, None, litnamemap)
         extra_options = ""
         if show_id:
             extra_options += (",xlabel=\"" + _format_sddnode_xlabel(node) + "\"")
         return [f"{node.id} [shape=rectangle,label=\"{label}\"{extra_options}];"]
     elif node.is_decision():
-        label = _format_sddnode_label(node, '+', litnamemap, show_id)
+        label = _format_sddnode_label(node, '+', litnamemap)
         extra_options = ""
         if show_id:
             extra_options += (",xlabel=\"" + _format_sddnode_xlabel(node) + "\"")
@@ -83,6 +85,7 @@ def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False):
 
 
 def vtree_to_dot(vtree, litnamemap=None, show_id=False):
+    # type: (Vtree, Optional[LitNameMap], bool) -> str
     """Generate (alternative) Graphviz DOT string for given Vtree."""
     s = [
         "digraph vtree {"
@@ -95,6 +98,7 @@ def vtree_to_dot(vtree, litnamemap=None, show_id=False):
 
 
 def _vtree_to_dot_int(vtree, litnamemap=None, show_id=False):
+    # type: (Vtree, Optional[LitNameMap], bool) -> List[str]
     s = []
     left = vtree.left()
     right = vtree.right()

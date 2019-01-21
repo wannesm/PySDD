@@ -7,7 +7,7 @@ setup.py
 Usage: python3 setup.py build_ext --inplace
 
 :author: Wannes Meert
-:copyright: Copyright 2017-2018 KU Leuven and Regents of the University of California.
+:copyright: Copyright 2017-2019 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
 from setuptools import setup
