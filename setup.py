@@ -108,7 +108,7 @@ setup(
     tests_require=tests_require,
     include_package_data=True,
     package_data={
-        '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a'],
+        '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*lib'],
     },
     entry_points={
         'console_scripts': [
