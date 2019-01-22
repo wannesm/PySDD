@@ -122,3 +122,38 @@ def _vtree_to_dot_int(vtree, litnamemap=None, show_id=False):
         s += [f"{vtree.position()} -> {right.position()} [arrowhead=none];"]
         s += _vtree_to_dot_int(right, litnamemap, show_id)
     return s
+
+
+def nnf_file_wmc(nnf_filename, weights=None):
+    """Perform non-smoothed Weighted Model Counting on the given NNF file.
+
+    This is an auxiliary function to perform WMC given an NNF file with only
+    Python code. This function will thus also work, even if the C SDD library
+    is not available.
+    """
+    wmc = []  # type: List[Optional[float]]
+    ln = 0
+    with open(nnf_filename, 'r') as nnf_file:
+        for line in nnf_file.readlines():
+            cols = line.strip().split(' ')
+            if cols[0] == 'c':
+                continue
+            if cols[0] == 'nnf':
+                wmc = [None] * int(cols[1])
+                continue
+            if cols[0] == 'L':
+                lit = int(cols[1])
+                if lit in weights:
+                    wmc[ln] = weights[lit]
+                else:
+                    wmc[ln] = 1.0
+            if cols[0] == 'A':
+                wmc[ln] = 1.0
+                for i in range(int(cols[1])):
+                    wmc[ln] *= wmc[int(cols[2 + i])]
+            if cols[0] == 'O':
+                wmc[ln] = 0.0
+                for i in range(int(cols[2])):
+                    wmc[ln] += wmc[int(cols[3 + i])]
+            ln += 1
+    return wmc[-1]
