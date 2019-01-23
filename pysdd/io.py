@@ -160,6 +160,9 @@ def nnf_file_wmc(nnf_filename, weights=None):
     """
     wmc = []  # type: List[Optional[float]]
     ln = 0
+    detected_nnf = False
+    true_weight = 1.0
+    false_weight = 0.0
     with open(nnf_filename, 'r') as nnf_file:
         for line in nnf_file.readlines():
             cols = line.strip().split(' ')
@@ -167,20 +170,71 @@ def nnf_file_wmc(nnf_filename, weights=None):
                 continue
             if cols[0] == 'nnf':
                 wmc = [None] * int(cols[1])
+                detected_nnf = True
                 continue
+            if not detected_nnf:
+                raise Exception(f"An NNF file should start with 'nnf'")
             if cols[0] == 'L':
                 lit = int(cols[1])
                 if lit in weights:
                     wmc[ln] = weights[lit]
                 else:
-                    wmc[ln] = 1.0
+                    wmc[ln] = true_weight
             if cols[0] == 'A':
                 wmc[ln] = 1.0
                 for i in range(int(cols[1])):
                     wmc[ln] *= wmc[int(cols[2 + i])]
             if cols[0] == 'O':
-                wmc[ln] = 0.0
+                wmc[ln] = false_weight
                 for i in range(int(cols[2])):
                     wmc[ln] += wmc[int(cols[3 + i])]
             ln += 1
     return wmc[-1]
+
+
+def sdd_file_wmc(sdd_filename, weights=None):
+    """Perform non-smoothed Weighted Model Counting on the given SDD file.
+
+    This is an auxiliary function to perform WMC given an SDD file with only
+    Python code. This function will thus also work, even if the C SDD library
+    is not available.
+    """
+    wmc = []  # type: List[Optional[float]]
+    ln = 0
+    detected_sdd = False
+    true_weight = 1.0
+    false_weight = 0.0
+    with open(sdd_filename, 'r') as sdd_file:
+        for line in sdd_file.readlines():
+            cols = line.strip().split(' ')
+            if cols[0] == 'c':
+                continue
+            if cols[0] == 'sdd':
+                detected_sdd = True
+                wmc = [None] * int(cols[1])
+                continue
+            if not detected_sdd:
+                raise Exception(f"An SDD file should start with 'sdd'")
+            if cols[0] == 'L':
+                nodeid = int(cols[1])
+                lit = int(cols[3])
+                if lit in weights:
+                    wmc[nodeid] = weights[lit]
+                else:
+                    wmc[nodeid] = 1.0
+            if cols[0] == 'F':
+                nodeid = int(cols[1])
+                wmc[nodeid] = false_weight
+            if cols[0] == 'T':
+                nodeid = int(cols[1])
+                wmc[nodeid] = true_weight
+            if cols[0] == 'D':
+                nodeid = int(cols[1])
+                nb_elmts = int(cols[3])
+                elmts = [int(col) for col in cols[4:]]
+                w = 0.0
+                for idx in range(nb_elmts):
+                    w += wmc[elmts[2 * idx]] * wmc[elmts[2 * idx + 1]]
+                wmc[nodeid] = w
+            ln += 1
+    return wmc[0]
