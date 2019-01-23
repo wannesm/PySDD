@@ -335,7 +335,7 @@ cdef class SddManager:
         Automatic garbage collection and automatic SDD minimization are activated in the created manager when
         auto gc and minimize is not 0.
     :param vtree: The manager copies the input vtree. Any manipulations performed by
-        the manager are done on its own copy, and does not a?ect the input vtree.
+        the manager are done on its own copy, and does not affect the input vtree.
 
     The creation and manipulation of SDDs are maintained by an SDD manager.
     The use of an SDD manager is analogous to the use of managers in OBDD packages

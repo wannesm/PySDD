@@ -10,20 +10,35 @@ pysdd.io
 MYPY = False
 if MYPY:
     from .sdd import SddNode, Vtree
-    from typing import List, Optional, Dict, Set
-    LitNameMap = Dict[int, str]
+    from typing import List, Optional, Dict, Set, Union, Tuple
+    LitNameMap = Dict[Union[int, str], str]
 
 
-def sdd_to_dot(node, litnamemap=None, show_id=False):
-    # type: (SddNode, Optional[LitNameMap], bool) -> str
-    """Generate (alternative) Graphviz DOT string for SDD with given root."""
+node_count = 0
+
+
+def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
+    # type: (SddNode, Optional[LitNameMap], bool, bool) -> str
+    """Generate (alternative) Graphviz DOT string for SDD with given root.
+
+    :param node: Root node for graph
+    :param litnamemap: Dictionary for node labels. For variable 1 the keys are 1 and -1 for positive and negative.
+        For multiplication and addition the keys are 'mult' and 'add'. And for true and false, the keys are 'true'
+        and 'false'.
+    :param show_id: Show internal node ids, useful for debugging
+    :param merge_leafs: Variable nodes are shown multiple times to improve the visualisation. Set this argument
+        to True to disable this.
+    """
+    global node_count
+    node_count = 0
     if node is None:
         raise ValueError("No root node given")
     s = [
         "digraph sdd {"
     ]
     visited = set()
-    s += _sddnode_to_dot_int(node, visited, litnamemap, show_id)
+    nodeid, root_s = _sddnode_to_dot_int(node, visited, litnamemap, show_id, merge_leafs)
+    s += root_s
     s += [
         "}"
     ]
@@ -35,9 +50,9 @@ def _format_sddnode_label(node, name=None, litnamemap=None):
     if name is not None:
         pass
     elif node.is_true():
-        name = "⟙"
+        name = litnamemap.get("true", "⟙")
     elif node.is_false():
-        name = "⟘"
+        name = litnamemap.get("false", "⟘")
     else:
         name = node.literal
     if litnamemap is not None:
@@ -54,34 +69,46 @@ def _format_sddnode_xlabel(node):
     return f"Id:{node.id}\\nVp:{vtree_pos}"
 
 
-def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False):
-    # type: (SddNode, Set[SddNode], Optional[LitNameMap], bool) -> List[str]
+def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False, merge_leafs=False):
+    # type: (SddNode, Set[SddNode], Optional[LitNameMap], bool, bool) -> Tuple[str, List[str]]
     if node in visited:
-        return []
-    visited.add(node)
+        return str(node.id), []
     if node.is_false() or node.is_true() or node.is_literal():
+        # Leaf node
+        if merge_leafs:
+            visited.add(node)
         label = _format_sddnode_label(node, None, litnamemap)
         extra_options = ""
         if show_id:
             extra_options += (",xlabel=\"" + _format_sddnode_xlabel(node) + "\"")
-        return [f"{node.id} [shape=rectangle,label=\"{label}\"{extra_options}];"]
+        if merge_leafs:
+            nodeid = str(node.id)
+        else:
+            global node_count
+            nodeid = f"n{node_count}_{node.id}"
+            node_count += 1
+        return nodeid, [f"{nodeid} [shape=rectangle,label=\"{label}\"{extra_options}];"]
     elif node.is_decision():
-        label = _format_sddnode_label(node, '+', litnamemap)
+        # Decision node
+        visited.add(node)
         extra_options = ""
         if show_id:
             extra_options += (",xlabel=\"" + _format_sddnode_xlabel(node) + "\"")
-        s = [f"{node.id} [shape=circle,label=\"{label}\"{extra_options}];"]
+        nodeid = str(node.id)
+        s = [f"{nodeid} [shape=circle,label=\"{litnamemap.get('add', '+')}\"{extra_options}];"]
         for idx, (prime, sub) in enumerate(node.elements()):
+            prime_id, prime_s = _sddnode_to_dot_int(prime, visited, litnamemap, show_id, merge_leafs)
+            sub_id, sub_s = _sddnode_to_dot_int(sub, visited, litnamemap, show_id, merge_leafs)
             ps_id = "ps_{}_{}".format(node.id, idx)
             s += [
-                "{} [shape=circle, label=\"×\"];".format(ps_id),
+                f"{ps_id} [shape=circle, label=\"{litnamemap.get('mult', '×')}\"];",
                 "{} -> {} [arrowhead=none];".format(node.id, ps_id),
-                "{} -> {};".format(ps_id, prime.id),
-                "{} -> {};".format(ps_id, sub.id),
+                "{} -> {};".format(ps_id, prime_id),
+                "{} -> {};".format(ps_id, sub_id),
             ]
-            s += _sddnode_to_dot_int(prime, visited, litnamemap, show_id)
-            s += _sddnode_to_dot_int(sub, visited, litnamemap, show_id)
-        return s
+            s += prime_s
+            s += sub_s
+        return nodeid, s
 
 
 def vtree_to_dot(vtree, litnamemap=None, show_id=False):
