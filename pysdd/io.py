@@ -31,6 +31,8 @@ def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
     """
     global node_count
     node_count = 0
+    if litnamemap is None:
+        litnamemap = {}
     if node is None:
         raise ValueError("No root node given")
     s = [

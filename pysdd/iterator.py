@@ -17,7 +17,7 @@ if MYPY:
 
 
 class SddIterator:
-    def __init__(self, sdd, smooth=True):
+    def __init__(self, sdd, smooth=True, smooth_to_root=False):
         """Simple iterator to iterate over the SDD graph.
 
         Supports smoothing: An arithmetic circuit AC(X) is smooth iff
@@ -39,6 +39,7 @@ class SddIterator:
         # Map Sdd nodes to missing variables
         self._missing_vars = dict()  # type: Dict[SddNode, Set[int]]
         self.smooth = smooth  # type: bool
+        self.smooth_to_root = smooth_to_root  # type: bool
 
         if self.smooth:
             self._cache_expected_vars()
@@ -65,6 +66,7 @@ class SddIterator:
                     queue.append(node.left())
 
     def depth_first(self, node, func):
+        # type: (SddIterator, SddNode, Callable) -> Union[int, float]
         """Depth first iterator
 
         :param node: Start node
@@ -77,9 +79,21 @@ class SddIterator:
         if self.smooth and self._expected_vars is None:
             self._cache_expected_vars()
         if self.smooth and (node.is_true() or node.is_literal()):
-            return func(node, None, self._expected_vars[self.vtree.position()], set())
+            wmc = func(node, None, self._expected_vars[self.vtree.position()], set())
         else:    
-            return self.depth_first_rec(node, func)
+            wmc = self.depth_first_rec(node, func)
+        if self.smooth_to_root:
+            root = self.vtree.root()
+            if root != node.vtree():
+                wmc_prime = wmc
+                wmc_sub = func(self.sdd.true(), None, None, None)
+                used_prime_vars = self._expected_vars[node.vtree().position()]
+                used_sub_vars = set()
+                rvalues = [(wmc_prime, wmc_sub, used_prime_vars, used_sub_vars)]
+                expected_prime_vars = used_sub_vars
+                expected_sub_vars = self._expected_vars[root.position()] - used_sub_vars
+                wmc = func(None, rvalues, expected_prime_vars, expected_sub_vars)
+        return wmc
 
     def depth_first_rec(self, node, func):
         # type: (SddIterator, SddNode, Callable) -> Union[int, float]
@@ -169,7 +183,7 @@ class SddIterator:
                 raise Exception("Unknown leaf type for node {}".format(node))
         else:
             # Decision node
-            if not node.is_decision():
+            if node is not None and not node.is_decision():
                 raise Exception("Expected a decision node for node {}".format(node))
             rvalue = 0
             for mc_prime, mc_sub, prime_vars, sub_vars in rvalues:

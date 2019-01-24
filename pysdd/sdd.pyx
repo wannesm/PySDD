@@ -1243,6 +1243,11 @@ cdef class Vtree:
         """
         return Vtree.wrap(sddapi_c.sdd_vtree_parent(self._vtree), is_ref=True)
 
+    def root(self):
+        parent = self.parent()
+        if parent is None:
+            return self
+        return parent.foot()
 
     ## Edit Operations (Sec 5.3.5)
 
