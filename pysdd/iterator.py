@@ -30,6 +30,7 @@ class SddIterator:
 
         :param sdd: WmcManager
         :param smooth: Perform smoothing while iterating over the graph
+        :param smooth_to_root: Perform smoothing wrt root instead of a given node
         """
         self.sdd = sdd  # type: SddManager
         self.vtree = sdd.vtree()  # type: Vtree
@@ -73,6 +74,16 @@ class SddIterator:
         :param func: Function to be called for each node:
         ``rvalue = func(node, [(prime_rvalue, sub_rvalue, prime_vars, sub_vars)],
                         expected_prime_vars, expected_sub_vars)``
+          The given arguments are:
+          * node: Current node, if None, it should be considered a decision node
+          * prime_rvalue: Return value from prime node
+          * sub_rvalue: Return value from sub node
+          * prime_vars: Variables present in prime
+          * sub_vars: Variables present in sub
+          * expected_prime_vars: Variables that are expected in prime
+          * expected_sub_vars: Variables that are expected in sub
+          The return value can be any type, there are no assumptions.
+          For WMC this is typically float, and for MC int.
         :return:
         """
         self._wmc_cache = dict()
