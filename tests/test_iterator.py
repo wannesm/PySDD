@@ -100,6 +100,7 @@ def test_it3():
     mc = it.depth_first(f, SddIterator.func_modelcounting)
     assert mc == 1, "MC (non-smooth) {} != 1".format(mc)
 
+
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
