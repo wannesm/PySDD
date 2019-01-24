@@ -44,6 +44,47 @@ def test_it1():
     assert mc == 3, "MC (non-smooth) {} != 3".format(mc)
 
 
+def test_it2():
+    """ Test case where formula = True """
+    vtree = Vtree(var_count=4, var_order=[1, 2, 3, 4], vtree_type="right")
+    sdd = SddManager.from_vtree(vtree)
+    a, b, c, d = sdd.vars[:5]
+    f = (a | -a)  # = SddNode(True)
+
+    wmc = f.wmc(log_mode=False)
+    mc = wmc.propagate()
+    # print(f"mc = {mc}")
+    assert mc == 16.0
+
+    it = SddIterator(sdd, smooth=True)
+    mc = it.depth_first(f, SddIterator.func_modelcounting)
+    assert mc == 16, "MC {} != 16".format(mc)
+
+    it = SddIterator(sdd, smooth=False)
+    mc = it.depth_first(f, SddIterator.func_modelcounting)
+    assert mc == 1, "MC (non-smooth) {} != 1".format(mc)
+
+
+def test_it3():
+    """ Test case where formula = literal """
+    vtree = Vtree(var_count=4, var_order=[1, 2, 3, 4], vtree_type="right")
+    sdd = SddManager.from_vtree(vtree)
+    a, b, c, d = sdd.vars[:5]
+    f = a  # = SddNode(True)
+
+    wmc = f.wmc(log_mode=False)
+    mc = wmc.propagate()
+    # print(f"mc = {mc}")
+    assert mc == 8.0
+
+    it = SddIterator(sdd, smooth=True)
+    mc = it.depth_first(f, SddIterator.func_modelcounting)
+    assert mc == 8, "MC {} != 8".format(mc)
+
+    it = SddIterator(sdd, smooth=False)
+    mc = it.depth_first(f, SddIterator.func_modelcounting)
+    assert mc == 1, "MC (non-smooth) {} != 1".format(mc)
+
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
@@ -51,3 +92,5 @@ if __name__ == "__main__":
     directory = Path(os.environ.get('TESTDIR', Path(__file__).parent))
     print(f"Saving files to {directory}")
     test_it1()
+    test_it2()
+    test_it3()

@@ -76,18 +76,23 @@ class SddIterator:
         self._wmc_cache = dict()
         if self.smooth and self._expected_vars is None:
             self._cache_expected_vars()
-        return self.depth_first_rec(node, func)
+        if self.smooth and (node.is_true() or node.is_literal()):
+            return func(node, None, self._expected_vars[self.vtree.position()], set())
+        else:    
+            return self.depth_first_rec(node, func)
 
     def depth_first_rec(self, node, func):
         # type: (SddIterator, SddNode, Callable) -> Union[int, float]
         if node in self._wmc_cache:
             return self._wmc_cache[node]
         if node.is_false():
-            self._wmc_cache[node] = 0
-            return 0
+            result = func(node, None, None, None)
+            self._wmc_cache[node] = result
+            return result
         if node.is_true():
-            self._wmc_cache[node] = 1
-            return 1
+            result = func(node, None, None, None)
+            self._wmc_cache[node] = result
+            return result
         vtree = node.vtree()
         if node.is_decision():
             rvalues = []
@@ -134,11 +139,40 @@ class SddIterator:
         if rvalues is None:
             # Leaf
             if node.is_true():
-                return 1
+                if expected_prime_vars is not None:
+                    nb_missing_vars = len(expected_prime_vars)
+                    prime_smooth_factor = 2**nb_missing_vars
+                else:
+                    prime_smooth_factor = 1
+
+                if expected_sub_vars is not None:
+                    nb_missing_vars = len(expected_sub_vars)
+                    sub_smooth_factor = 2**nb_missing_vars
+                else:
+                    sub_smooth_factor = 1
+
+                return prime_smooth_factor * sub_smooth_factor
             elif node.is_false():
                 return 0
             elif node.is_literal():
-                return 1
+                if expected_prime_vars is not None:
+                    nb_missing_vars = len(expected_prime_vars)
+                    if node.literal in expected_prime_vars:
+                        nb_missing_vars -= 1
+
+                    prime_smooth_factor = 2**nb_missing_vars
+                else:
+                    prime_smooth_factor = 1
+
+                if expected_sub_vars is not None:
+                    nb_missing_vars = len(expected_sub_vars)
+                    if node.literal in expected_sub_vars:
+                        nb_missing_vars -= 1
+                    sub_smooth_factor = 2**nb_missing_vars
+                else:
+                    sub_smooth_factor = 1
+
+                return prime_smooth_factor * sub_smooth_factor
             else:
                 raise Exception("Unknown leaf type for node {}".format(node))
         else:
