@@ -159,6 +159,15 @@ def nnf_file_wmc(nnf_filename, weights=None):
     This is an auxiliary function to perform WMC given an NNF file with only
     Python code. This function will thus also work, even if the C SDD library
     is not available.
+
+    A typical NNF file looks like:
+
+    nnf 12 12 3
+    L 1
+    ...
+    A 2 3 9
+    O 2 2 2 10
+
     """
     wmc = []  # type: List[Optional[float]]
     ln = 0
@@ -200,6 +209,13 @@ def sdd_file_wmc(sdd_filename, weights=None):
     This is an auxiliary function to perform WMC given an SDD file with only
     Python code. This function will thus also work, even if the C SDD library
     is not available.
+
+    A typical SDD file looks like:
+
+    sdd 11
+    L 1 0 1
+    ...
+    D 0 1 2 1 2 7 8
     """
     wmc = []  # type: List[Optional[float]]
     ln = 0
