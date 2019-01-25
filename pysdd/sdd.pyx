@@ -1247,7 +1247,7 @@ cdef class Vtree:
         parent = self.parent()
         if parent is None:
             return self
-        return parent.foot()
+        return parent.root()
 
     ## Edit Operations (Sec 5.3.5)
 
