@@ -93,7 +93,7 @@ class SddIterator:
             wmc = func(node, None, self._expected_vars[self.vtree.position()], set())
         else:    
             wmc = self.depth_first_rec(node, func)
-        if self.smooth_to_root:
+        if self.smooth_to_root and not (node.is_true() or node.is_literal() or node.is_false()):
             root = self.vtree.root()
             if root != node.vtree():
                 wmc_prime = wmc
