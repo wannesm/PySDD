@@ -101,8 +101,8 @@ class SddIterator:
                 used_prime_vars = self._expected_vars[node.vtree().position()]
                 used_sub_vars = set()
                 rvalues = [(wmc_prime, wmc_sub, used_prime_vars, used_sub_vars)]
-                expected_prime_vars = used_sub_vars
-                expected_sub_vars = self._expected_vars[root.position()] - used_sub_vars
+                expected_prime_vars = used_prime_vars
+                expected_sub_vars = self._expected_vars[root.position()] - used_prime_vars
                 wmc = func(None, rvalues, expected_prime_vars, expected_sub_vars)
         return wmc
 
