@@ -23,6 +23,11 @@ try:
 except ImportError:
     cythonize = None
 
+try:
+    import cysignals
+except ImportError:
+    cysignals = None
+
 # build_type = "debug"
 build_type = "optimized"
 

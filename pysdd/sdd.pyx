@@ -26,6 +26,13 @@ import collections
 
 
 wrapper_version = "1.0"
+IF HAVE_CYSIGNALS:
+    from cysignals.signals cimport sig_on, sig_off
+ELSE:
+    # for non-POSIX systems
+    noop = lambda: None
+    sig_on = noop
+    sig_off = noop
 
 
 cdef class SddNode:
@@ -855,13 +862,20 @@ cdef class SddManager:
     ## Manual SDD Minimization (Sec 5.5)
 
     def minimize(self):
+        # type: (SddManager) -> str
         """Performs global garbage collection and then tries to minimize the size of a manager’s SDD.
 
         This function calls sdd vtree search on the manager’s vtree.
+
+        To allow for a timeout, this function can be interrupted by the keyboard interrupt (SIGINT).
         """
-        # TODO: Add interruption to minimization (e.g. for timeouts)
-        # TODO: Capture stdout
-        sddapi_c.sdd_manager_minimize(self._sddmanager)
+        f = io.StringIO()
+        with redirect_stdout(f):
+            sig_on()
+            sddapi_c.sdd_manager_minimize(self._sddmanager)
+            sig_off()
+        s = f.getvalue()
+        return s
 
     def vtree_minimize(self, Vtree vtree):
         """Performs local garbage collection on vtree and then tries to minimize the size of the SDD of
