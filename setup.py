@@ -68,6 +68,10 @@ os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
 
+compile_time_env = dict(HAVE_CYSIGNALS=False)
+if cysignals is not None:
+    compile_time_env['HAVE_CYSIGNALS'] = True
+
 if build_type == "debug":
     gdb_debug = True
     extra_compile_args = ["-march=native", "-O0", "-g"]
@@ -84,13 +88,14 @@ if cythonize is not None:
             # include_dirs=[numpy.get_include()]
         )],
         compiler_directives={'embedsignature': True},
-        gdb_debug=gdb_debug)
+        gdb_debug=gdb_debug,
+        compile_time_env=compile_time_env)
 else:
     ext_modules = []
     print('Cython not yet available, skipping compilation')
 
 # install_requires = ['numpy', 'cython']
-install_requires = ['cython']
+install_requires = ['cython', 'cysignals']
 tests_require = ['pytest']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
@@ -101,7 +106,7 @@ setup(
     version=wrapper_version,
     description='Sentential Decision Diagrams',
     long_description=long_description,
-    author='Wannes Meert',
+    author='Wannes Meert, Arthur Choi',
     author_email='wannes.meert@cs.kuleuven.be',
     url='https://github.com/wannesm/PySDD',
     project_urls={

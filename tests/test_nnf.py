@@ -1,4 +1,4 @@
-from pysdd.io import nnf_file_wmc, sdd_file_wmc
+from pysdd.util import nnf_file_wmc, sdd_file_wmc
 import sys
 import os
 import logging

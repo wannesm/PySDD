@@ -1,6 +1,6 @@
 from pysdd.sdd import SddManager, Vtree
 from pysdd.iterator import SddIterator
-from pysdd.io import sdd_to_dot, vtree_to_dot
+from pysdd.util import sdd_to_dot, vtree_to_dot
 import sys
 import os
 import logging
@@ -152,6 +152,6 @@ if __name__ == "__main__":
     directory = Path(os.environ.get('TESTDIR', Path(__file__).parent))
     print(f"Saving files to {directory}")
     test_it1()
-    test_it2()
-    test_it3()
-    test_it4()
+    # test_it2()
+    # test_it3()
+    # test_it4()

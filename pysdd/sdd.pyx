@@ -46,6 +46,8 @@ cdef class SddNode:
 
     @staticmethod
     cdef wrap(sddapi_c.SddNode* node, SddManager manager):
+        if node == NULL:
+            return None
         wrapper = SddNode(manager)
         wrapper._sddnode = node
         if sddapi_c.sdd_node_is_literal(node):
@@ -188,13 +190,11 @@ cdef class SddNode:
         nodes = sddapi_c.sdd_node_elements(self._sddnode)
         # do not free memory of nodes
         m = self.node_size()
-        primes = []
+        primesubs = []
         for i in range(0, 2 * m, 2):
-            primes.append(SddNode.wrap(nodes[i], self._manager))
-        subs = []
-        for i in range(1, 2 * m, 2):
-            subs.append(SddNode.wrap(nodes[i], self._manager))
-        return zip(primes, subs)
+            primesubs.append((SddNode.wrap(nodes[i], self._manager),
+                              SddNode.wrap(nodes[i + 1], self._manager)))
+        return primesubs
 
     def vtree(self):
         """Returns the vtree of an SDD node."""

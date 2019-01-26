@@ -13,3 +13,5 @@ cython_debug
 _build
 *.egg-info
 dist
+pysdd/lib/sdd-2.0/*
+wm_*

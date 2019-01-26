@@ -92,24 +92,28 @@ def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False, merge_lea
         return nodeid, [f"{nodeid} [shape=rectangle,label=\"{label}\"{extra_options}];"]
     elif node.is_decision():
         # Decision node
+        shape_format = ",shape=circle,style=filled,fillcolor=gray95"
         visited.add(node)
         extra_options = ""
         if show_id:
             extra_options += (",xlabel=\"" + _format_sddnode_xlabel(node) + "\"")
         nodeid = str(node.id)
-        s = [f"{nodeid} [shape=circle,label=\"{litnamemap.get('add', '+')}\"{extra_options}];"]
+        s = [f"{nodeid} [label=\"{litnamemap.get('add', '+')}\"{shape_format}{extra_options}];"]
+        # same_rank_nodes = []
         for idx, (prime, sub) in enumerate(node.elements()):
             prime_id, prime_s = _sddnode_to_dot_int(prime, visited, litnamemap, show_id, merge_leafs)
             sub_id, sub_s = _sddnode_to_dot_int(sub, visited, litnamemap, show_id, merge_leafs)
             ps_id = "ps_{}_{}".format(node.id, idx)
             s += [
-                f"{ps_id} [shape=circle, label=\"{litnamemap.get('mult', '×')}\"];",
+                f"{ps_id} [label=\"{litnamemap.get('mult', '×')}\"{shape_format}{extra_options}];",
                 "{} -> {} [arrowhead=none];".format(node.id, ps_id),
-                "{} -> {};".format(ps_id, prime_id),
-                "{} -> {};".format(ps_id, sub_id),
+                "{} -> {} [arrowsize=.50,style=dashed];".format(ps_id, prime_id),
+                "{} -> {} [arrowsize=.50];".format(ps_id, sub_id),
             ]
             s += prime_s
             s += sub_s
+            # same_rank_nodes += [prime_id, sub_id]
+        # s += ["{rank=same;" + ";".join(same_rank_nodes) + "};"]
         return nodeid, s
 
 
