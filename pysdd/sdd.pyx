@@ -759,11 +759,9 @@ cdef class SddManager:
         sddapi_c.sdd_save(filename, node._sddnode)
 
     def dot(self, SddNode node=None):
+        """SDD for the given node, formatted for use with Graphviz dot."""
         if node is None:
-            if self.root is None:
-                raise ValueError("No root node is known, pass the root node as argument")
-            else:
-                node = self.root
+            return self.dot_shared()
         fname = None
         cdef bytes fname_b
         cdef char* fname_c
@@ -773,6 +771,21 @@ cdef class SddManager:
             fname_b = fname.encode()
             fname_c = fname_b
             self.save_as_dot(fname_c, node)
+            with open(fname, "r") as ifile:
+                result = ifile.read()
+        return result
+
+    def dot_shared(self):
+        """Shared SDD, formatted for use with Graphviz dot."""
+        fname = None
+        cdef bytes fname_b
+        cdef char* fname_c
+        result = None
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            fname = os.path.join(tmpdirname, "sdd.dot")
+            fname_b = fname.encode()
+            fname_c = fname_b
+            self.shared_save_as_dot(fname_c)
             with open(fname, "r") as ifile:
                 result = ifile.read()
         return result
