@@ -7,6 +7,9 @@ pysdd.io
 :copyright: Copyright 2017-2019 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
+import math
+
+
 MYPY = False
 if MYPY:
     from .sdd import SddNode, Vtree
@@ -257,6 +260,78 @@ def sdd_file_wmc(sdd_filename, weights=None):
                 w = 0.0
                 for idx in range(nb_elmts):
                     w += wmc[elmts[2 * idx]] * wmc[elmts[2 * idx + 1]]
+                wmc[nodeid] = w
+            ln += 1
+    return wmc[0]
+
+
+def psdd_file_wmc(psdd_filename, observations=None):
+    """Perform Weighted Model Counting on the given PSDD file.
+
+    This is an auxiliary function to perform WMC given a PSDD file with only
+    Python code. This function will thus also work, even if the C SDD library
+    is not available.
+
+    A typical PSDD file looks like:
+
+    psdd 49
+    T 0 20 11 -0.6931471805599453
+
+    :return: log(WMC)
+    """
+    wmc = []  # type: List[Optional[float]]
+    ln = 0
+    detected_psdd = False
+    with open(psdd_filename, 'r') as sdd_file:
+        for line in sdd_file.readlines():
+            cols = line.strip().split(' ')
+            if cols[0] == 'c':
+                continue
+            if cols[0] == 'psdd':s
+                detected_psdd = True
+                wmc = [None] * int(cols[1])
+                continue
+            if not detected_psdd:
+                raise Exception(f"An SDD file should start with 'sdd'")
+            if cols[0] == 'L':
+                nodeid = int(cols[1])
+                lit = int(cols[2])
+                if observations is not None and lit in observations:
+                    if var > 0:
+                        wmc[nodeid] = 0.0 if observations[lit] else -math.inf
+                    else:
+                        wmc[nodeid] = 0.0 if not observations[lit] else -math.inf
+                else:
+                    wmc[nodeid] = 0.0
+            if cols[0] == 'F':
+                nodeid = int(cols[1])
+                wmc[nodeid] = -math.inf
+            if cols[0] == 'T':
+                nodeid = int(cols[1])
+                var = int(cols[3])
+                if observations is not None and abs(var) in observations:
+                    if var > 0:
+                        logprob = 0.0 if observations[lit] else -math.inf
+                    else:
+                        logprob = 0.0 if not observations[lit] else -math.inf
+                else:
+                    logprob = float(cols[4])
+                wmc[nodeid] = logprob
+            if cols[0] == 'D':
+                nodeid = int(cols[1])
+                nb_elmts = int(cols[3])
+                elmts = cols[4:]
+                w = -math.inf
+                for idx in range(nb_elmts):
+                    add = wmc[int(elmts[3 * idx])] + wmc[int(elmts[3 * idx + 1])] + float(elmts[3 * idx + 1])
+                    if math.isinf(w) and w < 0:
+                        w = add
+                    elif math.isinf(add) and add < 0:
+                        pass
+                    elif w < add:
+                        w = add + math.log1p(math.exp(w - add))
+                    else:
+                        w = w + math.log1p(math.exp(add - w))
                 wmc[nodeid] = w
             ln += 1
     return wmc[0]

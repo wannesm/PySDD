@@ -1,6 +1,7 @@
-from pysdd.util import nnf_file_wmc, sdd_file_wmc
+from pysdd.util import nnf_file_wmc, sdd_file_wmc, psdd_file_wmc
 import sys
 import os
+import math
 import logging
 from pathlib import Path
 
@@ -49,6 +50,12 @@ def test_sdd2():
     assert wmc == 0.75, f"{wmc} != 0.75"
 
 
+def test_psdd1():
+    wmc = psdd_file_wmc(here / "rsrc" / "test.psdd", None)
+    wmc = math.exp(wmc)
+    print("WMC", wmc)
+
+
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
@@ -56,4 +63,5 @@ if __name__ == "__main__":
     directory = Path(os.environ.get('TESTDIR', Path(__file__).parent))
     print(f"Saving files to {directory}")
     # test_nnf1()
-    test_sdd2()
+    # test_sdd2()
+    test_psdd1()
