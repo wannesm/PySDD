@@ -25,7 +25,6 @@ import cython
 import collections
 
 
-wrapper_version = "1.0"
 IF HAVE_CYSIGNALS:
     from cysignals.signals cimport sig_on, sig_off
 ELSE:
@@ -1446,7 +1445,9 @@ cdef class WmcManager:
 
         Expects an array of size <nb_literals>*2 which represents literals [-3, -2, -1, 1, 2, 3]
         """
-        cdef long nb_lits = len(weights) / 2
+        if len(weights) > 2 * self.node._manager.var_count():
+            raise Exception("Array of weights is longer than the number of variables in the manager.")
+        cdef long nb_lits = len(weights) / 2  # The array can be shorter than the number of variables
         cdef sddapi_c.SddLiteral lit
         cdef long i
         for i in range(nb_lits):

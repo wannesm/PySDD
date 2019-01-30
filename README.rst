@@ -4,8 +4,6 @@ PySDD
 
 Python wrapper package to interactively use Sententical Decision Diagrams (SDD).
 
-*This is a beta version, not yet all functions in sddapi.h are available.*
-
 Full documentation available on http://pysdd.readthedocs.io.
 
 ------------
@@ -16,6 +14,11 @@ Dependencies
 * Cython
 * SDD package >=2.0: http://reasoning.cs.ucla.edu/sdd/
 
+Optional:
+
+* cysignals
+* numpy
+
 
 ------------
 Installation
@@ -23,29 +26,7 @@ Installation
 
 .. code-block:: shell
 
-   $ pip install git+https://github.com/wannesm/PySDD.git#egg=PySDD
-
-
------------
-Compilation
------------
-
-Notice: This wrapper requires some small changes to the SDD package.
-The changed files are already included in this repository. Do not overwrite
-them with the original files.
-
-* Download the SDD package from http://reasoning.cs.ucla.edu/sdd/.
-* Install the SDD package in the PySDD package in directories
-  ``pysdd/lib/sdd-2.0`` and ``pysdd/lib/sddlib-2.0`` without overwriting
-  the already available files.
-* Run ``python3 setup.py build_ext --inplace`` or ``make build`` to compile the
-  library in the current directory. If you want to install the library such
-  that the library is available for your local installation or in your virtual
-  environment, use ``python3 setup.py install``.
-
-For some Linux platforms, it might be necessary to recompile the libsdd-2.0 code with
-the gcc option ``-fPIC`` and replace the ``pysdd/lib/sdd-2.0/lib/Linux/libsdd.a``
-library with your newly compiled version.
+   $ pip install PySDD
 
 
 --------------
@@ -138,6 +119,37 @@ Memory management
 Python's memory management is not used for the internal datastructures.
 Use the SDD library's garbage collection commands (e.g. ref, deref) to
 perform memory management.
+
+
+-----------------------
+Compilation from source
+-----------------------
+
+.. code-block:: shell
+
+   $ pip install git+https://github.com/wannesm/PySDD.git#egg=PySDD
+
+The repository should contain all the required files and libraries (unless
+you use Windows). If you want to compile from source, note that some c-source
+files from the SDD package have been updated to work with this wrapper and are
+included in this repository. Do not overwrite these new files with the original
+files.
+
+* Download the SDD package from http://reasoning.cs.ucla.edu/sdd/.
+* Install the SDD package in the PySDD package in directories
+  ``pysdd/lib/sdd-2.0`` and ``pysdd/lib/sddlib-2.0`` without overwriting
+  the already available files.
+* Run ``python3 setup.py build_ext --inplace`` or ``make build`` to compile the
+  library in the current directory. If you want to install the library such
+  that the library is available for your local installation or in your virtual
+  environment, use ``python3 setup.py install``.
+
+For some Linux platforms, it might be necessary to recompile the libsdd-2.0 code with
+the gcc option ``-fPIC`` and replace the ``pysdd/lib/sdd-2.0/lib/Linux/libsdd.a``
+library with your newly compiled version.
+
+The Windows platform is not supported. There is some initial support but we cannot
+offer guarantees or detailed instructions (but are happy to accept pull requests).
 
 
 ----------

@@ -104,7 +104,7 @@ else:
     print('Cython not yet available, skipping compilation')
 
 # install_requires = ['numpy', 'cython']
-install_requires = ['cython', 'cysignals']
+install_requires = ['cython']
 tests_require = ['pytest']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
@@ -125,6 +125,9 @@ setup(
     packages=["pysdd"],
     install_requires=install_requires,
     tests_require=tests_require,
+    extras_require={
+        'all': ['cysignals', 'numpy']
+    },
     include_package_data=True,
     package_data={
         '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*lib'],
