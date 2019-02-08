@@ -7,9 +7,12 @@ pysdd.io
 :copyright: Copyright 2017-2019 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
+from .sdd import SddNode, SddManager, Vtree
+
+
 MYPY = False
 if MYPY:
-    from .sdd import SddNode, Vtree
+    # from .sdd import Vtree
     from typing import List, Optional, Dict, Set, Union, Tuple
     LitNameMap = Dict[Union[int, str], str]
 
@@ -29,6 +32,15 @@ def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
     :param merge_leafs: Variable nodes are shown multiple times to improve the visualisation. Set this argument
         to True to disable this.
     """
+    if isinstance(node, SddNode):
+        nodes = [node]
+    elif isinstance(node, SddManager):
+        mgr = node
+        # nodes = mgr.roots()
+        nodes = []
+        # TODO: get all root nodes?
+    else:
+        raise AttributeError(f"Unknown type {type(node)}")
     global node_count
     node_count = 0
     if litnamemap is None:
@@ -36,11 +48,13 @@ def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
     if node is None:
         raise ValueError("No root node given")
     s = [
-        "digraph sdd {"
+        "digraph sdd {",
+        "overlap=false;"
     ]
     visited = set()
-    nodeid, root_s = _sddnode_to_dot_int(node, visited, litnamemap, show_id, merge_leafs)
-    s += root_s
+    for node in nodes:
+        nodeid, root_s = _sddnode_to_dot_int(node, visited, litnamemap, show_id, merge_leafs)
+        s += root_s
     s += [
         "}"
     ]

@@ -25,13 +25,13 @@ import cython
 import collections
 
 
-IF HAVE_CYSIGNALS:
-    from cysignals.signals cimport sig_on, sig_off
-ELSE:
-    # for non-POSIX systems
-    noop = lambda: None
-    sig_on = noop
-    sig_off = noop
+# IF HAVE_CYSIGNALS:
+#     from cysignals.signals cimport sig_on, sig_off
+# ELSE:
+#     # for non-POSIX systems
+#     noop = lambda: None
+#     sig_on = noop
+#     sig_off = noop
 
 
 cdef class SddNode:
@@ -198,6 +198,14 @@ cdef class SddNode:
     def vtree(self):
         """Returns the vtree of an SDD node."""
         return Vtree.wrap(sddapi_c.sdd_vtree_of(self._sddnode), is_ref=True)
+
+    def vtree2(self):
+        """Returns the vtree of an SDD node."""
+        return Vtree.wrap(self._sddnode.vtree, is_ref=True)
+
+    def vtree_next(self):
+        cdef sddapi_c.SddNode* node = self._sddnode.vtree_next
+        return SddNode.wrap(node, self._manager)
 
     def copy(self, SddManager manager=None):
         """Returns a copy of an SDD, with respect to a new manager dest manager.
@@ -883,9 +891,9 @@ cdef class SddManager:
         """
         f = io.StringIO()
         with redirect_stdout(f):
-            sig_on()
+            # sig_on()
             sddapi_c.sdd_manager_minimize(self._sddmanager)
-            sig_off()
+            # sig_off()
         s = f.getvalue()
         return s
 
@@ -978,7 +986,7 @@ cdef class SddManager:
     ## Printing
 
     def __str__(self):
-        """Prints various statistics that are collected by an SDD manager."""
+        """Prints various statistics that are collected by the SDD manager."""
         f = io.StringIO()
         with redirect_stderr(f):
             sddapi_c.sdd_manager_print(self._sddmanager)
@@ -1126,6 +1134,21 @@ cdef class Vtree:
 
     def __eq__(Vtree self, Vtree other):
         return self._vtree == other._vtree
+
+    def get_sdd_nodes(self, SddManager manager):
+        """List of SDD nodes normalized for vtree.
+
+        Only two sdd nodes for leaf vtrees: first is positive literal, second is negative literal.
+        """
+        nodes = []
+        cur_node = SddNode.wrap(self._vtree.nodes, manager)  # TODO: can we get manager from node?
+        print(cur_node)
+        if cur_node is None:
+            return nodes
+        while cur_node is not None:
+            nodes.append(cur_node)
+            cur_node = cur_node.vtree_next()
+        return nodes
 
     @staticmethod
     def from_file(filename):

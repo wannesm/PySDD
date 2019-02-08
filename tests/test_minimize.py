@@ -23,14 +23,15 @@ def test_min1():
         with (directory / "vtree1_before.gv").open("w") as out:
             print(sdd.vtree().dot(), file=out)
         with (directory / "sdd1_before.gv").open("w") as out:
-            print(f.dot(), file=out)
+            # print(sdd.dot(), file=out)
+            print(sdd_to_dot(f), file=out)
     result = sdd.minimize()
     print(result)
     if directory:
         with (directory / "vtree2_after.gv").open("w") as out:
             print(sdd.vtree().dot(), file=out)
         with (directory / "sdd1_after.gv").open("w") as out:
-            print(f.dot(), file=out)
+            print(sdd.dot(), file=out)
     f.deref()
 
     wmc = f.wmc(log_mode=False)
@@ -39,10 +40,23 @@ def test_min1():
     assert mc == 7.0
 
 
+def test_min2():
+    mgr = SddManager(var_count=3)
+    a, b, c = mgr.vars
+    fa = b | c
+    fa.ref()
+    fb = b
+    fb.ref()
+    fc = c
+    fc.ref()
+    with (directory / "sdd.gv").open("w") as out:
+        print(mgr.dot_shared(), file=out)
+
+
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
     logger.addHandler(sh)
     directory = Path(os.environ.get('TESTDIR', Path(__file__).parent))
     print(f"Saving files to {directory}")
-    test_min1()
+    test_min2()

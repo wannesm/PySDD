@@ -46,8 +46,15 @@ typedef unsigned short BoolOp; //holds one of two values defined next
  * struct and function definitions
  ****************************************************************************************/
 
-typedef struct vtree_t Vtree;
-typedef struct sdd_node_t SddNode;
+struct sdd_node_t;
+
+typedef struct vtree_t {
+  struct sdd_node_t* nodes; //linked list of nodes normalized for vtree (linked using ->vtree_next)
+} Vtree;
+typedef struct sdd_node_t {
+  Vtree* vtree; //vtree for which node is normalize for
+  struct sdd_node_t* vtree_next; //linking into list of nodes normalized for same vtree
+} SddNode;
 typedef struct sdd_manager_t SddManager;
 typedef struct wmc_manager_t WmcManager;
 
