@@ -21,7 +21,7 @@ node_count = 0
 
 
 def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
-    # type: (SddNode, Optional[LitNameMap], bool, bool) -> str
+    # type: (Union[SddNode, SddManager], Optional[LitNameMap], bool, bool) -> str
     """Generate (alternative) Graphviz DOT string for SDD with given root.
 
     :param node: Root node for graph
@@ -36,9 +36,8 @@ def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
         nodes = [node]
     elif isinstance(node, SddManager):
         mgr = node
-        # nodes = mgr.roots()
-        nodes = []
-        # TODO: get all root nodes?
+        vtree = mgr.vtree()
+        nodes = vtree.get_sdd_rootnodes(mgr)
     else:
         raise AttributeError(f"Unknown type {type(node)}")
     global node_count
@@ -131,21 +130,21 @@ def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False, merge_lea
         return nodeid, s
 
 
-def vtree_to_dot(vtree, litnamemap=None, show_id=False):
-    # type: (Vtree, Optional[LitNameMap], bool) -> str
+def vtree_to_dot(vtree, mgr, litnamemap=None, show_id=False):
+    # type: (Vtree, SddManager, Optional[LitNameMap], bool) -> str
     """Generate (alternative) Graphviz DOT string for given Vtree."""
     s = [
         "digraph vtree {"
     ]
-    s += _vtree_to_dot_int(vtree, litnamemap, show_id)
+    s += _vtree_to_dot_int(vtree, mgr, litnamemap, show_id)
     s += [
         "}"
     ]
     return "\n".join(s)
 
 
-def _vtree_to_dot_int(vtree, litnamemap=None, show_id=False):
-    # type: (Vtree, Optional[LitNameMap], bool) -> List[str]
+def _vtree_to_dot_int(vtree, mgr, litnamemap=None, show_id=False):
+    # type: (Vtree, SddManager, Optional[LitNameMap], bool) -> List[str]
     s = []
     left = vtree.left()
     right = vtree.right()
@@ -155,19 +154,25 @@ def _vtree_to_dot_int(vtree, litnamemap=None, show_id=False):
             name = litnamemap.get(name, name)
         extra_options = ""
         if show_id:
-            extra_options += f",xlabel=\"{vtree.position()}\""
+            extra_options += f",xlabel=\"{vtree.position()} (" +\
+                             ",".join(litnamemap.get(node.literal, node.literal)
+                                      for node in vtree.get_sdd_nodes(mgr)) +\
+                             ")\""
         s += [f"{vtree.position()} [label=\"{name}\",shape=\"box\"{extra_options}];"]
     else:
         extra_options = ""
         if show_id:
-            extra_options += f",xlabel=\"{vtree.position()}\""
+            extra_options += f",xlabel=\"{vtree.position()} (" + \
+                             ",".join(str(litnamemap.get(node.literal, node.literal))
+                                      for node in vtree.get_sdd_nodes(mgr)) + \
+                             ")\""
         s += [f"{vtree.position()} [shape=\"point\"{extra_options}];"]
     if left is not None:
         s += [f"{vtree.position()} -> {left.position()} [arrowhead=none];"]
-        s += _vtree_to_dot_int(left, litnamemap, show_id)
+        s += _vtree_to_dot_int(left, mgr, litnamemap, show_id)
     if right is not None:
         s += [f"{vtree.position()} -> {right.position()} [arrowhead=none];"]
-        s += _vtree_to_dot_int(right, litnamemap, show_id)
+        s += _vtree_to_dot_int(right, mgr, litnamemap, show_id)
     return s
 
 

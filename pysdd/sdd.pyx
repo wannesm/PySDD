@@ -25,13 +25,13 @@ import cython
 import collections
 
 
-# IF HAVE_CYSIGNALS:
-#     from cysignals.signals cimport sig_on, sig_off
-# ELSE:
-#     # for non-POSIX systems
-#     noop = lambda: None
-#     sig_on = noop
-#     sig_off = noop
+IF HAVE_CYSIGNALS:
+    from cysignals.signals cimport sig_on, sig_off
+ELSE:
+    # for non-POSIX systems
+    noop = lambda: None
+    sig_on = noop
+    sig_off = noop
 
 
 cdef class SddNode:
@@ -896,9 +896,9 @@ cdef class SddManager:
         """
         f = io.StringIO()
         with redirect_stdout(f):
-            # sig_on()
+            sig_on()
             sddapi_c.sdd_manager_minimize(self._sddmanager)
-            # sig_off()
+            sig_off()
         s = f.getvalue()
         return s
 
@@ -1153,6 +1153,18 @@ cdef class Vtree:
         while cur_node is not None:
             nodes.append(cur_node)
             cur_node = cur_node.vtree_next()
+        return nodes
+
+    def get_sdd_rootnodes(self, SddManager manager):
+        nodes = self.get_sdd_nodes(manager)
+        if len(nodes) == 0:
+            nodes = []
+            left = self.left()
+            if left is not None:
+                nodes += left.get_sdd_rootnodes(manager)
+            right = self.right()
+            if right is not None:
+                nodes += right.get_sdd_rootnodes(manager)
         return nodes
 
     @staticmethod

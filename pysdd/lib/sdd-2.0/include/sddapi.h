@@ -28,6 +28,7 @@ typedef unsigned int SddRefCount; //refcount
 typedef unsigned long long SddModelCount; //model counts
 typedef double SddWmc; // weighted model count
 typedef long SddLiteral; //literals of clauses
+typedef char SddNodeType; //holds one of two values defined next
 
 //control strings
 #define PRIsS "zu"
@@ -48,13 +49,98 @@ typedef unsigned short BoolOp; //holds one of two values defined next
 
 struct sdd_node_t;
 
+typedef struct {
+  struct vtree_t* previous_left;
+  struct vtree_t* previous_right;
+  SddSize previous_size;
+  SddSize previous_count;
+  unsigned fold:1;
+  unsigned virtually_empty:1;
+} VtreeSearchState;
+
 typedef struct vtree_t {
+  struct vtree_t* parent; //parent
+  struct vtree_t* left; //left child
+  struct vtree_t* right; //right child
+
+  //vtree nodes are maintained as a linked list
+  struct vtree_t* next; //next node in in-order
+  struct vtree_t* prev; //previous node in in-order
+  struct vtree_t* first; //first node in in-order (which is part of this vtree)
+  struct vtree_t* last; //last node in in-order (which is part of this vtree)
+
+  //position of vtree node in the vtree inorder
+  //position may CHANGE, e.g., due to swapping or adding/removing/moving variables,
+  //but is invariant to rotations
+  SddLiteral position; //start from 0
+
+  SddLiteral var_count; //number of variables in vtree
+  SddSize sdd_size; //sum of sizes for all sdd nodes normalized for this vnode
+  SddSize dead_sdd_size; //sum of sizes for all dead sdd nodes normalized for this vnode
+  SddSize node_count; //number of sdd nodes normalized for vtree
+  SddSize dead_node_count; //number of sdd nodes normalized for vtree with ref_count==0
+
+  SddLiteral var; //variable associated with vtree (for leaf vtrees only)
+
   struct sdd_node_t* nodes; //linked list of nodes normalized for vtree (linked using ->vtree_next)
+  //only two sdd nodes for leaf vtrees: first is positive literal, second is negative literal
+
+  //used to associate secondary data with vtree structures by user
+  void* user_data;
+  void* user_search_state;
+
+  //vtree search
+  SddSize auto_last_search_live_size;
+  VtreeSearchState* search_state; //for library version of vtree search
+
+  unsigned some_X_constrained_vars:1;
+  unsigned all_vars_in_sdd:1;
+  unsigned no_var_in_sdd:1;
+  unsigned bit:1;
+  unsigned user_bit:1; //for user convenience
 } Vtree;
+
 typedef struct sdd_node_t {
-  Vtree* vtree; //vtree for which node is normalize for
+  //put small types next to each other to reduce space used by structure
+  //these are also the more used fields (more efficient if put first?)
+  SddNodeType type;
+  char shadow_type;
+  SddNodeSize size; //number of elements for decomposition nodes, 0 for terminal nodes
+  SddNodeSize saved_size; //used for reversing node replacement
+  SddRefCount ref_count; //number of parents elements that have non-zero ref_count
+  SddRefCount parent_count; //number of parents for node in the SDD DAG
+
+  union {
+	struct sdd_element_t* elements; // for decompositions
+	SddLiteral literal;             // for literal terminals
+  } alpha;
+  struct sdd_element_t* saved_elements; //used for reversing node replacement
+
+  struct sdd_node_t* next;  //linking into collision list of hash table
+  struct sdd_node_t** prev; //linking into collision list of hash table
   struct sdd_node_t* vtree_next; //linking into list of nodes normalized for same vtree
+  struct sdd_node_t** vtree_prev; //linking into list of nodes normalized for same vtree
+  struct sdd_node_t* negation; //caches negation of node when it exists
+  Vtree* vtree; //vtree for which node is normalize for
+
+  SddSize id; //unique id for each node
+  SddSize index; //used mainly by graph traversal algorithms to cache results
+
+  struct sdd_node_t* multiply_sub; //used by multiply-decompositions
+  struct sdd_node_t* map; //used for caching node transformations (exists, condition, rename vars,...)
+                          //used also as a next field for distributing sdd nodes over vtree nodes
+  struct sdd_node_shadow_t* shadow; //used by fragments
+
+  unsigned bit:1; //used for navigating sdd graphs (should be kept 0 by default)
+  unsigned cit:1; //used for navigating sdd graphs (should be kept 0 by default)
+  unsigned dit:1; //used for multiplying decompositions
+  unsigned git:1; //used for garbage collection
+  unsigned in_unique_table:1; //used for maintaining counts and sizes
+  unsigned replaced:1; //used for marking rotated or swapped nodes
+  unsigned user_bit:1; //for user convenience
 } SddNode;
+
+
 typedef struct sdd_manager_t SddManager;
 typedef struct wmc_manager_t WmcManager;
 
