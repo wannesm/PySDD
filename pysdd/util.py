@@ -1,7 +1,9 @@
 # -*- coding: UTF-8 -*-
 """
-pysdd.io
-~~~~~~~~
+pysdd.util
+~~~~~~~~~~
+
+Utility function on top of the ``sdd`` package.
 
 :author: Wannes Meert, Arthur Choi
 :copyright: Copyright 2017-2019 KU Leuven and Regents of the University of California.
