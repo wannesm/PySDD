@@ -25,7 +25,8 @@ except ImportError:
 
 try:
     import cysignals
-except ImportError:
+except ImportError as exc:
+    print(f"cysignals not found\n{exc}")
     cysignals = None
 
 # build_type = "debug"
@@ -47,6 +48,8 @@ lib_path = sdd_path / "lib"
 # print(f"Platform: {platform.platform()}")
 if "Darwin" in platform.platform():
     lib_path = lib_path / "Darwin"
+    if build_type == "debug":
+        lib_path = lib_path / "debug"
     libsdd_path = lib_path / "libsdd.a"
 elif "Linux" in platform.platform():
     lib_path = lib_path / "Linux"
@@ -77,23 +80,32 @@ if "Darwin" in platform.platform() or "Linux" in platform.platform():
     if build_type == "debug":
         gdb_debug = True
         extra_compile_args = ["-march=native", "-O0", "-g"]
+        extra_link_args = ["-g"]
     else:
         gdb_debug = False
         extra_compile_args = ["-march=native", "-O2"]
+        extra_link_args = ["-g"]
 elif "Windows" in platform.platform():
     if build_type == "debug":
         gdb_debug = True
         extra_compile_args = []
+        extra_link_args = []
     else:
         gdb_debug = False
         extra_compile_args = []
+        extra_link_args = []
+else:
+    gdb_debug = False
+    extra_compile_args = []
+    extra_link_args = []
 
 if cythonize is not None:
     ext_modules = cythonize([
         Extension(
             "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
             extra_objects=[str(libsdd_path)],
-            extra_compile_args=extra_compile_args
+            extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args
             # include_dirs=[numpy.get_include()]
         )],
         compiler_directives={'embedsignature': True},

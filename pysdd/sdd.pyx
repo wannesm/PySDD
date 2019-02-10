@@ -150,6 +150,9 @@ cdef class SddNode:
     def __invert__(SddNode node):
         return node._manager.negate(node)
 
+    def equiv(SddNode left, SddNode right):
+        return (~left | right) & (left | ~right)
+
     def condition(SddNode node, lit):
         return node._manager.condition(lit, node)
 
@@ -747,7 +750,9 @@ cdef class SddManager:
 
     def shared_save_as_dot(self, char* filename):
         """Saves the SDD of the manager’s vtree (a shared SDD), formatted for use with Graphviz dot."""
+        sig_on()
         sddapi_c.sdd_shared_save_as_dot(filename, self._sddmanager)
+        sig_off()
 
     def read_sdd_file(self, char* filename):
         """Reads an SDD from ﬁle.
