@@ -1147,7 +1147,6 @@ cdef class Vtree:
         """
         nodes = []
         cur_node = SddNode.wrap(self._vtree.nodes, manager)  # TODO: can we get manager from node?
-        print(cur_node)
         if cur_node is None:
             return nodes
         while cur_node is not None:
@@ -1158,7 +1157,6 @@ cdef class Vtree:
     def get_sdd_rootnodes(self, SddManager manager):
         nodes = self.get_sdd_nodes(manager)
         if len(nodes) == 0:
-            nodes = []
             left = self.left()
             if left is not None:
                 nodes += left.get_sdd_rootnodes(manager)
