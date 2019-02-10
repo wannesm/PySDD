@@ -24,13 +24,16 @@ def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
     # type: (Union[SddNode, SddManager], Optional[LitNameMap], bool, bool) -> str
     """Generate (alternative) Graphviz DOT string for SDD with given root.
 
-    :param node: Root node for graph
+    This method is an alternative to SddManager.dot() and SddNode.dot().
+
+    :param node: Root node for graph or SddManager
     :param litnamemap: Dictionary for node labels. For variable 1 the keys are 1 and -1 for positive and negative.
         For multiplication and addition the keys are 'mult' and 'add'. And for true and false, the keys are 'true'
         and 'false'.
     :param show_id: Show internal node ids, useful for debugging
     :param merge_leafs: Variable nodes are shown multiple times to improve the visualisation. Set this argument
         to True to disable this.
+    :return: String in the Graphviz DOT format
     """
     if isinstance(node, SddNode):
         nodes = [node]
@@ -132,7 +135,17 @@ def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False, merge_lea
 
 def vtree_to_dot(vtree, mgr, litnamemap=None, show_id=False):
     # type: (Vtree, SddManager, Optional[LitNameMap], bool) -> str
-    """Generate (alternative) Graphviz DOT string for given Vtree."""
+    """Generate (alternative) Graphviz DOT string for given Vtree.
+
+    This method is an alternative to Vtree.dot().
+
+    :param mgr: SddManager associated with this Vtree
+    :param litnamemap: Dictionary for node labels. For variable 1 the keys are 1 and -1 for positive and negative.
+        For multiplication and addition the keys are 'mult' and 'add'. And for true and false, the keys are 'true'
+        and 'false'.
+    :param show_id: Show internal node ids, useful for debugging
+    :return: String in the Graphviz DOT format
+    """
     s = [
         "digraph vtree {"
     ]
