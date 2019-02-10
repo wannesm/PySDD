@@ -1144,6 +1144,9 @@ cdef class Vtree:
         """List of SDD nodes normalized for vtree.
 
         Only two sdd nodes for leaf vtrees: first is positive literal, second is negative literal.
+
+        :param manager: SddManager associated with this Vtree
+        :return: List of SddNodes
         """
         nodes = []
         cur_node = SddNode.wrap(self._vtree.nodes, manager)  # TODO: can we get manager from node?
@@ -1155,6 +1158,11 @@ cdef class Vtree:
         return nodes
 
     def get_sdd_rootnodes(self, SddManager manager):
+        """List of SDD nodes that are a root for the shared SDD.
+
+        :param manager: SddManager associated with this Vtree
+        :return: List of SddNodes
+        """
         nodes = self.get_sdd_nodes(manager)
         if len(nodes) == 0:
             left = self.left()
