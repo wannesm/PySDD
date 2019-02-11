@@ -573,14 +573,23 @@ cdef class SddManager:
         cdef int count = len(literals)
         return Vtree.wrap(sddapi_c.sdd_manager_lca_of_literals(count, &literals[0], self._sddmanager))
 
-    def is_var_used(self, sddapi_c.SddLiteral var):
+    def is_var_used(self, var):
         """Returns 1 if var is referenced by a decision SDD node (dead or alive); returns 0 otherwise.
 
         :param var: Literal (number)
         """
-        if var == 0:
+        cdef sddapi_c.SddLiteral lit
+        if isinstance(var, int):
+            lit = var
+        elif isinstance(var, SddNode):
+            if not var.is_literal():
+                raise ValueError("Expected a literal node")
+            lit = var.literal
+        else:
+            raise ValueError("Unexpected type for var: {}".format(type(var)))
+        if lit == 0:
             raise ValueError("Literal 0 does not exist")
-        return sddapi_c.sdd_manager_is_var_used(var, self._sddmanager)
+        return sddapi_c.sdd_manager_is_var_used(lit, self._sddmanager)
 
     def var_order(self):
         """Return an array var order (whose length will be equal the number of variables in the manager)
