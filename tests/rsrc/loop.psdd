@@ -1,0 +1,20 @@
+c ids of psdd nodes start at 0
+c psdd nodes appear bottom-up, children before parents
+c
+c file syntax:
+c psdd count-of-sdd-nodes
+c P id-of-positive-sdd-node trueNode
+c N id-of-negative-sdd-node trueNode
+c L id-of-trueNode-sdd-node id-of-vtree trueNode log(litProb)
+c D id-of-decomposition-sdd-node id-of-vtree number-of-elements {id-of-prime id-of-sub log(elementProb)}*
+c
+psdd 9
+L 0 0 -1
+T 1 6 4 -0.6931471805599453
+T 2 4 3 -0.6931471805599453
+T 3 2 2 -0.6931471805599453
+L 4 0 1
+D 5 1 1 0 3 0.0
+D 6 5 1 2 1 0.0
+D 7 1 1 4 3 0.0
+D 8 3 2 7 6 -0.6931471805599453 5 6 -0.6931471805599453

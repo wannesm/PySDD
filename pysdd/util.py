@@ -304,8 +304,16 @@ def psdd_file_wmc(psdd_filename, observations=None):
     Python code. This function will thus also work, even if the C SDD library
     is not available.
 
-    A typical PSDD file looks like:
+    A typical PSDD file looks like (Yitao's version):
 
+    c ids of psdd nodes start at 0
+    c psdd nodes appear bottom-up, children before parents
+    c
+    c file syntax:
+    c psdd count-of-sdd-nodes
+    c L id-of-literal-sdd-node id-of-vtree literal
+    c T id-of-trueNode-sdd-node id-of-vtree variable log(litProb)
+    c D id-of-decomposition-sdd-node id-of-vtree number-of-elements {id-of-prime id-of-sub log(elementProb)}*
     psdd 49
     T 0 20 11 -0.6931471805599453
 
@@ -336,26 +344,31 @@ def psdd_file_wmc(psdd_filename, observations=None):
                 else:
                     wmc[nodeid] = 0.0
             if cols[0] == 'F':
-                nodeid = int(cols[1])
-                wmc[nodeid] = -math.inf
+                raise Exception("There should be no false nodes")
+                # nodeid = int(cols[1])
+                # wmc[nodeid] = -math.inf
             if cols[0] == 'T':
-                nodeid = int(cols[1])
-                var = int(cols[3])
-                if observations is not None and abs(var) in observations:
-                    if var > 0:
-                        logprob = 0.0 if observations[lit] else -math.inf
+                nodeid, vtreeid, lit = [int(val) for val in cols[1:4]]
+                var = abs(lit)
+                theta = float(cols[4])
+                if observations is not None and var in observations:
+                    if lit > 0:
+                        logprob = 0.0 if observations[var] else -math.inf
                     else:
-                        logprob = 0.0 if not observations[lit] else -math.inf
+                        logprob = 0.0 if not observations[var] else -math.inf
                 else:
-                    logprob = float(cols[4])
+                    logprob = theta
                 wmc[nodeid] = logprob
             if cols[0] == 'D':
-                nodeid = int(cols[1])
-                nb_elmts = int(cols[3])
+                nodeid, vtree_id, nb_elmts = [int(val) for val in cols[1:4]]
                 elmts = cols[4:]
                 w = -math.inf
                 for idx in range(nb_elmts):
-                    add = wmc[int(elmts[3 * idx])] + wmc[int(elmts[3 * idx + 1])] + float(elmts[3 * idx + 1])
+                    p, s, t = elmts[3 * idx: 3 * idx + 3]
+                    wmc_p = wmc[int(p)]
+                    wmc_s =  wmc[int(s)]
+                    theta = float(s)
+                    add = wmc_p + wmc_s + theta
                     if math.isinf(w) and w < 0:
                         w = add
                     elif math.isinf(add) and add < 0:
