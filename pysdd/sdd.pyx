@@ -150,6 +150,9 @@ cdef class SddNode:
     def __invert__(SddNode node):
         return node._manager.negate(node)
 
+    def equiv(SddNode left, SddNode right):
+        return (~left | right) & (left | ~right)
+
     def condition(SddNode node, lit):
         return node._manager.condition(lit, node)
 
@@ -198,6 +201,14 @@ cdef class SddNode:
     def vtree(self):
         """Returns the vtree of an SDD node."""
         return Vtree.wrap(sddapi_c.sdd_vtree_of(self._sddnode), is_ref=True)
+
+    def vtree2(self):
+        """Returns the vtree of an SDD node."""
+        return Vtree.wrap(self._sddnode.vtree, is_ref=True)
+
+    def vtree_next(self):
+        cdef sddapi_c.SddNode* node = self._sddnode.vtree_next
+        return SddNode.wrap(node, self._manager)
 
     def copy(self, SddManager manager=None):
         """Returns a copy of an SDD, with respect to a new manager dest manager.
@@ -562,14 +573,23 @@ cdef class SddManager:
         cdef int count = len(literals)
         return Vtree.wrap(sddapi_c.sdd_manager_lca_of_literals(count, &literals[0], self._sddmanager))
 
-    def is_var_used(self, sddapi_c.SddLiteral var):
+    def is_var_used(self, var):
         """Returns 1 if var is referenced by a decision SDD node (dead or alive); returns 0 otherwise.
 
         :param var: Literal (number)
         """
-        if var == 0:
+        cdef sddapi_c.SddLiteral lit
+        if isinstance(var, int):
+            lit = var
+        elif isinstance(var, SddNode):
+            if not var.is_literal():
+                raise ValueError("Expected a literal node")
+            lit = var.literal
+        else:
+            raise ValueError("Unexpected type for var: {}".format(type(var)))
+        if lit == 0:
             raise ValueError("Literal 0 does not exist")
-        return sddapi_c.sdd_manager_is_var_used(var, self._sddmanager)
+        return sddapi_c.sdd_manager_is_var_used(lit, self._sddmanager)
 
     def var_order(self):
         """Return an array var order (whose length will be equal the number of variables in the manager)
@@ -739,7 +759,9 @@ cdef class SddManager:
 
     def shared_save_as_dot(self, char* filename):
         """Saves the SDD of the manager’s vtree (a shared SDD), formatted for use with Graphviz dot."""
+        sig_on()
         sddapi_c.sdd_shared_save_as_dot(filename, self._sddmanager)
+        sig_off()
 
     def read_sdd_file(self, char* filename):
         """Reads an SDD from ﬁle.
@@ -978,7 +1000,7 @@ cdef class SddManager:
     ## Printing
 
     def __str__(self):
-        """Prints various statistics that are collected by an SDD manager."""
+        """Prints various statistics that are collected by the SDD manager."""
         f = io.StringIO()
         with redirect_stderr(f):
             sddapi_c.sdd_manager_print(self._sddmanager)
@@ -1126,6 +1148,39 @@ cdef class Vtree:
 
     def __eq__(Vtree self, Vtree other):
         return self._vtree == other._vtree
+
+    def get_sdd_nodes(self, SddManager manager):
+        """List of SDD nodes normalized for vtree.
+
+        Only two sdd nodes for leaf vtrees: first is positive literal, second is negative literal.
+
+        :param manager: SddManager associated with this Vtree
+        :return: List of SddNodes
+        """
+        nodes = []
+        cur_node = SddNode.wrap(self._vtree.nodes, manager)  # TODO: can we get manager from node?
+        if cur_node is None:
+            return nodes
+        while cur_node is not None:
+            nodes.append(cur_node)
+            cur_node = cur_node.vtree_next()
+        return nodes
+
+    def get_sdd_rootnodes(self, SddManager manager):
+        """List of SDD nodes that are a root for the shared SDD.
+
+        :param manager: SddManager associated with this Vtree
+        :return: List of SddNodes
+        """
+        nodes = self.get_sdd_nodes(manager)
+        if len(nodes) == 0:
+            left = self.left()
+            if left is not None:
+                nodes += left.get_sdd_rootnodes(manager)
+            right = self.right()
+            if right is not None:
+                nodes += right.get_sdd_rootnodes(manager)
+        return nodes
 
     @staticmethod
     def from_file(filename):

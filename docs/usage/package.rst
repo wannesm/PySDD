@@ -11,7 +11,7 @@ The following example builds an SDD for the formula ``a∧b ∨ b∧c ∨  c∧d
     from pysdd.sdd import SddManager, Vtree, WmcManager
     vtree = Vtree(var_count=4, var_order=[2,1,4,3], vtree_type="balanced")
     sdd = SddManager.from_vtree(vtree)
-    a, b, c, d = [manager.literal(i) for i in range(1, 5)]
+    a, b, c, d = manager.vars
 
     # Build SDD for formula
     formula = (a & b) | (b & c) | (c & d)

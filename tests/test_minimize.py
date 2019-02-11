@@ -5,10 +5,12 @@ import sys
 import os
 import logging
 from pathlib import Path
+import tempfile
 
 
 logger = logging.getLogger("pysdd")
-directory = None
+
+directory = Path(tempfile.gettempdir())
 counter = 0
 
 
@@ -20,17 +22,26 @@ def test_min1():
     f = ((a & b) | (c & d))
     f.ref()
     if directory:
-        with (directory / "vtree1_before.gv").open("w") as out:
+        names = {
+            1: 'a', -1: '-a',
+            2: 'b', -2: '-b',
+            3: 'c', -3: '-c',
+            4: 'd', -4: '-d'
+        }
+        with (directory / "vtree1_before_a.gv").open("w") as out:
             print(sdd.vtree().dot(), file=out)
-        with (directory / "sdd1_before.gv").open("w") as out:
-            print(f.dot(), file=out)
-    result = sdd.minimize()
-    print(result)
+        with (directory / "vtree1_before_b.gv").open("w") as out:
+            print(vtree_to_dot(sdd.vtree(), sdd, litnamemap=names, show_id=True), file=out)
+        with (directory / "sdd1_before_a.gv").open("w") as out:
+            print(sdd.dot(), file=out)
+        with (directory / "sdd1_before_b.gv").open("w") as out:
+            print(sdd_to_dot(sdd), file=out)
+    sdd.minimize()
     if directory:
         with (directory / "vtree2_after.gv").open("w") as out:
             print(sdd.vtree().dot(), file=out)
         with (directory / "sdd1_after.gv").open("w") as out:
-            print(f.dot(), file=out)
+            print(sdd.dot(), file=out)
     f.deref()
 
     wmc = f.wmc(log_mode=False)
@@ -39,10 +50,36 @@ def test_min1():
     assert mc == 7.0
 
 
+def test_min2():
+    sdd = SddManager(var_count=3)
+    a, b, c = sdd.vars
+    fa = b | c
+    fa.ref()
+    fb = b
+    fb.ref()
+    fc = c
+    fc.ref()
+    if directory:
+        names = {
+            1: 'a', -1: '-a',
+            2: 'b', -2: '-b',
+            3: 'c', -3: '-c'
+        }
+        with (directory / "vtree2_before_a.gv").open("w") as out:
+            print(sdd.vtree().dot(), file=out)
+        with (directory / "vtree2_before_b.gv").open("w") as out:
+            print(vtree_to_dot(sdd.vtree(), sdd, litnamemap=names, show_id=True), file=out)
+        # with (directory / "sdd2_before_a.gv").open("w") as out:
+        #     print(sdd.dot(), file=out)
+        with (directory / "sdd2_before_b.gv").open("w") as out:
+            print(sdd_to_dot(sdd), file=out)
+
+
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
     logger.addHandler(sh)
-    directory = Path(os.environ.get('TESTDIR', Path(__file__).parent))
+    directory = Path(os.environ.get('TESTDIR', Path(".")))
     print(f"Saving files to {directory}")
     test_min1()
+    test_min2()

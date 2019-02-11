@@ -1,18 +1,21 @@
 # -*- coding: UTF-8 -*-
 """
-pysdd.io
-~~~~~~~~
+pysdd.util
+~~~~~~~~~~
+
+Utility function on top of the ``sdd`` package.
 
 :author: Wannes Meert, Arthur Choi
 :copyright: Copyright 2017-2019 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
 import math
+from .sdd import SddNode, SddManager, Vtree
 
 
 MYPY = False
 if MYPY:
-    from .sdd import SddNode, Vtree
+    # from .sdd import Vtree
     from typing import List, Optional, Dict, Set, Union, Tuple
     LitNameMap = Dict[Union[int, str], str]
 
@@ -21,17 +24,28 @@ node_count = 0
 
 
 def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
-    # type: (SddNode, Optional[LitNameMap], bool, bool) -> str
+    # type: (Union[SddNode, SddManager], Optional[LitNameMap], bool, bool) -> str
     """Generate (alternative) Graphviz DOT string for SDD with given root.
 
-    :param node: Root node for graph
+    This method is an alternative to SddManager.dot() and SddNode.dot().
+
+    :param node: Root node for graph or SddManager
     :param litnamemap: Dictionary for node labels. For variable 1 the keys are 1 and -1 for positive and negative.
         For multiplication and addition the keys are 'mult' and 'add'. And for true and false, the keys are 'true'
         and 'false'.
     :param show_id: Show internal node ids, useful for debugging
     :param merge_leafs: Variable nodes are shown multiple times to improve the visualisation. Set this argument
         to True to disable this.
+    :return: String in the Graphviz DOT format
     """
+    if isinstance(node, SddNode):
+        nodes = [node]
+    elif isinstance(node, SddManager):
+        mgr = node
+        vtree = mgr.vtree()
+        nodes = vtree.get_sdd_rootnodes(mgr)
+    else:
+        raise AttributeError(f"Unknown type {type(node)}")
     global node_count
     node_count = 0
     if litnamemap is None:
@@ -39,11 +53,13 @@ def sdd_to_dot(node, litnamemap=None, show_id=False, merge_leafs=False):
     if node is None:
         raise ValueError("No root node given")
     s = [
-        "digraph sdd {"
+        "digraph sdd {",
+        "overlap=false;"
     ]
     visited = set()
-    nodeid, root_s = _sddnode_to_dot_int(node, visited, litnamemap, show_id, merge_leafs)
-    s += root_s
+    for node in nodes:
+        nodeid, root_s = _sddnode_to_dot_int(node, visited, litnamemap, show_id, merge_leafs)
+        s += root_s
     s += [
         "}"
     ]
@@ -120,21 +136,31 @@ def _sddnode_to_dot_int(node, visited, litnamemap=None, show_id=False, merge_lea
         return nodeid, s
 
 
-def vtree_to_dot(vtree, litnamemap=None, show_id=False):
-    # type: (Vtree, Optional[LitNameMap], bool) -> str
-    """Generate (alternative) Graphviz DOT string for given Vtree."""
+def vtree_to_dot(vtree, mgr, litnamemap=None, show_id=False):
+    # type: (Vtree, SddManager, Optional[LitNameMap], bool) -> str
+    """Generate (alternative) Graphviz DOT string for given Vtree.
+
+    This method is an alternative to Vtree.dot().
+
+    :param mgr: SddManager associated with this Vtree
+    :param litnamemap: Dictionary for node labels. For variable 1 the keys are 1 and -1 for positive and negative.
+        For multiplication and addition the keys are 'mult' and 'add'. And for true and false, the keys are 'true'
+        and 'false'.
+    :param show_id: Show internal node ids, useful for debugging
+    :return: String in the Graphviz DOT format
+    """
     s = [
         "digraph vtree {"
     ]
-    s += _vtree_to_dot_int(vtree, litnamemap, show_id)
+    s += _vtree_to_dot_int(vtree, mgr, litnamemap, show_id)
     s += [
         "}"
     ]
     return "\n".join(s)
 
 
-def _vtree_to_dot_int(vtree, litnamemap=None, show_id=False):
-    # type: (Vtree, Optional[LitNameMap], bool) -> List[str]
+def _vtree_to_dot_int(vtree, mgr, litnamemap=None, show_id=False):
+    # type: (Vtree, SddManager, Optional[LitNameMap], bool) -> List[str]
     s = []
     left = vtree.left()
     right = vtree.right()
@@ -144,19 +170,25 @@ def _vtree_to_dot_int(vtree, litnamemap=None, show_id=False):
             name = litnamemap.get(name, name)
         extra_options = ""
         if show_id:
-            extra_options += f",xlabel=\"{vtree.position()}\""
+            extra_options += f",xlabel=\"{vtree.position()} (" +\
+                             ",".join(litnamemap.get(node.literal, node.literal)
+                                      for node in vtree.get_sdd_nodes(mgr)) +\
+                             ")\""
         s += [f"{vtree.position()} [label=\"{name}\",shape=\"box\"{extra_options}];"]
     else:
         extra_options = ""
         if show_id:
-            extra_options += f",xlabel=\"{vtree.position()}\""
+            extra_options += f",xlabel=\"{vtree.position()} (" + \
+                             ",".join(str(litnamemap.get(node.literal, node.literal))
+                                      for node in vtree.get_sdd_nodes(mgr)) + \
+                             ")\""
         s += [f"{vtree.position()} [shape=\"point\"{extra_options}];"]
     if left is not None:
         s += [f"{vtree.position()} -> {left.position()} [arrowhead=none];"]
-        s += _vtree_to_dot_int(left, litnamemap, show_id)
+        s += _vtree_to_dot_int(left, mgr, litnamemap, show_id)
     if right is not None:
         s += [f"{vtree.position()} -> {right.position()} [arrowhead=none];"]
-        s += _vtree_to_dot_int(right, litnamemap, show_id)
+        s += _vtree_to_dot_int(right, mgr, litnamemap, show_id)
     return s
 
 

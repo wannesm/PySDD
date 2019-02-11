@@ -19,12 +19,25 @@ cdef extern from "sddapi.h":
 
     ctypedef unsigned short BoolOp
 
+    cdef struct sdd_node_t
+
     ctypedef struct Vtree:
-        pass
-    ctypedef struct SddNode:
-        pass
+        sdd_node_t* nodes
+
+    cdef struct sdd_node_t:
+        Vtree * vtree
+        sdd_node_t* vtree_next
+    ctypedef sdd_node_t SddNode
+
+    # ctypedef struct SddNode:
+    #     pass
+    #
+    # ctypedef struct Vtree:
+    #     pass
+    #
     ctypedef struct SddManager:
         pass
+
     ctypedef struct WmcManager:
         pass
 
