@@ -319,7 +319,7 @@ def psdd_file_wmc(psdd_filename, observations=None):
             cols = line.strip().split(' ')
             if cols[0] == 'c':
                 continue
-            if cols[0] == 'psdd':s
+            if cols[0] == 'psdd':
                 detected_psdd = True
                 wmc = [None] * int(cols[1])
                 continue
