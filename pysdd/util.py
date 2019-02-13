@@ -3,7 +3,7 @@
 pysdd.util
 ~~~~~~~~~~
 
-Utility function on top of the ``sdd`` package.
+Utility functions on top of the ``sdd`` package.
 
 :author: Wannes Meert, Arthur Choi
 :copyright: Copyright 2017-2019 KU Leuven and Regents of the University of California.
@@ -142,6 +142,7 @@ def vtree_to_dot(vtree, mgr, litnamemap=None, show_id=False):
 
     This method is an alternative to Vtree.dot().
 
+    :param vtree: Vtree to plot
     :param mgr: SddManager associated with this Vtree
     :param litnamemap: Dictionary for node labels. For variable 1 the keys are 1 and -1 for positive and negative.
         For multiplication and addition the keys are 'mult' and 'add'. And for true and false, the keys are 'true'
@@ -366,7 +367,7 @@ def psdd_file_wmc(psdd_filename, observations=None):
                 for idx in range(nb_elmts):
                     p, s, t = elmts[3 * idx: 3 * idx + 3]
                     wmc_p = wmc[int(p)]
-                    wmc_s =  wmc[int(s)]
+                    wmc_s = wmc[int(s)]
                     theta = float(s)
                     add = wmc_p + wmc_s + theta
                     if math.isinf(w) and w < 0:
