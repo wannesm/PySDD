@@ -49,6 +49,8 @@ cdef class SddNode:
             return None
         wrapper = SddNode(manager)
         wrapper._sddnode = node
+        if wrapper.garbage_collected():
+            return None
         if sddapi_c.sdd_node_is_literal(node):
             wrapper._name = sddapi_c.sdd_node_literal(node)
         elif sddapi_c.sdd_node_is_true(node):
