@@ -12,6 +12,8 @@ Usage: python3 setup.py build_ext --inplace
 """
 from setuptools import setup
 from setuptools.extension import Extension
+from setuptools.command.build_ext import build_ext as BuildExtCommand
+from setuptools import Distribution
 import platform
 import os
 import re
@@ -29,6 +31,16 @@ except ImportError as exc:
     print(f"cysignals not found\n{exc}")
     cysignals = None
 
+
+class MyDistribution(Distribution):
+    global_options = Distribution.global_options + [
+        ('debug', None, 'Compile with debug options on')
+    ]
+
+    def __init__(self, attrs=None):
+        self.debug = 0
+        super().__init__(attrs)
+
 # build_type = "debug"
 build_type = "optimized"
 
@@ -45,20 +57,6 @@ sdd_version = "2.0"
 libwrapper_path = here / "pysdd" / "lib"
 sdd_path = libwrapper_path / f"sdd-{sdd_version}"
 lib_path = sdd_path / "lib"
-# print(f"Platform: {platform.platform()}")
-if "Darwin" in platform.platform():
-    lib_path = lib_path / "Darwin"
-    if build_type == "debug":
-        lib_path = lib_path / "debug"
-    libsdd_path = lib_path / "libsdd.a"
-elif "Linux" in platform.platform():
-    lib_path = lib_path / "Linux"
-    libsdd_path = lib_path / "libsdd.a"
-elif "Windows" in platform.platform():
-    lib_path = lib_path / "Windows"
-    libsdd_path = lib_path / "libsdd.dll"
-else:
-    libsdd_path = lib_path / "libsdd.a"
 inc_path = sdd_path / "include"
 src_path = sdd_path / "src"
 csrc_path = here / "pysdd" / "src"
@@ -76,40 +74,81 @@ compile_time_env = dict(HAVE_CYSIGNALS=False)
 if cysignals is not None:
     compile_time_env['HAVE_CYSIGNALS'] = True
 
-if "Darwin" in platform.platform() or "Linux" in platform.platform():
-    if build_type == "debug":
-        gdb_debug = True
-        extra_compile_args = ["-march=native", "-O0", "-g"]
-        extra_link_args = ["-g"]
-    else:
-        gdb_debug = False
-        extra_compile_args = ["-march=native", "-O2"]
-        extra_link_args = ["-g"]
-elif "Windows" in platform.platform():
-    if build_type == "debug":
-        gdb_debug = True
-        extra_compile_args = []
-        extra_link_args = []
-    else:
-        gdb_debug = False
-        extra_compile_args = []
-        extra_link_args = []
-else:
-    gdb_debug = False
-    extra_compile_args = []
-    extra_link_args = []
+c_args = {
+    'unix': ['-O3', '-march=native'],
+    'msvc': ['/Ox', '/fp:fast', '/favor:INTEL64', '/Og'],
+    'mingw32': ['-O3', '-march=native']
+}
+c_args_debug = {
+    'unix': ["-march=native", "-O0", '-g'],
+    'msvc': [["-Zi", "/Od"]],
+    'mingw32': ["-march=native", "-O0", '-g']
+}
+l_args = {
+    'unix': [],
+    'msvc': [],
+    'mingw32': []
+}
+l_args_debug = {
+    'unix': ['-g'],
+    'msvc': ["-debug"],
+    'mingw32': ['-g']
+}
+
+class MyBuildExtCommand(BuildExtCommand):
+
+    def build_extensions(self):
+        global lib_path
+        c = self.compiler.compiler_type
+        print("Compiler type: {}".format(c))
+        print("--debug: {}".format(self.distribution.debug))
+        # Compiler and linker options
+        if self.distribution.debug:
+            cur_c_args = c_args_debug
+            cur_l_args = l_args_debug
+        else:
+            cur_c_args = c_args
+            cur_l_args = l_args
+        if c in cur_c_args:
+            args = cur_c_args[c]
+            for e in self.extensions:
+                e.extra_compile_args = args
+        else:
+            print("Unknown compiler type: {}".format(c))
+        if c in cur_l_args:
+            args = cur_l_args[c]
+            for e in self.extensions:
+                e.extra_link_args = args
+        # Extra objects
+        if "Darwin" in platform.platform():
+            cur_lib_path = lib_path / "Darwin"
+            if build_type == "debug":
+                cur_lib_path = cur_lib_path / "debug"
+            libsdd_path = cur_lib_path / "libsdd.a"
+        elif "Linux" in platform.platform():
+            cur_lib_path = lib_path / "Linux"
+            libsdd_path = cur_lib_path / "libsdd.a"
+        elif "Windows" in platform.platform():
+            cur_lib_path = lib_path / "Windows"
+            libsdd_path = cur_lib_path / "libsdd.dll"
+        else:
+            libsdd_path = lib_path / "libsdd.a"
+        for e in self.extensions:
+            e.extra_objects = [str(libsdd_path)]
+        BuildExtCommand.build_extensions(self)
+
 
 if cythonize is not None:
     ext_modules = cythonize([
         Extension(
-            "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
-            extra_objects=[str(libsdd_path)],
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args
+            "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths
+            # extra_objects=[str(libsdd_path)],
+            # extra_compile_args=extra_compile_args,
+            # extra_link_args=extra_link_args
             # include_dirs=[numpy.get_include()]
         )],
         compiler_directives={'embedsignature': True},
-        gdb_debug=gdb_debug,
+        # gdb_debug=gdb_debug,
         compile_time_env=compile_time_env)
 else:
     ext_modules = []
@@ -121,7 +160,6 @@ tests_require = ['pytest']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
     long_description = f.read()
-
 setup(
     name='PySDD',
     version=wrapper_version,
@@ -144,6 +182,10 @@ setup(
     package_data={
         '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*lib'],
     },
+    distclass=MyDistribution,
+    cmdclass={
+        'build_ext': MyBuildExtCommand
+    },
     entry_points={
         'console_scripts': [
             'pysdd = pysdd.cli:main'
@@ -160,3 +202,4 @@ setup(
     ext_modules=ext_modules,
     zip_safe=False
 )
+
