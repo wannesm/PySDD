@@ -12,6 +12,10 @@ clean:
 build:
 	python3 setup.py build_ext --inplace
 
+.PHONY: build_debug
+build_debug: clean
+	python3 setup.py --debug build_ext --inplace
+
 .PHONY: prepare_dist
 prepare_dist:
 	rm -rf dist/*

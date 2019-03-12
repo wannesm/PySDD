@@ -34,7 +34,7 @@ except ImportError as exc:
 
 class MyDistribution(Distribution):
     global_options = Distribution.global_options + [
-        ('debug', None, 'Compile with debug options on')
+        ('debug', None, 'Compile with debug options on (PySDD option)')
     ]
 
     def __init__(self, attrs=None):
@@ -70,7 +70,7 @@ os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
 
-compile_time_env = dict(HAVE_CYSIGNALS=False)
+compile_time_env = {'HAVE_CYSIGNALS': False}
 if cysignals is not None:
     compile_time_env['HAVE_CYSIGNALS'] = True
 
@@ -104,6 +104,7 @@ class MyBuildExtCommand(BuildExtCommand):
         print("--debug: {}".format(self.distribution.debug))
         # Compiler and linker options
         if self.distribution.debug:
+            self.force = True  # force full rebuild in debugging mode
             cur_c_args = c_args_debug
             cur_l_args = l_args_debug
         else:
@@ -111,13 +112,13 @@ class MyBuildExtCommand(BuildExtCommand):
             cur_l_args = l_args
         if c in cur_c_args:
             args = cur_c_args[c]
-            for e in self.extensions:
+            for e in self.extensions:  # type: Extension
                 e.extra_compile_args = args
         else:
             print("Unknown compiler type: {}".format(c))
         if c in cur_l_args:
             args = cur_l_args[c]
-            for e in self.extensions:
+            for e in self.extensions:  # type: Extension
                 e.extra_link_args = args
         # Extra objects
         if "Darwin" in platform.platform():
@@ -133,7 +134,7 @@ class MyBuildExtCommand(BuildExtCommand):
             libsdd_path = cur_lib_path / "libsdd.dll"
         else:
             libsdd_path = lib_path / "libsdd.a"
-        for e in self.extensions:
+        for e in self.extensions:  # type: Extension
             e.extra_objects = [str(libsdd_path)]
         BuildExtCommand.build_extensions(self)
 
@@ -155,7 +156,7 @@ else:
     print('Cython not yet available, skipping compilation')
 
 # install_requires = ['numpy', 'cython']
-install_requires = ['cython']
+install_requires = ['cython>=0.29.6']
 tests_require = ['pytest']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
