@@ -385,9 +385,9 @@ cdef class SddManager:
         self.root = None
         if vtree is not None:
             self._sddmanager = sddapi_c.sdd_manager_new(vtree._vtree)
-            self._auto_gc_and_minimize = False
             if self._sddmanager is NULL:
                 raise MemoryError("Could not create SddManager")
+            self.auto_gc_and_minimize_off()
         else:
             self._sddmanager = sddapi_c.sdd_manager_create(var_count, auto_gc_and_minimize)
             if self._sddmanager is NULL:
