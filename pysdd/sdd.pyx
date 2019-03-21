@@ -371,7 +371,7 @@ cdef class SddManager:
     refer to its positive literal by i and its negative literal by −i.
     """
     cdef sddapi_c.SddManager* _sddmanager
-    cdef bint _auto_gc_and_minimize  # TODO: replace by manager->auto_gc_and_search_on (should be identical)
+    cdef bint _prevent_transformation # Sect 5.2: Transformations with auto_gc_and_minimize can invalidate WMCManager
     cdef CompilerOptions options
     cdef public object root
 
@@ -385,16 +385,16 @@ cdef class SddManager:
         self.root = None
         if vtree is not None:
             self._sddmanager = sddapi_c.sdd_manager_new(vtree._vtree)
-            self._auto_gc_and_minimize = False
             if self._sddmanager is NULL:
                 raise MemoryError("Could not create SddManager")
+            self.auto_gc_and_minimize_off()
         else:
             self._sddmanager = sddapi_c.sdd_manager_create(var_count, auto_gc_and_minimize)
-            self._auto_gc_and_minimize = auto_gc_and_minimize
             if self._sddmanager is NULL:
                 raise MemoryError("Could not create SddManager")
         # Since 2.0 you have to set options and initialize values to avoid segfault
         self.set_options()
+        self._prevent_transformation = False
 
     def __dealloc__(self):
         if self._sddmanager is not NULL:
@@ -537,11 +537,20 @@ cdef class SddManager:
         sddapi_c.sdd_manager_auto_gc_and_minimize_off(self._sddmanager)
 
     def is_auto_gc_and_minimize_on(self):
-        """Is automatic garbage collection and automatic SDD minimization is activated?"""
+        """Is automatic garbage collection and automatic SDD minimization activated?"""
         cdef int rval = sddapi_c.sdd_manager_is_auto_gc_and_minimize_on(self._sddmanager)
         if rval == 1:
             return True
         return False
+
+    # custom
+    def set_prevent_transformation(self, prevent=True):
+        """Prevent transformations when prevent=True and self.is_auto_gc_and_minimize_on()=True"""
+        self._prevent_transformation = prevent
+
+    def is_prevent_transformation_on(self):
+        """Are transformations prevented when self.is_auto_gc_and_minimize_on()=True?"""
+        return self._prevent_transformation
 
 
     ## Size and Count (Sec 5.1.4)
@@ -607,30 +616,30 @@ cdef class SddManager:
 
     def apply(self, SddNode node1, SddNode node2, sddapi_c.BoolOp op):
         """Returns the result of combining two SDDs, where op can be CONJOIN (0) or DISJOIN (1)."""
-        if self._auto_gc_and_minimize:
-            raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
-                                   "is active")
+        if self.is_prevent_transformation_on() and self.is_auto_gc_and_minimize_on():
+            raise EnvironmentError("Transformation is not allowed when prevent_transformation and auto garbage "
+                                   "collection and SDD minimization is active")
         return SddNode.wrap(sddapi_c.sdd_apply(node1._sddnode, node2._sddnode, op, self._sddmanager), self)
 
     def conjoin(self, SddNode node1, SddNode node2):
         """Returns the result of applying the corresponding Boolean operation on the given SDDs."""
-        if self._auto_gc_and_minimize:
-            raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
-                                   "is active")
+        if self.is_prevent_transformation_on() and self.is_auto_gc_and_minimize_on():
+            raise EnvironmentError("Transformation is not allowed when prevent_transformation and auto garbage "
+                                   "collection and SDD minimization is active")
         return SddNode.wrap(sddapi_c.sdd_conjoin(node1._sddnode, node2._sddnode, self._sddmanager), self)
 
     def disjoin(self, SddNode node1, SddNode node2):
         """Returns the result of applying the corresponding Boolean operation on the given SDDs."""
-        if self._auto_gc_and_minimize:
-            raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
-                                   "is active")
+        if self.is_prevent_transformation_on() and self.is_auto_gc_and_minimize_on():
+            raise EnvironmentError("Transformation is not allowed when prevent_transformation and auto garbage "
+                                   "collection and SDD minimization is active")
         return SddNode.wrap(sddapi_c.sdd_disjoin(node1._sddnode, node2._sddnode, self._sddmanager), self)
 
     def negate(self, SddNode node):
         """Returns the result of applying the corresponding Boolean operation on the given SDDs."""
-        if self._auto_gc_and_minimize:
-            raise EnvironmentError("Transformation is not allowed when auto garbage collection and SDD minimization"
-                                   "is active")
+        if self.is_prevent_transformation_on() and self.is_auto_gc_and_minimize_on():
+            raise EnvironmentError("Transformation is not allowed when prevent_transformation and auto garbage "
+                                   "collection and SDD minimization is active")
         return SddNode.wrap(sddapi_c.sdd_negate(node._sddnode, self._sddmanager), self)
 
     def condition(self, lit, SddNode node):
@@ -1423,7 +1432,7 @@ cdef class Vtree:
 
     def minimize(self, SddManager manager):
         """Performs local garbage collection on vtree and then tries to minimize the size of the SDD of
-        vtree by searching for a diﬀerent vtree. Returns the root of the resulting vtree.
+        vtree by searching for a different vtree. Returns the root of the resulting vtree.
         """
         return Vtree.wrap(sddapi_c.sdd_vtree_minimize(self._vtree, manager._sddmanager))
 
@@ -1446,7 +1455,10 @@ cdef class WmcManager:
     become invalid if garbage collection or SDD minimization takes place.
 
     Note: To avoid invalidating a WMC manager, the user should refrain from performing the SDD operations like
-    queries and transformations when auto garbage collection and SDD minimization is active.
+    queries and transformations when auto garbage collection and SDD minimization is active. For this reason,
+    the WMCManager will set the prevent_transformation flag on the SDDManager. This prevents transformations on the
+    SDDManager when auto_gc_and_minize is on. When the WMCManager is not used anymore,
+    Sddmanager.set_prevent_transformations(prevent=False) can be executed to re-allow transformations.
 
     Background:
 
@@ -1455,7 +1467,7 @@ cdef class WmcManager:
 
     * The weight of a variable instantiation is the product of weights assigned to its literals.
     * The weighted model count of the SDD is the sum of weights attained by its models. Here, a model is an
-      instantiation (of all variables in the manager) that satis?es the SDD.
+      instantiation (of all variables in the manager) that satisfies the SDD.
     * The weighted model count of a literal is the sum of weights attained by its models that are also models of
       the given SDD.
     * The probability of a literal is the ratio of its weighted model count over the one for the given SDD.
@@ -1475,6 +1487,7 @@ cdef class WmcManager:
     def __cinit__(self, SddNode node, bint log_mode=1):
         self._wmcmanager = sddapi_c.wmc_manager_new(node._sddnode, log_mode, node._manager._sddmanager)
         self.node = node
+        node._manager.set_prevent_transformation(prevent=True)
         if self._wmcmanager is NULL:
             raise MemoryError()
 
