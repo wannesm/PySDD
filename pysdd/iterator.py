@@ -66,6 +66,17 @@ class SddIterator:
                     queue.append(node.right())
                     queue.append(node.left())
 
+    def depth_first_from_root(self, func):
+        # type: (SddIterator, Callable) -> List[Union[int, float]]
+        """Depth first iterator starting from the root nodes.
+
+        See `depth_first` for more details.
+        """
+        results = []
+        for node in self.vtree.get_sdd_rootnodes(self.sdd):
+            results.append(self.depth_first(node, func))
+        return results
+
     def depth_first(self, node, func):
         # type: (SddIterator, SddNode, Callable) -> Union[int, float]
         """Depth first iterator
