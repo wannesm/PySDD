@@ -16,6 +16,7 @@ cimport compiler_c
 cimport io_c
 cimport fnf_c
 from cpython cimport array
+from libc.stdlib cimport malloc, free
 
 import os
 import tempfile
@@ -408,6 +409,20 @@ cdef class SddManager:
         and does not aﬀect the input vtree.
         """
         return SddManager(vtree=vtree)
+        
+    @staticmethod
+    cdef wrap(sddapi_c.SddManager* sdd_manager, CompilerOptions options, object root=None):
+        """Transform a C SddManager to a Python SddManager.
+
+        :return: Python object for the SddManager
+        """
+        if sdd_manager == NULL:
+            return None
+        new_mgr = SddManager(var_count=1, auto_gc_and_minimize=False, vtree=None)
+        new_mgr._sddmanager = sdd_manager
+        new_mgr.set_options(options)
+        new_mgr.root = root
+        return new_mgr
 
     def set_options(self, options=None):
         if options is not None:
@@ -557,6 +572,22 @@ cdef class SddManager:
 
 
     ## Misc Functions (Sec 5.1.5)
+
+    def copy(self, nodes):
+        """Returns a new SDDManager, while copying the vtree and the specified SDD nodes of this manager.
+
+        :param nodes: A list of SddNodes to copy.
+        :return:
+        """
+        cdef int size_c = len(nodes)
+        cdef sddapi_c.SddNode** nodes_c = <sddapi_c.SddNode **> malloc(size_c * sizeof(sddapi_c.SddNode))
+        if not nodes_c:
+            raise MemoryError("Could not create array of SddNodes")
+        for i in range(1,len(nodes)):
+            nodes_c[i] = (<SddNode> nodes[i])._sddnode
+        cdef sddapi_c.SddManager* new_manager = sddapi_c.sdd_manager_copy(size_c, nodes_c, self._sddmanager)
+        free(nodes_c)
+        return SddManager.wrap(new_manager, options=self.options, root=None)
 
     def print_stdout(self):
         sddapi_c.sdd_manager_print(self._sddmanager)
