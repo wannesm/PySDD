@@ -63,6 +63,7 @@ cdef extern from "sddapi.h":
     void* sdd_manager_options(SddManager* manager);
     void sdd_manager_set_options(void* options, SddManager* manager);
 
+    SddManager* sdd_manager_copy(SddSize size, SddNode** nodes, SddManager* from_manager);
     int sdd_manager_is_var_used(SddLiteral var, SddManager* manager);
     Vtree* sdd_manager_vtree_of_var(const SddLiteral var, const SddManager* manager);
     Vtree* sdd_manager_lca_of_literals(int count, SddLiteral* literals, SddManager* manager);
