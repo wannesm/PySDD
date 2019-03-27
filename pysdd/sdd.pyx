@@ -574,20 +574,26 @@ cdef class SddManager:
     ## Misc Functions (Sec 5.1.5)
 
     def copy(self, nodes):
-        """Returns a new SDDManager, while copying the vtree and the specified SDD nodes of this manager.
-
+        """Returns a new SDDManager, while copying the vtree and the SDD nodes of this manager.
+        After this operation, the given list of nodes will contain the corresponding nodes in the new manager.
         :param nodes: A list of SddNodes to copy.
-        :return:
+        :return: The new SDDManager
         """
+        # init
         cdef int size_c = len(nodes)
-        cdef sddapi_c.SddNode** nodes_c = <sddapi_c.SddNode **> malloc(size_c * sizeof(sddapi_c.SddNode))
+        cdef sddapi_c.SddNode** nodes_c = <sddapi_c.SddNode**> malloc(size_c * sizeof(sddapi_c.SddNode*))
         if not nodes_c:
             raise MemoryError("Could not create array of SddNodes")
-        for i in range(1,len(nodes)):
+        for i in range(0,size_c):
             nodes_c[i] = (<SddNode> nodes[i])._sddnode
-        cdef sddapi_c.SddManager* new_manager = sddapi_c.sdd_manager_copy(size_c, nodes_c, self._sddmanager)
+        # copy
+        cdef sddapi_c.SddManager* new_manager_c = sddapi_c.sdd_manager_copy(size_c, nodes_c, self._sddmanager)
+        # wrap results
+        new_manager = SddManager.wrap(new_manager_c, options=self.options, root=None)
+        for i in range(0,size_c):
+            nodes[i] = SddNode.wrap(nodes_c[i], new_manager)
         free(nodes_c)
-        return SddManager.wrap(new_manager, options=self.options, root=None)
+        return new_manager
 
     def print_stdout(self):
         sddapi_c.sdd_manager_print(self._sddmanager)
