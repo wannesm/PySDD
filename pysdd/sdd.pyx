@@ -16,7 +16,7 @@ cimport compiler_c
 cimport io_c
 cimport fnf_c
 from cpython cimport array
-from libc.stdlib cimport malloc, free
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 import os
 import tempfile
@@ -581,18 +581,22 @@ cdef class SddManager:
         """
         # init
         cdef int size_c = len(nodes)
-        cdef sddapi_c.SddNode** nodes_c = <sddapi_c.SddNode**> malloc(size_c * sizeof(sddapi_c.SddNode*))
+        cdef sddapi_c.SddNode** nodes_c = <sddapi_c.SddNode**> PyMem_Malloc(size_c * sizeof(sddapi_c.SddNode*))
         if not nodes_c:
             raise MemoryError("Could not create array of SddNodes")
-        for i in range(0,size_c):
-            nodes_c[i] = (<SddNode> nodes[i])._sddnode
-        # copy
-        cdef sddapi_c.SddManager* new_manager_c = sddapi_c.sdd_manager_copy(size_c, nodes_c, self._sddmanager)
-        # wrap results
-        new_manager = SddManager.wrap(new_manager_c, options=self.options, root=None)
-        for i in range(0,size_c):
-            nodes[i] = SddNode.wrap(nodes_c[i], new_manager)
-        free(nodes_c)
+        cdef sddapi_c.SddManager* new_manager_c
+        new_manager = None
+        try:
+            for i in range(0,size_c):
+                nodes_c[i] = (<SddNode> nodes[i])._sddnode
+            # copy
+            new_manager_c = sddapi_c.sdd_manager_copy(size_c, nodes_c, self._sddmanager)
+            # wrap results
+            new_manager = SddManager.wrap(new_manager_c, options=self.options, root=None)
+            for i in range(0,size_c):
+                nodes[i] = SddNode.wrap(nodes_c[i], new_manager)
+        finally:
+            PyMem_Free(nodes_c)
         return new_manager
 
     def print_stdout(self):
