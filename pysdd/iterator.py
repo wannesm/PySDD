@@ -8,8 +8,8 @@ pysdd.iterator
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
 from collections import deque
-import numpy as np
 from .sdd import SddManager, Vtree, SddNode
+from .util import BitArray
 
 MYPY = False
 if MYPY:
@@ -49,7 +49,7 @@ class SddIterator:
         self._expected_vars = dict()
         nb_vtree_nodes = self.sdd.var_count() * 2 - 1
         # visited = [False] * nb_vtree_nodes
-        visited = np.zeros(nb_vtree_nodes, dtype=bool)
+        visited = BitArray(nb_vtree_nodes)
         queue = deque([self.vtree])
         while len(queue) > 0:
             node = queue.pop()  # type: Vtree
