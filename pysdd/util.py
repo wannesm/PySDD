@@ -10,6 +10,7 @@ Utility functions on top of the ``sdd`` package.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
 import math
+import array
 from .sdd import SddNode, SddManager, Vtree
 
 
@@ -381,3 +382,69 @@ def psdd_file_wmc(psdd_filename, observations=None):
                 wmc[nodeid] = w
             ln += 1
     return wmc[0]
+
+
+class BitArray:
+    def __init__(self, size, fill=0):
+        """Array of boolean values.
+
+        Based on https://wiki.python.org/moin/BitArrays
+
+        :param size: Length of array
+        :param fill: Default value to set. Should be 0 or 1.
+        """
+        int_size = size >> 5  # number of 32 bit integers
+        if size & 31:  # if bitSize != (32 * n) add
+            int_size += 1  # a record for stragglers
+        if fill == 1:
+            fill = 4294967295  # all bits set
+        else:
+            fill = 0  # all bits cleared
+
+        self.bits = array.array('I')  # 'I' = unsigned 32-bit integer
+        self.bits.extend((fill,) * int_size)
+
+    def is_set(self, bit_num):
+        """Returns a nonzero result, 2**offset, if the bit at 'bit_num' is set to 1."""
+        record = bit_num >> 5
+        offset = bit_num & 31
+        mask = 1 << offset
+        return self.bits[record] & mask > 0
+
+    def __getitem__(self, item):
+        return self.is_set(item)
+
+    def set(self, bit_num):
+        """Set the bit at 'bit_num' to 1."""
+        record = bit_num >> 5
+        offset = bit_num & 31
+        mask = 1 << offset
+        self.bits[record] |= mask
+
+    def __setitem__(self, key, value):
+        if value == 0:
+            self.clear(key)
+        elif value == 1:
+            self.set(key)
+        else:
+            raise ValueError("Key should be 0 or 1")
+
+    def clear(self, bit_num):
+        """Clear the bit at 'bit_num'."""
+        record = bit_num >> 5
+        offset = bit_num & 31
+        mask = ~(1 << offset)
+        self.bits[record] &= mask
+
+    def toggle(self, bit_num):
+        """Invert the bit at 'bit_num', 0 -> 1 and 1 -> 0."""
+        record = bit_num >> 5
+        offset = bit_num & 31
+        mask = 1 << offset
+        self.bits[record] ^= mask
+
+    def __str__(self):
+        s = ""
+        for bits in self.bits:
+            s += "{0:032b}".format(bits)
+        return s

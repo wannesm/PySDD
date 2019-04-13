@@ -28,7 +28,7 @@ def test_it1():
         with (directory / "vtree1.gv").open("w") as out:
             print(sdd.vtree().dot(), file=out)
         with (directory / "vtree2.gv").open("w") as out:
-            print(vtree_to_dot(sdd.vtree(), litnamemap=litnamemap, show_id=True), file=out)
+            print(vtree_to_dot(sdd.vtree(), sdd, litnamemap=litnamemap, show_id=True), file=out)
     wmc = f.wmc(log_mode=False)
     mc = wmc.propagate()
     # print(f"mc = {mc}")

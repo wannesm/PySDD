@@ -34,11 +34,13 @@ except ImportError as exc:
 
 class MyDistribution(Distribution):
     global_options = Distribution.global_options + [
-        ('debug', None, 'Compile with debug options on (PySDD option)')
+        ('debug', None, 'Compile with debug options on (PySDD option)'),
+        ('usecysignals', None, 'Compile with CySignals (PySDD option)')
     ]
 
     def __init__(self, attrs=None):
         self.debug = 0
+        self.usecysignals = 0
         super().__init__(attrs)
 
 # build_type = "debug"
@@ -71,8 +73,8 @@ os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
 
 compile_time_env = {'HAVE_CYSIGNALS': False}
-if cysignals is not None:
-    compile_time_env['HAVE_CYSIGNALS'] = True
+# if cysignals is not None:
+#     compile_time_env['HAVE_CYSIGNALS'] = True
 
 c_args = {
     'unix': ['-O3', '-march=native'],
@@ -95,6 +97,7 @@ l_args_debug = {
     'mingw32': ['-g']
 }
 
+
 class MyBuildExtCommand(BuildExtCommand):
 
     def build_extensions(self):
@@ -102,6 +105,7 @@ class MyBuildExtCommand(BuildExtCommand):
         c = self.compiler.compiler_type
         print("Compiler type: {}".format(c))
         print("--debug: {}".format(self.distribution.debug))
+        print("--usecysignals: {}".format(self.distribution.usecysignals))
         # Compiler and linker options
         if self.distribution.debug:
             self.force = True  # force full rebuild in debugging mode
@@ -120,6 +124,14 @@ class MyBuildExtCommand(BuildExtCommand):
             args = cur_l_args[c]
             for e in self.extensions:  # type: Extension
                 e.extra_link_args = args
+        if self.distribution.usecysignals:
+            if cysignals is not None:
+                if self.cython_compile_time_env is None:
+                    self.cython_compile_time_env = {'HAVE_CYSIGNALS': True}
+                else:
+                    self.cython_compile_time_env['HAVE_CYSIGNALS'] = True
+            else:
+                print("Warning: import cysignals failed")
         # Extra objects
         if "Darwin" in platform.platform():
             cur_lib_path = lib_path / "Darwin"
