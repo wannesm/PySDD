@@ -104,6 +104,8 @@ class MyBuildExtCommand(BuildExtCommand):
         global lib_path
         c = self.compiler.compiler_type
         print("Compiler type: {}".format(c))
+        compiler_name = self.compiler.compiler[0]
+        print("Compiler name: {}".format(compiler_name))
         print("--debug: {}".format(self.distribution.debug))
         print("--usecysignals: {}".format(self.distribution.usecysignals))
         # Compiler and linker options
@@ -114,6 +116,8 @@ class MyBuildExtCommand(BuildExtCommand):
         else:
             cur_c_args = c_args
             cur_l_args = l_args
+        if "gcc" in compiler_name:
+            cur_c_args["unix"].append("-std=c99")
         if c in cur_c_args:
             args = cur_c_args[c]
             for e in self.extensions:  # type: Extension
