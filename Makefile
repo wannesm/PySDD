@@ -19,7 +19,8 @@ build_debug: clean
 .PHONY: prepare_dist
 prepare_dist:
 	rm -rf dist/*
-	python3 setup.py sdist bdist_wheel
+	python3 setup.py sdist
+	@#python3 setup.py sdist bdist_wheel
 
 .PHONY: version
 version:
