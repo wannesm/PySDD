@@ -173,6 +173,7 @@ else:
 
 # install_requires = ['numpy', 'cython']
 install_requires = ['cython>=0.29.6']
+setup_requires = ['cython>=0.29.6']
 tests_require = ['pytest']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
@@ -191,6 +192,7 @@ setup(
     },
     packages=["pysdd"],
     install_requires=install_requires,
+    setup_requires=setup_requires,
     tests_require=tests_require,
     extras_require={
         'all': ['cysignals', 'numpy']
