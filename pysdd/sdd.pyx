@@ -647,7 +647,7 @@ cdef class SddManager:
         """Return an array var order (whose length will be equal the number of variables in the manager)
         with the left-to-right variable ordering of the manager’s vtree.
         """
-        cdef array.array var_order = array.array('d', [0]*self.var_count())
+        cdef array.array var_order = array.array('l', [0]*self.var_count())
         sddapi_c.sdd_manager_var_order(var_order.data.as_longs, self._sddmanager)
         return var_order
 
