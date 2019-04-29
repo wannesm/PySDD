@@ -27,6 +27,18 @@ def test_bitarray1():
     assert b[2] is False
 
 
+def test_bitarray2():
+    b = BitArray(100)  # more than 32 bits
+    print(b)
+    assert b[60] is False
+    assert b[90] is False
+    b[60] = True
+    b[90] = True
+    print(b)
+    assert b[60] is True
+    assert b[90] is True
+
+
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
