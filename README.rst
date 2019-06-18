@@ -2,7 +2,7 @@
 PySDD
 =====
 
-Python wrapper package to interactively use Sententical Decision Diagrams (SDD).
+Python wrapper package to interactively use `Sententical Decision Diagrams (SDD) <http://reasoning.cs.ucla.edu/sdd/>`_.
 
 Full documentation available on http://pysdd.readthedocs.io.
 
@@ -12,13 +12,16 @@ Dependencies
 
 * Python >=3.6
 * Cython
-* SDD package >=2.0: http://reasoning.cs.ucla.edu/sdd/
 
 Optional:
 
 * cysignals
 * numpy
 
+Make sure to have the correct development tools installed:
+
+* C compiler (see `Installing Cython <https://cython.readthedocs.io/en/latest/src/quickstart/install.html>`_)
+* The Python development version that includes Python header files and static library (e.g. libpython3-dev, python-dev, ...)
 
 ------------
 Installation
@@ -42,7 +45,7 @@ The following example builds an SDD for the formula ``a∧b ∨ b∧c ∨  c∧d
     from pysdd.sdd import SddManager, Vtree, WmcManager
     vtree = Vtree(var_count=4, var_order=[2,1,4,3], vtree_type="balanced")
     sdd = SddManager.from_vtree(vtree)
-    a, b, c, d = [sdd.literal(i) for i in range(1, 5)]
+    a, b, c, d = sdd.vars
 
     # Build SDD for formula
     formula = (a & b) | (b & c) | (c & d)
