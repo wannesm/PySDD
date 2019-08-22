@@ -201,6 +201,12 @@ cdef class SddNode:
                               SddNode.wrap(nodes[i + 1], self._manager)))
         return primesubs
 
+    def bit(self):
+        return sddapi_c.sdd_node_bit(self._sddnode)
+
+    def set_bit(self, int bit):
+        sddapi_c.sdd_node_set_bit(bit, self._sddnode)
+
     def vtree(self):
         """Returns the vtree of an SDD node."""
         return Vtree.wrap(sddapi_c.sdd_vtree_of(self._sddnode), is_ref=True)
