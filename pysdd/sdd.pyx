@@ -201,6 +201,12 @@ cdef class SddNode:
                               SddNode.wrap(nodes[i + 1], self._manager)))
         return primesubs
 
+    def bit(self):
+        return sddapi_c.sdd_node_bit(self._sddnode)
+
+    def set_bit(self, int bit):
+        sddapi_c.sdd_node_set_bit(bit, self._sddnode)
+
     def vtree(self):
         """Returns the vtree of an SDD node."""
         return Vtree.wrap(sddapi_c.sdd_vtree_of(self._sddnode), is_ref=True)
@@ -922,14 +928,14 @@ cdef class SddManager:
     def from_fnf(Fnf fnf, char* vtree_type="balanced"):
         """Create an SDD from the given DNF file."""
         vtree = Vtree(var_count=fnf.var_count, vtree_type=vtree_type)
-        sdd = SddManager(vtree=vtree)
-        sdd.auto_gc_and_minimize_off()  # Having this on while building triggers segfault
+        mgr = SddManager(vtree=vtree)
+        mgr.auto_gc_and_minimize_off()  # Having this on while building triggers segfault
         # cli.initialize_manager_search_state(self._sddmanager)  # not required anymore in 2.0?
         # TODO: Add interruption to compilation (e.g. for timeouts)
-        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(fnf._fnf, sdd._sddmanager), sdd)
-        sdd.root = rnode
-        # sdd.auto_gc_and_minimize_off()
-        return sdd, rnode
+        rnode = SddNode.wrap(compiler_c.fnf_to_sdd(fnf._fnf, mgr._sddmanager), mgr)
+        mgr.root = rnode
+        # mgr.auto_gc_and_minimize_off()
+        return mgr, rnode
 
 
     def fnf_to_sdd(self, Fnf fnf):
