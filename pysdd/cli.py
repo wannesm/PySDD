@@ -15,7 +15,7 @@ import sys
 import time
 import argparse
 import logging
-from pysdd.sdd import SddManager, Vtree, Fnf, CompilerOptions
+from .sdd import SddManager, Vtree, Fnf, CompilerOptions
 
 
 logger = logging.getLogger(__name__)
