@@ -137,15 +137,15 @@ class MyBuildExtCommand(BuildExtCommand):
             else:
                 print("Warning: import cysignals failed")
         # Extra objects
-        if "Darwin" in platform.platform():
+        if "Darwin" in platform.system():
             cur_lib_path = lib_path / "Darwin"
             if build_type == "debug":
                 cur_lib_path = cur_lib_path / "debug"
             libsdd_path = cur_lib_path / "libsdd.a"
-        elif "Linux" in platform.platform():
+        elif "Linux" in platform.system():
             cur_lib_path = lib_path / "Linux"
             libsdd_path = cur_lib_path / "libsdd.a"
-        elif "Windows" in platform.platform():
+        elif "Windows" in platform.system():
             cur_lib_path = lib_path / "Windows"
             libsdd_path = cur_lib_path / "libsdd.dll"
         else:
