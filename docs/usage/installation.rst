@@ -9,6 +9,24 @@ Dependencies
 * Cython
 * SDD package >=2.0: http://reasoning.cs.ucla.edu/sdd/
 
+----------------
+Pip Installation
+----------------
+
+The package can be installed using Pip:
+
+.. code-block:: shell
+
+    pip install pysdd
+
+If the package complains that ``ModuleNotFoundError: No module named 'pysdd.sdd'``
+something went wrong during compilation. Reinstall with the verbose option to see
+what the issue is:
+
+.. code-block:: shell
+
+    pip install -vvv --upgrade --force-reinstall --no-deps pysdd
+
 
 -----------
 Compilation
