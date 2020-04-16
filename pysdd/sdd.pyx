@@ -1293,24 +1293,56 @@ cdef class Vtree:
     ## Size and Count (Sec 5.3.2)
 
     def size(self):
+        """Returns the size (live+dead) of all SDD nodes in the vtree.
+
+        :return: size
+        """
         return sddapi_c.sdd_vtree_size(self._vtree)
 
     def live_size(self):
+        """Returns the size (live only) of all SDD nodes in the vtree.
+
+        :return: size
+        """
         return sddapi_c.sdd_vtree_live_size(self._vtree)
 
     def dead_size(self):
+        """Returns the size (dead only) of all SDD nodes in the vtree.
+
+        :return: size
+        """
         return sddapi_c.sdd_vtree_dead_size(self._vtree)
 
     def count(self):
+        """Returns the node count (live+dead) of all SDD nodes in the vtree.
+
+        :return: count
+        """
         return sddapi_c.sdd_vtree_count(self._vtree)
 
     def live_count(self):
+        """Returns the node count (live only) of all SDD nodes in the vtree.
+
+        :return: count
+        """
         return sddapi_c.sdd_vtree_live_count(self._vtree)
 
     def dead_count(self):
+        """Returns the node count (dead only) of all SDD nodes in the vtree.
+
+        :return: count
+        """
         return sddapi_c.sdd_vtree_dead_count(self._vtree)
 
     def size_at(self):
+        """Returns the size of all SDD nodes normalized for a vtree node
+        (the root where this Vtree points at).
+
+        For example, Vtree.size(vtree) returns the sum of Vtree.size_at(v)
+        where v ranges over all nodes of vtree.
+
+        :return: size
+        """
         return sddapi_c.sdd_vtree_size_at(self._vtree)
 
     def live_size_at(self):
@@ -1320,6 +1352,14 @@ cdef class Vtree:
         return sddapi_c.sdd_vtree_dead_size_at(self._vtree)
 
     def count_at(self):
+        """Returns the node count of all SDD nodes normalized for a vtree node
+        (the root where this Vtree points at).
+
+        For example, Vtree.size(vtree) returns the sum of Vtree.size_at(v)
+        where v ranges over all nodes of vtree.
+
+        :return: size
+        """
         return sddapi_c.sdd_vtree_count_at(self._vtree)
 
     def live_count_at(self):
