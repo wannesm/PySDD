@@ -27,10 +27,17 @@ Make sure to have the correct development tools installed:
 Installation
 ------------
 
+Through pip:
+
 .. code-block:: shell
 
    $ pip install PySDD
 
+An AUR package is available for Arch Linux users:
+
+.. code-block:: shell
+
+  $ yay -S python-pysdd
 
 --------------
 Python package
