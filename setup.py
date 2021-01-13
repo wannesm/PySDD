@@ -170,7 +170,9 @@ if cythonize is not None:
         compile_time_env=compile_time_env)
 else:
     ext_modules = []
+    print('**********************************************')
     print('Cython not yet available, skipping compilation')
+    print('**********************************************')
 
 # install_requires = ['numpy', 'cython']
 install_requires = ['cython>=0.29.6']
