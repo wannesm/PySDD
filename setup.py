@@ -14,6 +14,7 @@ from setuptools import setup
 from setuptools.extension import Extension
 from setuptools.command.build_ext import build_ext as BuildExtCommand
 from setuptools import Distribution
+from distutils.errors import CCompilerError, DistutilsExecError, DistutilsPlatformError
 import platform
 import os
 import re
@@ -178,7 +179,13 @@ tests_require = ['pytest']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
     long_description = f.read()
-setup(
+
+setup_kwargs = {}
+def set_setup_kwargs(**kwargs):
+    global setup_kwargs
+    setup_kwargs = kwargs
+
+set_setup_kwargs(
     name='PySDD',
     version=wrapper_version,
     description='Sentential Decision Diagrams',
@@ -222,3 +229,11 @@ setup(
     zip_safe=False
 )
 
+try:
+    setup(**setup_kwargs)
+except (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOError, SystemExit) as exc:
+    print("********************************************")
+    print("ERROR: The C extension could not be compiled")
+    print("********************************************")
+    print(exc)
+    raise exc
