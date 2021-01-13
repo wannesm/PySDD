@@ -176,7 +176,7 @@ else:
 
 # install_requires = ['numpy', 'cython']
 install_requires = ['cython>=0.29.6']
-setup_requires = ['cython>=0.29.6']
+setup_requires = ['setuptools>=18.0', 'cython>=0.29.6']
 tests_require = ['pytest']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
