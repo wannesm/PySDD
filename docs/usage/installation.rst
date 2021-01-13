@@ -7,7 +7,6 @@ Dependencies
 
 * Python >=3.6
 * Cython
-* SDD package >=2.0: http://reasoning.cs.ucla.edu/sdd/
 
 ----------------
 Pip Installation
@@ -25,12 +24,12 @@ what the issue is:
 
 .. code-block:: shell
 
-    pip install -vvv --upgrade --force-reinstall --no-deps pysdd
+    pip install -vvv --upgrade --force-reinstall --no-deps --no-binary :all: pysdd
 
 
------------
-Compilation
------------
+-----------------------
+Compilation from Source
+-----------------------
 
 Notice: This wrapper requires some small changes to the SDD package.
 The changed files are already included in this repository. Do not overwrite

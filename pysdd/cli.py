@@ -33,7 +33,7 @@ def main(argv=None):
     elif options.dnf_filename is not None:
         print("reading dnf...")
         fnf = Fnf.from_dnf_file(bytes(options.dnf_filename))
-        weights = read_weights(options.cnf_filename)
+        weights = read_weights(options.dnf_filename)
 
     if options.vtree_filename is not None:
         print("reading initial vtree...")

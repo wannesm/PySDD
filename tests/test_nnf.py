@@ -1,4 +1,6 @@
 from pysdd.util import nnf_file_wmc, sdd_file_wmc, psdd_file_wmc
+from pysdd.sdd import Fnf, Vtree, SddManager
+from pysdd.cli import read_weights
 import sys
 import os
 import math
@@ -28,6 +30,16 @@ def test_nnf2():
     }
     wmc = nnf_file_wmc(here / "rsrc" / "test.cnf.nnf", weights)
     assert wmc == 0.75
+
+
+def test_dnf1():
+    dnf_filename = str(here / "rsrc" / "test.cnf.nnf")
+    fnf = Fnf.from_dnf_file(bytes(dnf_filename, encoding='utf8'))
+    # weights = read_weights(dnf_filename)
+    vtree = Vtree(var_count=fnf.var_count)
+    manager = SddManager.from_vtree(vtree)
+    node = manager.fnf_to_sdd(fnf)
+    print(node)
 
 
 def test_sdd1():
@@ -64,4 +76,5 @@ if __name__ == "__main__":
     print(f"Saving files to {directory}")
     # test_nnf1()
     # test_sdd2()
-    test_psdd1()
+    # test_psdd1()
+    test_dnf1()
