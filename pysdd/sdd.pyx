@@ -461,6 +461,53 @@ cdef class SddManager:
         sddapi_c.sdd_manager_add_var_after(target_var, self._sddmanager)
 
 
+    def add_var_before_lca(self, sddapi_c.SddLiteral[:] literals):
+        """
+        Let v be the smallest vtree which contains the variables of literals, where count is the number of literals.
+        A new leaf node labeled with variable n + 1 is created and made a left sibling of v.
+        """
+        cdef int count = len(literals)
+        sddapi_c.add_var_before_lca(count, &literals[0], self._sddmanager)
+
+    def add_var_after_lca(self, sddapi_c.SddLiteral[:] literals):
+        """
+        Let v be the smallest vtree which contains the variables of literals, where count is the number of literals.
+        A new leaf node labeled with variable n + 1 is created and made a right sibling of v.
+        """
+        cdef int count = len(literals)
+        sddapi_c.add_var_after_lca(count, &literals[0], self._sddmanager)
+
+    def move_var_before_first(self, sddapi_c.SddLiteral var):
+        """Let v be the leftmost leaf node in the vtree. The leaf node labeled with variable
+        var is moved to become a left sibling of leaf v.
+        """
+        sddapi_c.move_var_before_first(var, self._sddmanager)
+
+    def move_var_after_last(self, sddapi_c.SddLiteral var):
+        """Let v be the rightmost leaf node in the vtree. The leaf node labeled with variable
+        var is moved to become a right sibling of leaf v.
+        """
+        sddapi_c.move_var_after_last(var, self._sddmanager)
+
+    def move_var_before(self, sddapi_c.SddLiteral var, sddapi_c.SddLiteral target_var):
+        """Let v be the vtree leaf node labeled with variable target var. The leaf node labeled with variable
+        var is moved to become a left sibling of leaf v.
+        """
+        sddapi_c.move_var_before(var, target_var, self._sddmanager)
+
+    def move_var_after(self, sddapi_c.SddLiteral var, sddapi_c.SddLiteral target_var):
+        """Let v be the vtree leaf node labeled with variable target var. The leaf node labeled with variable
+        var is moved to become a right sibling of leaf v.
+        """
+        sddapi_c.move_var_after(var, target_var, self._sddmanager)
+
+    def remove_var_added_last(self):
+        """Let v be the vtree leaf node with the variable that was added last to the vtree.
+        This leaf is removed from the vtree.
+        """
+        sddapi_c.remove_var_added_last(self._sddmanager)
+
+
     ## Terminal SDDs (Sec 5.1.2)
 
     def true(self):
