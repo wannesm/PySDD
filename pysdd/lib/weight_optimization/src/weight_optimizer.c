@@ -33,8 +33,8 @@ int _progress(void* instance, const lbfgsfloatval_t *x,
 }
 
 WeightOptimizationProblem wop_new(SddNode* sdd, SddManager* mgr, int m_instances,
-	        int n_optimize, int* ind_optimize,  long double* weights_optimize, int* counts_optimize,
-	        int n_fix, int* ind_fix,  long double* weights_fix, int* counts_fix ){
+	        int n_optimize, int* ind_optimize,  double* weights_optimize, int* counts_optimize,
+	        int n_fix, int* ind_fix,  double* weights_fix, int* counts_fix ){
 
     WeightOptimizationProblem wop;
 
@@ -138,7 +138,7 @@ When optimization is done: copy last weights and final score to wop
 void wop_done(WeightOptimizationProblem* wop, lbfgsfloatval_t *m_x,
 		lbfgsfloatval_t fx) {
 	for (int i = 0; i < wop->n_optimize; i++) {
-		wop->weights_optimize[i] = m_x[i];
+		wop->weights_optimize[i] = (double) m_x[i];
 	}
 	wop->loglikelihood = -fx / wop->m_instances;
 }
@@ -167,7 +167,7 @@ int wo_optimize(WeightOptimizer* wo, WeightOptimizationProblem* problem) {
 		return 1;
 	}
 	for (int i = 0; i < problem->n_optimize; i++) {
-		m_x[i] = problem->weights_optimize[i];
+		m_x[i] = (lbfgsfloatval_t) problem->weights_optimize[i];
 	}
 	if (wo->settings.orthantwise_c != 0) {
 		wo->settings.linesearch = LBFGS_LINESEARCH_BACKTRACKING; //required by lbfgs lib
@@ -226,8 +226,8 @@ lbfgsfloatval_t wo_prior(WeightOptimizer* wo, const lbfgsfloatval_t* cur_weights
     indicators that are not in ind_fix nor ind_optimize are not used, i.e. both their literal weights are set to 0.
 */
 void optimize_weights(SddNode* sdd, SddManager* mgr, int m_instances,
-        int n_optimize, int* ind_optimize,  long double* weights_optimize, int* counts_optimize,
-        int n_fix, int* ind_fix,  long double* weights_fix, int* counts_fix,
+        int n_optimize, int* ind_optimize,  double* weights_optimize, int* counts_optimize,
+        int n_fix, int* ind_fix,  double* weights_fix, int* counts_fix,
         long double prior_sigma, long double l1_const, int max_iter, long double delta, long double epsilon) {
 
 	WeightOptimizationProblem wop = wop_new(sdd, mgr, m_instances,

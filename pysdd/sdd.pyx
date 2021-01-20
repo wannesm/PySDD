@@ -19,13 +19,13 @@ cimport weight_optimization_c
 from cpython cimport array
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
+
 import os
 import tempfile
 from contextlib import redirect_stdout, redirect_stderr
 import io
 import cython
 import collections
-import numpy as np
 
 
 IF HAVE_CYSIGNALS:
@@ -1841,38 +1841,36 @@ def optimize_weights(sdd: SddNode, mgr: SddManager, int m_instances,
 
     # Implicit indicators of weights to be optimized
     if ind_optimize is None:
-        ind_optimize = np.arange(1,len(counts_optimize)+1, dtype=np.int32)
+        ind_optimize = array.array('i', list(range((1,len(counts_optimize)+1))))
 
     # Set initial weights if none were given
     if weights_optimize is None:
-        weights_optimize = np.zeros_like(counts_optimize, dtype=np.longdouble)
+        weights_optimize = array.array('d', [0]*len(counts_optimize))
 
+    assert len(ind_optimize) == len(weights_optimize) == len(counts_optimize)
+    cdef int n_optimize = len(ind_optimize)
+
+    cdef int n_fix;
     # No weights to be fixed
-    if ind_fix is None:
+    if ind_fix is None or len(ind_fix) == 0:
         assert weights_fix is None or len(weights_fix)==0
         assert counts_fix is None or len(counts_fix)==0
-        ind_fix = np.empty(0, dtype=np.int32)
-        weights_fix = np.empty(0, dtype=np.int32)
-        counts_fix = np.empty(0, dtype=np.int32)
+        n_fix = 0
+        # add 1 element to arrays: hacky solution to avoid out of bounds on buffer access error
+        ind_fix = array.array('i', [0])
+        weights_fix = array.array('d', [0])
+        counts_fix = array.array('i', [0])
+    else:
+        assert len(ind_fix) == len(weights_fix) == len(counts_fix)
+        n_fix = len(ind_fix)
 
-    assert len(ind_optimize)==len(weights_optimize)==len(counts_optimize)
-    assert len(ind_fix)==len(weights_fix)==len(counts_fix)
-
-    cdef int n_optimize = len(ind_optimize)
-    cdef int n_fix = len(ind_fix)
-
-    # hacky solution to avoid out of bounds on buffer access error
-    if n_fix==0:
-        ind_fix = np.empty(1,dtype=np.int32)
-        weights_fix = np.empty(1,dtype=np.longdouble)
-        counts_fix = np.empty(1,dtype=np.int32)
 
     # to ctypes
     cdef int[:] ind_optimize_c = ind_optimize
-    cdef long double[:] weights_optimize_c = weights_optimize
+    cdef double[:] weights_optimize_c = weights_optimize
     cdef int[:] counts_optimize_c = counts_optimize
     cdef int[:] ind_fix_c = ind_fix
-    cdef long double[:] weights_fix_c = weights_fix
+    cdef double[:] weights_fix_c = weights_fix
     cdef int[:] counts_fix_c = counts_fix
 
     weight_optimization_c.optimize_weights(sdd._sddnode, mgr._sddmanager, m_instances,

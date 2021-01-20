@@ -13,7 +13,7 @@ struct WeightOptimizationProblem {
 	int m_instances;
 	int n_optimize; // num_features to optimize
 	int* ind_optimize;
-	long double* weights_optimize;
+	double* weights_optimize;
 	int* counts_optimize;
 	long double ll_fix;
 	WmcManager* wmcManager;
@@ -47,8 +47,8 @@ int _progress(void* instance, const lbfgsfloatval_t *x,
 
 // constructor weightOptimization
 WeightOptimizationProblem wop_new(SddNode* sdd, SddManager* mgr, int m_instances,
-	        int n_optimize, int* ind_optimize,  long double* weights_optimize, int* counts_optimize,
-	        int n_fix, int* ind_fix,  long double* weights_fix, int* counts_fix);
+	        int n_optimize, int* ind_optimize,  double* weights_optimize, int* counts_optimize,
+	        int n_fix, int* ind_fix,  double* weights_fix, int* counts_fix);
 
 void wop_free(WeightOptimizationProblem* wop);
 
@@ -85,8 +85,8 @@ lbfgsfloatval_t wo_prior(WeightOptimizer* wo, const lbfgsfloatval_t* cur_weights
     indicators that are not in ind_fix nor ind_optimize are not used, i.e. both their literal weights are set to 0.
 */
 void optimize_weights(SddNode* sdd, SddManager* mgr, int m_instances,
-        int n_optimize, int* ind_optimize,  long double* weights_optimize, int* counts_optimize,
-        int n_fix, int* ind_fix,  long double* weights_fix, int* counts_fix,
+        int n_optimize, int* ind_optimize,  double* weights_optimize, int* counts_optimize,
+        int n_fix, int* ind_fix,  double* weights_fix, int* counts_fix,
         long double prior_sigma, long double l1_const, int max_iter, long double delta, long double epsilon);
 
 
