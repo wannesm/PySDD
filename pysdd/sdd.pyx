@@ -15,6 +15,7 @@ cimport sddapi_c
 cimport compiler_c
 cimport io_c
 cimport fnf_c
+cimport weight_optimization_c
 from cpython cimport array
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
@@ -24,6 +25,7 @@ from contextlib import redirect_stdout, redirect_stderr
 import io
 import cython
 import collections
+import numpy as np
 
 
 IF HAVE_CYSIGNALS:
@@ -350,6 +352,7 @@ cdef class SddNode:
 
     def __eq__(SddNode self, SddNode other):
         return self._sddnode == other._sddnode
+
 
 
 @cython.embedsignature(True)
@@ -1802,3 +1805,79 @@ cdef class CompilerOptions:
         r += "  post_search: " + str(self.post_search) + "\n"
         r += "  verbose: " + str(self.verbose) + "\n"
         return r
+
+
+def optimize_weights(sdd: SddNode, mgr: SddManager, int m_instances,
+                     counts_optimize, weights_optimize=None, ind_optimize = None,
+                     counts_fix = None, weights_fix = None, ind_fix = None,
+                     long double prior_sigma=2, long double l1_const=0.95, int max_iter=70,
+                     long double delta=1e-10, long double epsilon=1e-4):
+    """
+    Optimize the sdd variable log weights given counts of how often the variables are positive in the data,
+    using l-bfgs algorithm.
+
+    All the negative literals are fixed to log(1)=0 while the positive literal weights are optimized.
+    Fixing the negative weights does not reduce expressiveness, so optimal weights can still be learned.
+
+    Not all variables need to be optimized.
+    The weights of the variables that are not optimized are set to log(1)=0, so that they do not , or to the weight
+
+
+    :param sdd: The SDD that represents the constraints between the variables
+    :param mgr: Sdd manager
+    :param m_instances: The number of instances in the data
+    :param counts_optimize: counts_optimize[i] is the count of how often variable ind_optimize[i] is positive in the data
+    :param weights_optimize: weights_optimize[i] is the initial weight for variable ind_optimize[i]
+    :param ind_optimize: variables to optimize
+    :param counts_fix: counts_fix[i] is the count of how often variable ind_fix[i] is positive in the data
+    :param weights_fix: weights_fix[i] is the fixed weight for variable ind_fix[i]
+    :param ind_fix: variables of which the weights are fixed (to weights different than log(1)=0)
+    :param prior_sigma: sigma of gaussian prior on weights
+    :param l1_const: strength of l1 regularisation
+    :param max_iter: maximum number of l-bfgs iterations
+    :param delta: delta for convergence test in l-bfgs, it determines the minimum rate of decrease of the objective function
+    :param epsilon: distance for delta-based convergence test in l-bfgs
+    """
+
+    # Implicit indicators of weights to be optimized
+    if ind_optimize is None:
+        ind_optimize = np.arange(1,len(counts_optimize)+1, dtype=np.int32)
+
+    # Set initial weights if none were given
+    if weights_optimize is None:
+        weights_optimize = np.zeros_like(counts_optimize, dtype=np.longdouble)
+
+    # No weights to be fixed
+    if ind_fix is None:
+        assert weights_fix is None or len(weights_fix)==0
+        assert counts_fix is None or len(counts_fix)==0
+        ind_fix = np.empty(0, dtype=np.int32)
+        weights_fix = np.empty(0, dtype=np.int32)
+        counts_fix = np.empty(0, dtype=np.int32)
+
+    assert len(ind_optimize)==len(weights_optimize)==len(counts_optimize)
+    assert len(ind_fix)==len(weights_fix)==len(counts_fix)
+
+    cdef int n_optimize = len(ind_optimize)
+    cdef int n_fix = len(ind_fix)
+
+    # hacky solution to avoid out of bounds on buffer access error
+    if n_fix==0:
+        ind_fix = np.empty(1,dtype=np.int32)
+        weights_fix = np.empty(1,dtype=np.longdouble)
+        counts_fix = np.empty(1,dtype=np.int32)
+
+    # to ctypes
+    cdef int[:] ind_optimize_c = ind_optimize
+    cdef long double[:] weights_optimize_c = weights_optimize
+    cdef int[:] counts_optimize_c = counts_optimize
+    cdef int[:] ind_fix_c = ind_fix
+    cdef long double[:] weights_fix_c = weights_fix
+    cdef int[:] counts_fix_c = counts_fix
+
+    weight_optimization_c.optimize_weights(sdd._sddnode, mgr._sddmanager, m_instances,
+                          n_optimize, &ind_optimize_c[0], &weights_optimize_c[0], &counts_optimize_c[0],
+                          n_fix, &ind_fix_c[0], &weights_fix_c[0], &counts_fix_c[0],
+                          prior_sigma, l1_const, max_iter, delta, epsilon)
+
+    return weights_optimize

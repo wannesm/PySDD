@@ -63,8 +63,8 @@ lib_path = sdd_path / "lib"
 inc_path = sdd_path / "include"
 src_path = sdd_path / "src"
 csrc_path = here / "pysdd" / "src"
-# c_files_paths = src_path.glob("**/*.c")
-c_files_paths = (src_path / "fnf").glob("*.c")
+c_files_paths = src_path.glob("**/*.c")
+# c_files_paths = (src_path / "fnf").glob("*.c")
 c_dirs_paths = set(p.parent for p in src_path.glob("**/*.c"))
 all_c_file_paths = [str(p) for p in c_files_paths]  # + [str(p) for p in csrc_path.glob("*.c")]
 # print("Found c files: ", ", ".join([str(p) for p in all_c_file_paths]))
