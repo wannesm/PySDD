@@ -19,7 +19,6 @@ cimport weight_optimization_c
 from cpython cimport array
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
-
 import os
 import tempfile
 from contextlib import redirect_stdout, redirect_stderr
@@ -352,7 +351,6 @@ cdef class SddNode:
 
     def __eq__(SddNode self, SddNode other):
         return self._sddnode == other._sddnode
-
 
 
 @cython.embedsignature(True)
