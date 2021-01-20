@@ -78,7 +78,6 @@ c_dirs_paths = set(p.parent for p in src_path.glob("**/*.c")) | {wo_src_path}
 all_c_file_paths = [str(p) for p in c_files_paths] + [str(p) for p in wo_c_files_paths]
 # print("Found c files: ", ", ".join([str(p) for p in all_c_file_paths]))
 
-
 os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{wo_inc_path} " + f"-I{sdd_extra_inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)

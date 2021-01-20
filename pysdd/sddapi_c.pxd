@@ -70,7 +70,6 @@ cdef extern from "sddapi.h":
     SddLiteral sdd_manager_var_count(SddManager* manager);
     void sdd_manager_var_order(SddLiteral* var_order, SddManager *manager);
     void sdd_manager_add_var_before_first(SddManager* manager);
-    void sdd_manager_add_var_before_first(SddManager* manager);
     void sdd_manager_add_var_after_last(SddManager* manager);
     void sdd_manager_add_var_before(SddLiteral target_var, SddManager* manager);
     void sdd_manager_add_var_after(SddLiteral target_var, SddManager* manager);
