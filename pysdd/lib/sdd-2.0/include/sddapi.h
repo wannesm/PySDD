@@ -173,15 +173,6 @@ void sdd_manager_add_var_after_last(SddManager* manager);
 void sdd_manager_add_var_before(SddLiteral target_var, SddManager* manager);
 void sdd_manager_add_var_after(SddLiteral target_var, SddManager* manager);
 
-// Some additional functions, that were originally not in the public interface.
-void add_var_before_lca(int count, SddLiteral* literals, SddManager* manager);
-void add_var_after_lca(int count, SddLiteral* literals, SddManager* manager);
-void move_var_before_first(SddLiteral var, SddManager* manager);
-void move_var_after_last(SddLiteral var, SddManager* manager);
-void move_var_before(SddLiteral var, SddLiteral target_var, SddManager* manager);
-void move_var_after(SddLiteral var, SddLiteral target_var, SddManager* manager);
-void remove_var_added_last(SddManager*manager);
-
 // TERMINAL SDDS
 SddNode* sdd_manager_true(const SddManager* manager);
 SddNode* sdd_manager_false(const SddManager* manager);
