@@ -62,7 +62,7 @@ WeightOptimizationProblem wop_new(SddNode* sdd, SddManager* mgr, int m_instances
 		wmc_set_literal_weight(-i, wmc_one_weight(wop.wmcManager), wop.wmcManager);
 	}
 
-    // set positive literal weights of indicators to be fixed to their fixed weights
+    // set literal weights of indicators to be fixed to their fixed weights
 	for (int i = 1; i <= n_fix; i++) {
 		wmc_set_literal_weight(ind_fix[i], weights_fix[i], wop.wmcManager);
 	}

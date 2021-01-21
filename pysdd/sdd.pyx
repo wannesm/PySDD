@@ -1811,25 +1811,28 @@ def optimize_weights(sdd: SddNode, mgr: SddManager, int m_instances,
                      long double prior_sigma=2, long double l1_const=0.95, int max_iter=70,
                      long double delta=1e-10, long double epsilon=1e-4):
     """
-    Optimize the sdd variable log weights given counts of how often the variables are positive in the data,
-    using l-bfgs algorithm.
+    Optimize the sdd variable log weights to maximize the log likelihood of some data using l-bfgs algorithm.
+    The data consists of m instances and the count of how often the variable appear positive in the data is provided.
+    The weights are optimized so that the counts are most likely to be observed given the constraints represented
+    by the sdd and the weights of the variables. See https://doi.org/10.1016/j.artint.2007.11.002
 
-    All the negative literals are fixed to log(1)=0 while the positive literal weights are optimized.
-    Fixing the negative weights does not reduce expressiveness, so optimal weights can still be learned.
+    Without loss of expressiveness, all the negative literals weights are fixed to log(1)=0
+    while the positive literal weights are optimized.
 
     Not all variables need to be optimized.
-    The weights of the variables that are not optimized are set to log(1)=0, so that they do not , or to the weight
-
+    The weights of the variables that are not optimized are set to log(1)=0, so that they do not affect the LL,
+    or, if the variable is in ind_fix, to the weight specified by the corresponding value in  weights_fix.
 
     :param sdd: The SDD that represents the constraints between the variables
     :param mgr: Sdd manager
     :param m_instances: The number of instances in the data
     :param counts_optimize: counts_optimize[i] is the count of how often variable ind_optimize[i] is positive in the data
-    :param weights_optimize: weights_optimize[i] is the initial weight for variable ind_optimize[i]
-    :param ind_optimize: variables to optimize
+    :param weights_optimize: weights_optimize[i] is the initial weight for variable ind_optimize[i],
+                             default: [0]*len(counts_optimize)
+    :param ind_optimize: variables to optimize. default: range(1,len(counts_optimize)
     :param counts_fix: counts_fix[i] is the count of how often variable ind_fix[i] is positive in the data
     :param weights_fix: weights_fix[i] is the fixed weight for variable ind_fix[i]
-    :param ind_fix: variables of which the weights are fixed (to weights different than log(1)=0)
+    :param ind_fix: variables of which the weights are fixed (to weights different than log(1)=0), default: []
     :param prior_sigma: sigma of gaussian prior on weights
     :param l1_const: strength of l1 regularisation
     :param max_iter: maximum number of l-bfgs iterations
