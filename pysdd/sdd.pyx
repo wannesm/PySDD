@@ -1805,78 +1805,106 @@ cdef class CompilerOptions:
         return r
 
 
-def optimize_weights(sdd: SddNode, mgr: SddManager, int m_instances,
-                     counts_optimize, weights_optimize=None, ind_optimize = None,
-                     counts_fix = None, weights_fix = None, ind_fix = None,
+def optimize_weights(sdd: SddNode, mgr: SddManager, int nb_instances,
+                     counts_optimize, weights_optimize=None, lits_optimize = None,
+                     weights_fix = None, lits_fix = None,
                      long double prior_sigma=2, long double l1_const=0.95, int max_iter=70,
                      long double delta=1e-10, long double epsilon=1e-4):
+
     """
-    Optimize the sdd variable log weights to maximize the log likelihood of some data using l-bfgs algorithm.
-    The data consists of m instances and the count of how often the variable appear positive in the data is provided.
-    The weights are optimized so that the counts are most likely to be observed given the constraints represented
-    by the sdd and the weights of the variables. See https://doi.org/10.1016/j.artint.2007.11.002
+    Optimize the SDD literal log weights to maximize the log likelihood of the weights for some data
+    using l-BFGS optimization.
+    I.e. optimize the probabilistic model encoded by the SDD: https://doi.org/10.1016/j.artint.2007.11.002
 
-    Without loss of expressiveness, all the negative literals weights are fixed to log(1)=0
-    while the positive literal weights are optimized.
+    The data is characterized by the number of instances and the counts of instances in which the literals of the
+    to-be-optimized weights are true.
 
-    Not all variables need to be optimized.
-    The weights of the variables that are not optimized are set to log(1)=0, so that they do not affect the LL,
-    or, if the variable is in ind_fix, to the weight specified by the corresponding value in  weights_fix.
+    Not all literal weights need to be optimized.
+    The weights of the literals that are not optimized are by default set to log(1)=0, so that they do not affect the LL.
+    Alternatively, fixed weights can be provided for literals through lit_fix and weights_fix.
 
-    :param sdd: The SDD that represents the constraints between the variables
-    :param mgr: Sdd manager
-    :param m_instances: The number of instances in the data
-    :param counts_optimize: counts_optimize[i] is the count of how often variable ind_optimize[i] is positive in the data
-    :param weights_optimize: weights_optimize[i] is the initial weight for variable ind_optimize[i],
-                             default: [0]*len(counts_optimize)
-    :param ind_optimize: variables to optimize. default: range(1,len(counts_optimize)
-    :param counts_fix: counts_fix[i] is the count of how often variable ind_fix[i] is positive in the data
-    :param weights_fix: weights_fix[i] is the fixed weight for variable ind_fix[i]
-    :param ind_fix: variables of which the weights are fixed (to weights different than log(1)=0), default: []
-    :param prior_sigma: sigma of gaussian prior on weights
-    :param l1_const: strength of l1 regularisation
-    :param max_iter: maximum number of l-bfgs iterations
-    :param delta: delta for convergence test in l-bfgs, it determines the minimum rate of decrease of the objective function
-    :param epsilon: distance for delta-based convergence test in l-bfgs
+
+    Preconditions
+    -------------
+     - 1 <= abs(lit)) <= sdd_manager_var_count(mgr) for lit in lit_optimize and lit_fix
+     - lit_optimize & lit_fix = {}  (intersection of lit_optimize and lit_fix is empty)
+     - len(lit_optimize) == len(counts_optimize) == len(weights_optimize)
+     - len(lit_fix) == len(weights_fix)
+
+    Parameters
+    ----------
+    sdd : SddNode
+    mgr : SddManager
+    nb_instances : int
+                  The number of instances in the data
+    counts_optimize : numpy.ndarray
+                      1D Array of length N1, representing the counts of the to-be-optimized literals in the data
+                      counts_optimize[i] is the count of instances in which literal lit_optimize[i] is true
+    weights_optimize: numpy.ndarray
+                      1D Array of length N1, representing the initial weights of the to-be-optimized literals
+                      weights_optimize[i] is the initial weight of literal lit_optimize[i]
+                      default: None -> numpy.zeros(len(counts_optimize))
+    lits_optimize: numpy.ndarray
+                   1D Array of length N1, representing the to-be-optimized literals
+                   default: None -> numpy.arange(1,len(counts_optimize))
+    weights_fix: numpy.ndarray
+                 1D Array of length N2, representing the initial weights of the literals with fixed weights
+                 weights_fix[i] is the initial weight of literal lit_fix[i]
+                 default: None -> numpy.array([])
+    lits_fix: numpy.ndarray
+              1D Array of length N2, representing the literals with fixed weights
+              default: None -> numpy.array([])
+    prior sigma: float64
+                sigma of gaussian prior on weights
+                default: 2
+    l1 const: float64
+              strength of l1 regularisation
+              default: 0.95
+    max_iter: int
+              maximum number of l-bfgs iterations
+              default: 70
+    delta: float64
+           delta for convergence test in l-bfgs, it determines the minimum rate of decrease of the objective function
+           default: 1e-10
+    epsilon: float64
+             distance for delta-based convergence test in l-bfgs
+             default: 1e-4
     """
 
     # Implicit indicators of weights to be optimized
-    if ind_optimize is None:
-        ind_optimize = array.array('i', list(range((1,len(counts_optimize)+1))))
+    if lits_optimize is None:
+        lits_optimize = array.array('i', list(range((1,len(counts_optimize)+1))))
 
     # Set initial weights if none were given
     if weights_optimize is None:
         weights_optimize = array.array('d', [0]*len(counts_optimize))
 
-    assert len(ind_optimize) == len(weights_optimize) == len(counts_optimize)
-    cdef int n_optimize = len(ind_optimize)
+    assert len(lits_optimize) == len(weights_optimize) == len(counts_optimize)
+    cdef int n_optimize = len(lits_optimize)
 
     cdef int n_fix;
     # No weights to be fixed
-    if ind_fix is None or len(ind_fix) == 0:
+    if lits_fix is None or len(lits_fix) == 0:
         assert weights_fix is None or len(weights_fix)==0
-        assert counts_fix is None or len(counts_fix)==0
         n_fix = 0
         # add 1 element to arrays: hacky solution to avoid out of bounds on buffer access error
-        ind_fix = array.array('i', [0])
+        lits_fix = array.array('i', [0])
         weights_fix = array.array('d', [0])
-        counts_fix = array.array('i', [0])
     else:
-        assert len(ind_fix) == len(weights_fix) == len(counts_fix)
-        n_fix = len(ind_fix)
+        assert len(lits_fix) == len(weights_fix)
+        n_fix = len(lits_fix)
 
 
     # to ctypes
-    cdef int[:] ind_optimize_c = ind_optimize
+    cdef int[:] lits_optimize_c = lits_optimize
     cdef double[:] weights_optimize_c = weights_optimize
     cdef int[:] counts_optimize_c = counts_optimize
-    cdef int[:] ind_fix_c = ind_fix
+    cdef int[:] lits_fix_c = lits_fix
     cdef double[:] weights_fix_c = weights_fix
-    cdef int[:] counts_fix_c = counts_fix
 
-    weight_optimization_c.optimize_weights(sdd._sddnode, mgr._sddmanager, m_instances,
-                          n_optimize, &ind_optimize_c[0], &weights_optimize_c[0], &counts_optimize_c[0],
-                          n_fix, &ind_fix_c[0], &weights_fix_c[0], &counts_fix_c[0],
+    weight_optimization_c.optimize_weights(sdd._sddnode, mgr._sddmanager, nb_instances,
+                          n_optimize, &lits_optimize_c[0], &weights_optimize_c[0], &counts_optimize_c[0],
+                          n_fix, &lits_fix_c[0], &weights_fix_c[0],
                           prior_sigma, l1_const, max_iter, delta, epsilon)
 
     return weights_optimize
