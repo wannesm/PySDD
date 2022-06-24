@@ -1,0 +1,166 @@
+
+name: Python PySDD package
+
+on:
+  push:
+    branches: [ deploy ]
+  pull_request:
+    branches: [ deploy ]
+
+jobs:
+  build_unix:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        # os: [ubuntu-20.04,ubuntu-18.04]
+        # python-version: ["3.8","3.9","3.10"]
+        os: [ ubuntu-18.04 ]
+        # cibuildwheel will automatically provide all Python versions
+        python-version: [ "3.9" ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install cibuildwheel==2.3.1
+      - name: Build wheel
+        run: |
+          pwd
+          ls
+          python -m cibuildwheel --output-dir dist/
+        env:
+          CIBW_BUILD_VERBOSITY: 2
+          # cp36-* and cp37-* do not support f-strings
+          CIBW_SKIP: cp36-* cp37-* pp* *-manylinux_i686 *-musllinux_i686 *-musllinux_x86_64
+          CIBW_TEST_EXTRAS: "dev"
+          CIBW_TEST_COMMAND: pytest --ignore=venv {project}/tests
+      - name: Store wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist/*.whl
+
+
+  build_macos:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ macos-11 ]
+        python-version: [ "3.8","3.9","3.10" ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest build
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Compile and install
+        run: |
+          python -m pip install . -v
+          ls ${{ github.workspace }}/build || true
+      - name: Test with pytest
+        run: |
+          mv pysdd pysdd_pkg
+          pytest --ignore=venv
+          mv pysdd_pkg pysdd
+      - name: Build
+        run: |
+          python -m build
+      - name: Store wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist/*.whl
+
+  build_windows:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ windows-2019 ]
+        python-version: [ "3.8","3.9","3.10" ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest build cython
+          python -m pip install numpy
+          python -m pip install cysignals
+          python -m pip install "cython>=0.29.6"
+      - name: Compile and install
+        run: |
+          python -m pip install . -v
+          ls ${{ github.workspace }}/build || true
+      - name: Test with pytest
+        run: |
+          mv pysdd pysdd_pkg
+          pytest --ignore=venv
+          mv pysdd_pkg pysdd
+      - name: Build
+        run: |
+          python -m build
+      - name: Store wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist/*.whl
+
+  build_sdist:
+    name: Prepare source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Build
+        run: |
+          python -m pip install build
+          python -m build --sdist
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist/*.tar.gz
+
+
+#  upload_wheels:
+#    name: Upload wheels to PyPi
+#    runs-on: ubuntu-latest
+#    # upload to PyPI on every tag starting with 'v'
+#    # if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+#    needs: [ build_unix,build_macos,build_windows,build_sdist ]
+#
+#    steps:
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: wheels
+#          path: dist
+#
+#      - name: Publish package to PyPI
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          user: __token__
+#          password: ${{ secrets.PYPI_API_TOKEN }}
+#          packages_dir: dist/

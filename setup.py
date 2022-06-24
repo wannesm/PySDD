@@ -187,6 +187,7 @@ else:
 install_requires = ['cython>=0.29.6']
 setup_requires = ['setuptools>=18.0', 'cython>=0.29.6']
 tests_require = ['pytest']
+dev_require = tests_require + ['cython>=0.29.6']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
     long_description = f.read()
@@ -213,7 +214,8 @@ set_setup_kwargs(
     setup_requires=setup_requires,
     tests_require=tests_require,
     extras_require={
-        'all': ['cysignals', 'numpy']
+        'all': ['cysignals', 'numpy'],
+        'dev': dev_require
     },
     include_package_data=True,
     package_data={
