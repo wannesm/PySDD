@@ -108,9 +108,10 @@ jobs:
           python -m pip install Scons
       - name: Compile libsdd
         run: |
-          cd pysdd/lib/libsdd-2.0
-          ../../../venv/bin/scons
-          cp build/libsdd.a ../sdd-2.0/lib/Windows/
+          cd ${{ github.workspace }}/pysdd/lib/libsdd-2.0
+          ls ${{ github.workspace }}/pysdd/lib/libsdd-2.0
+          ${{ github.workspace }}/venv/bin/scons
+          cp ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.a ${{ github.workspace }}/pysdd/lib/sdd-2.0/lib/Windows/
       - name: Compile and install
         run: |
           python -m pip install . -v
