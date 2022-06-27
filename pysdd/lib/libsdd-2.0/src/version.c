@@ -5,7 +5,8 @@
  ****************************************************************************************/
 
 const char* libsdd_version() {
-  return "libsdd version " SDD_VERSION ", " SDD_DATE;
+  /* return "libsdd version " SDD_VERSION ", " SDD_DATE; */
+  return "libsdd version 2.0";
 }
 
 /****************************************************************************************
