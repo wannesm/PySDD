@@ -81,8 +81,9 @@ all_c_file_paths = [str(p) for p in c_files_paths] + [str(p) for p in wo_c_files
 os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{wo_inc_path} " + f"-I{sdd_extra_inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
-library_dirs = [lib_path]
-include_dirs = [inc_path, wo_inc_path, sdd_extra_inc_path, csrc_path] + list(c_dirs_paths)
+library_dirs = [str(lib_path)]
+include_dirs = [str(inc_path), str(wo_inc_path), str(sdd_extra_inc_path), str(csrc_path)] + \
+               [str(p) for p in c_dirs_paths]
 
 compile_time_env = {'HAVE_CYSIGNALS': False}
 # if cysignals is not None:
