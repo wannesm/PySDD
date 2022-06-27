@@ -110,6 +110,14 @@ jobs:
           cd ${{ github.workspace }}/pysdd/lib/libsdd-2.0
           ls
           mkdir build
+          mkdir build/basic
+          mkdir build/fnf
+          mkdir build/manager
+          mkdir build/sdds
+          mkdir build/vtree_fragments
+          mkdir build/vtree_operations
+          mkdir build/vtree_search
+          mkdir build/vtrees
           bash custom_build.sh
           cp ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.a ${{ github.workspace }}/pysdd/lib/sdd-2.0/lib/Windows/
       - name: Compile and install
