@@ -120,12 +120,12 @@ jobs:
           mkdir build/vtree_search
           mkdir build/vtrees
           bash custom_build.sh
-          cp ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.a ${{ github.workspace }}/pysdd/lib/sdd-2.0/lib/Windows/
+          cp ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.dll ${{ github.workspace }}/pysdd/lib/sdd-2.0/lib/Windows/
       - name: Store pysdd library
         uses: actions/upload-artifact@v2
         with:
           name: library
-          path: build/*.dll
+          path: ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.dll
       - name: Compile and install
         run: |
           python -m pip install . -v

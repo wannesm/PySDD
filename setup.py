@@ -112,10 +112,13 @@ class MyBuildExtCommand(BuildExtCommand):
 
     def build_extensions(self):
         global lib_path
-        c = self.compiler.compiler_type
-        print("Compiler type: {}".format(c))
-        compiler_name = self.compiler.compiler[0]
-        print("Compiler name: {}".format(compiler_name))
+        try:
+            c = self.compiler.compiler_type
+            print("Compiler type: {}".format(c))
+            compiler_name = self.compiler.compiler[0]
+            print("Compiler name: {}".format(compiler_name))
+        except AttributeError:
+            print("Could not derive compiler type")
         print("--debug: {}".format(self.distribution.debug))
         print("--usecysignals: {}".format(self.distribution.usecysignals))
         # Compiler and linker options
