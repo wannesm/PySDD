@@ -81,6 +81,8 @@ all_c_file_paths = [str(p) for p in c_files_paths] + [str(p) for p in wo_c_files
 os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{wo_inc_path} " + f"-I{sdd_extra_inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
+library_dirs = [lib_path]
+include_dirs = [inc_path, wo_inc_path, sdd_extra_inc_path, csrc_path] + list(c_dirs_paths)
 
 compile_time_env = {'HAVE_CYSIGNALS': False}
 # if cysignals is not None:
@@ -180,7 +182,9 @@ class MyBuildExtCommand(BuildExtCommand):
 if cythonize is not None:
     ext_modules = cythonize([
         Extension(
-            "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths
+            "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
+            include_dirs=include_dirs,
+            library_dirs=library_dirs
             # extra_objects=[str(libsdd_path)],
             # extra_compile_args=extra_compile_args,
             # extra_link_args=extra_link_args
