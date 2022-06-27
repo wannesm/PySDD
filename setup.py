@@ -117,8 +117,17 @@ class MyBuildExtCommand(BuildExtCommand):
             print("Compiler type: {}".format(c))
             compiler_name = self.compiler.compiler[0]
             print("Compiler name: {}".format(compiler_name))
-        except AttributeError:
-            print("Could not derive compiler type")
+        except AttributeError as exc:
+            output = str(exc)
+            if 'MSVCCompiler' in output:
+                c = "msvc"
+                print("Compiler type: {}".format(c))
+                compiler_name = "MSVCCompiler"
+                print("Compiler name: {}".format(compiler_name))
+            else:
+                print("Could not derive compiler type")
+                c = "Unknown"
+                compiler_name = "Unknown"
         print("--debug: {}".format(self.distribution.debug))
         print("--usecysignals: {}".format(self.distribution.usecysignals))
         # Compiler and linker options
