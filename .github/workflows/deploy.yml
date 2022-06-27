@@ -96,6 +96,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
+        id: setuppython
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -111,6 +112,8 @@ jobs:
           ls
           cd ${{ github.workspace }}/pysdd/lib/libsdd-2.0
           ls
+          echo ${{ steps.setuppython.python-path }}
+          ls ${{ steps.setuppython.python-path }}
           python ${{ github.workspace }}/venv/bin/scons
           cp ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.a ${{ github.workspace }}/pysdd/lib/sdd-2.0/lib/Windows/
       - name: Compile and install
