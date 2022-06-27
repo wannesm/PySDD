@@ -110,9 +110,9 @@ jobs:
         run: |
           ls
           cd ${{ github.workspace }}/pysdd/lib/libsdd-2.0
-          ls C:\Program Files
-          ls ${{ steps.setuppython.python-path }}
-          python ${{ github.workspace }}/venv/bin/scons
+          ls 'C:\Program Files'
+          ls
+          scons
           cp ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.a ${{ github.workspace }}/pysdd/lib/sdd-2.0/lib/Windows/
       - name: Compile and install
         run: |
