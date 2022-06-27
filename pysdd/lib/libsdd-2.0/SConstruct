@@ -26,7 +26,7 @@ if mode == 'debug':
     if GetOption('full_debug'):
         env.Append(CCFLAGS='-DFULL_DEBUG=1 ')
         if GetOption('ndebug'):
-            print "warning: full_debug is inactive without assertions"
+            print("warning: full_debug is inactive without assertions")
     else:
         env.Append(CCFLAGS='-DFULL_DEBUG=0 ')
 else:
