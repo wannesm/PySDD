@@ -15,7 +15,7 @@ AddOption('--enable-full-debug',
 lib = ['m']
 
 # compile
-env = Environment(CC='gcc',CCFLAGS='-std=c99 -Wall ',
+env = Environment(CC='gcc',CCFLAGS='-std=c99 -Wall ', tools = ['gcc', 'gnulink'],
                   CPPPATH=['#/include', '#/src'], ENV=os.environ)
 
 if mode == 'debug':
