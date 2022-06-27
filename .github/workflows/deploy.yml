@@ -105,12 +105,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest build
           python -m pip install "cython>=0.29.6"
-          python -m pip install Scons
       - name: Compile libsdd
         run: |
           cd ${{ github.workspace }}/pysdd/lib/libsdd-2.0
           ls
-          scons
+          bash custom_build.sh
           cp ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.a ${{ github.workspace }}/pysdd/lib/sdd-2.0/lib/Windows/
       - name: Compile and install
         run: |
