@@ -20,6 +20,7 @@ void press(char* str) {
 #define CALLS_COUNT 11
 //prints the last CALLS_COUNT-1 calls, excluding print_trace()
 void print_trace () {
+  /*
   void *array[CALLS_COUNT];
   int size;
   char **strings;
@@ -31,6 +32,7 @@ void print_trace () {
   for (int i=0; i<size-1; i++) printf("%s\n",strings[CALLS_COUNT-i-1]);
 
   free (strings);
+  */
 }
 
 /****************************************************************************************
