@@ -102,7 +102,8 @@ c_args_debug = {
 l_args = {
     'unix': [],
     'msvc': [],
-    'mingw32': []
+    'mingw32': ['-static-libgcc', '-static-libstdc++', '-Wl,-Bstatic,--whole-archive',
+                '-lwinpthread', '-Wl,--no-whole-archive']
 }
 l_args_debug = {
     'unix': ['-g'],
