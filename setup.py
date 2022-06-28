@@ -172,7 +172,7 @@ class MyBuildExtCommand(BuildExtCommand):
             libsdd_path = cur_lib_path / "libsdd.a"
         elif "Windows" in platform.system():
             cur_lib_path = lib_path / "Windows"
-            libsdd_path = cur_lib_path / "libsdd.dll"
+            libsdd_path = cur_lib_path / "libsdd.a"
         else:
             libsdd_path = lib_path / "libsdd.a"
         for e in self.extensions:  # type: Extension
