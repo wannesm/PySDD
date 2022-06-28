@@ -81,9 +81,9 @@ typedef Fnf Dnf;
  * function declaration
  ****************************************************************************************/
 
-Cnf* read_cnf(const char* filename);
-Dnf* read_dnf(const char* filename);
-void free_fnf(Fnf* fnf);
+/* Cnf* read_cnf(const char* filename); */
+/* Dnf* read_dnf(const char* filename); */
+/* void free_fnf(Fnf* fnf); */
 
 SddNode* fnf_to_sdd(Fnf* fnf, SddManager* manager);
 
