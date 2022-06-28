@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "sddapi.h"
+
 /****************************************************************************************
  * this file contains macros, definitions of structures, and forward references
  * used by the fnf-to-sdd compiler (auto and manual versions)
