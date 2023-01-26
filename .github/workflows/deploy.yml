@@ -128,7 +128,7 @@ jobs:
           path: ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/libsdd.a
       - name: Compile and install
         run: |
-          python -m pip install --global-option --compiler=mingw32 . -v
+          python -m pip install . -vvv
           ls ${{ github.workspace }}/build || true
       - name: Test with pytest
         run: |
