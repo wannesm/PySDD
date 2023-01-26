@@ -184,9 +184,10 @@ class MyBuildExtCommand(BuildExtCommand):
 if cythonize is not None:
     ext_modules = cythonize([
         Extension(
-            "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
+            "sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
             include_dirs=include_dirs,
-            library_dirs=library_dirs
+            library_dirs=library_dirs,
+            libraries=["legacy_stdio_definitions"]
             # extra_objects=[str(libsdd_path)],
             # extra_compile_args=extra_compile_args,
             # extra_link_args=extra_link_args
