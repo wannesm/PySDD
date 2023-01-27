@@ -15,9 +15,13 @@ AddOption('--enable-full-debug',
 lib = ['m']
 
 # compile
-env = Environment(CC='gcc',CCFLAGS='-std=c99 -Wall ',
-                  CPPPATH=['#/include', '#/src'], ENV=os.environ)
+#env = Environment(CC='gcc',CCFLAGS='-std=c99 -Wall ',
+#                  CPPPATH=['#/include', '#/src'], ENV=os.environ)
 
+env = Environment(CCFLAGS='/TC /Wall /O2', LINKFLAGS='/DEF:sdd.def',
+                  CPPPATH=['#/include', '#/src'], ENV=os.environ, TARGET_ARCH ='x86_64')
+
+                 
 if mode == 'debug':
     build_dir = 'debug'
     env.Append(CCFLAGS='-O0 -g ')
@@ -31,6 +35,7 @@ if mode == 'debug':
         env.Append(CCFLAGS='-DFULL_DEBUG=0 ')
 else:
     build_dir = 'build'
-    env.Append(CCFLAGS='-O2 -finline-functions -DNDEBUG ')
+    #-DNDEBUG 
+ #  env.Append(CCFLAGS='/O2 ')
 
 SConscript('src/SConscript',variant_dir=build_dir,duplicate=0,exports='env')
