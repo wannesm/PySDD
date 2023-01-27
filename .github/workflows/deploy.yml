@@ -110,7 +110,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}/pysdd/lib/libsdd-2.0
           ls
-          sconf
+          scons
           cp ${{ github.workspace }}/pysdd/lib/libsdd-2.0/build/sdd.dll ${{ github.workspace }}/pysdd/lib/sdd-2.0/lib/Windows/
       - name: Store pysdd library
         uses: actions/upload-artifact@v2
