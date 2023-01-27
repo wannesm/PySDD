@@ -26,6 +26,7 @@
 #define ERR_MSG_FRG_N "\nerror in %s: fragment cannot be moved to the next state while in goto mode\n"
 #define ERR_MSG_FRG_G "\nerror in %s: fragment cannot by moved to the given state while in next mode\n"
 #define ERR_MSG_FRG_R "\nerror in %s: fragment cannot be rewinded while in goto mode\n"
+#define FULL_DEBUG FALSE
 
 //if condition C is met, print error message M that materialized in function F
 #define CHECK_ERROR(C,M,F) if(C) { fprintf(stderr,M,F); exit(1); }

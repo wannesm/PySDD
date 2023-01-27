@@ -28,20 +28,20 @@ def test_min1():
             3: 'c', -3: '-c',
             4: 'd', -4: '-d'
         }
-        with (directory / "vtree1_before_a.gv").open("w") as out:
-            print(sdd.vtree().dot(), file=out)
-        with (directory / "vtree1_before_b.gv").open("w") as out:
-            print(vtree_to_dot(sdd.vtree(), sdd, litnamemap=names, show_id=True), file=out)
-        with (directory / "sdd1_before_a.gv").open("w") as out:
-            print(sdd.dot(), file=out)
-        with (directory / "sdd1_before_b.gv").open("w") as out:
-            print(sdd_to_dot(sdd), file=out)
+        # with (directory / "vtree1_before_a.gv").open("w") as out:
+        #     print(sdd.vtree().dot(), file=out)
+        # with (directory / "vtree1_before_b.gv").open("w") as out:
+        #     print(vtree_to_dot(sdd.vtree(), sdd, litnamemap=names, show_id=True), file=out)
+        # with (directory / "sdd1_before_a.gv").open("w") as out:
+        #     print(sdd.dot(), file=out)
+        # with (directory / "sdd1_before_b.gv").open("w") as out:
+        #     print(sdd_to_dot(sdd), file=out)
     sdd.minimize()
-    if directory:
-        with (directory / "vtree2_after.gv").open("w") as out:
-            print(sdd.vtree().dot(), file=out)
-        with (directory / "sdd1_after.gv").open("w") as out:
-            print(sdd.dot(), file=out)
+    # if directory:
+    #     with (directory / "vtree2_after.gv").open("w") as out:
+    #         print(sdd.vtree().dot(), file=out)
+    #     with (directory / "sdd1_after.gv").open("w") as out:
+    #         print(sdd.dot(), file=out)
     f.deref()
 
     wmc = f.wmc(log_mode=False)
@@ -65,14 +65,14 @@ def test_min2():
             2: 'b', -2: '-b',
             3: 'c', -3: '-c'
         }
-        with (directory / "vtree2_before_a.gv").open("w") as out:
-            print(sdd.vtree().dot(), file=out)
-        with (directory / "vtree2_before_b.gv").open("w") as out:
-            print(vtree_to_dot(sdd.vtree(), sdd, litnamemap=names, show_id=True), file=out)
+        # with (directory / "vtree2_before_a.gv").open("w") as out:
+        #     print(sdd.vtree().dot(), file=out)
+        # with (directory / "vtree2_before_b.gv").open("w") as out:
+        #     print(vtree_to_dot(sdd.vtree(), sdd, litnamemap=names, show_id=True), file=out)
         # with (directory / "sdd2_before_a.gv").open("w") as out:
         #     print(sdd.dot(), file=out)
-        with (directory / "sdd2_before_b.gv").open("w") as out:
-            print(sdd_to_dot(sdd), file=out)
+        # with (directory / "sdd2_before_b.gv").open("w") as out:
+        #     print(sdd_to_dot(sdd), file=out)
 
 
 if __name__ == "__main__":

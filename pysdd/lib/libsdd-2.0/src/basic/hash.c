@@ -103,15 +103,6 @@ SddSize key_sdd_node(SddNode* node, SddHash* hash) {
  * hash table properties
  *******************************************************************************************/
 
-inline
-float hit_rate(SddHash* hash) {
-  return 100.0*hash->hit_count/hash->lookup_count;
-}
-
-inline
-float ave_lookup_cost(SddHash* hash) {
-  return ((float)hash->lookup_cost)/hash->lookup_count;
-}
 
 //percentage of entries in hash table that have non-empty collision lists 
 float saturation(SddHash* hash) {

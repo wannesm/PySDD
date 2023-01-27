@@ -173,7 +173,7 @@ class MyBuildExtCommand(BuildExtCommand):
             libsdd_path = cur_lib_path / "libsdd.a"
         elif "Windows" in platform.system():
             cur_lib_path = lib_path / "Windows"
-            libsdd_path = cur_lib_path / "libsdd.a"
+            libsdd_path = cur_lib_path / "sdd.lib"
         else:
             libsdd_path = lib_path / "libsdd.a"
         for e in self.extensions:  # type: Extension
@@ -237,7 +237,7 @@ set_setup_kwargs(
     },
     include_package_data=True,
     package_data={
-        '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*.dylib'],
+        '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*.dylib', '*.lib'],
     },
     distclass=MyDistribution,
     cmdclass={
