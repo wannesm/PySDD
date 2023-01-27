@@ -158,22 +158,22 @@ jobs:
           path: dist/*.tar.gz
 
 
-#  upload_wheels:
-#    name: Upload wheels to PyPi
-#    runs-on: ubuntu-latest
-#    # upload to PyPI on every tag starting with 'v'
-#    # if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-#    needs: [ build_unix,build_macos,build_windows,build_sdist ]
-#
-#    steps:
-#      - uses: actions/download-artifact@v2
-#        with:
-#          name: wheels
-#          path: dist
-#
-#      - name: Publish package to PyPI
-#        uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          user: __token__
-#          password: ${{ secrets.PYPI_API_TOKEN }}
-#          packages_dir: dist/
+  upload_wheels:
+    name: Upload wheels to PyPi
+    runs-on: ubuntu-latest
+    # upload to PyPI on every tag starting with 'v'
+    # if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    needs: [ build_unix,build_macos,build_windows,build_sdist ]
+
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dist/
