@@ -104,7 +104,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade setuptools
-          python -m pip install pytest build sconf
+          python -m pip install pytest build SCons
           python -m pip install "cython>=0.29.6"
       - name: Compile libsdd
         run: |
