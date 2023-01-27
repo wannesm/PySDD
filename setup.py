@@ -81,6 +81,9 @@ all_c_file_paths = [str(p) for p in c_files_paths] + [str(p) for p in wo_c_files
 os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{wo_inc_path} " + f"-I{sdd_extra_inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
+library_dirs = [str(lib_path)]
+include_dirs = [str(inc_path), str(wo_inc_path), str(sdd_extra_inc_path), str(csrc_path)] + \
+               [str(p) for p in c_dirs_paths]
 
 compile_time_env = {'HAVE_CYSIGNALS': False}
 # if cysignals is not None:
@@ -92,14 +95,15 @@ c_args = {
     'mingw32': ['-O3', '-march=native']
 }
 c_args_debug = {
-    'unix': ["-march=native", "-O0", '-g'],
+    'unix': ["-O0", '-g'],
     'msvc': [["-Zi", "/Od"]],
     'mingw32': ["-march=native", "-O0", '-g']
 }
 l_args = {
     'unix': [],
     'msvc': [],
-    'mingw32': []
+    'mingw32': ['-static-libgcc', '-static-libstdc++', '-Wl,-Bstatic,--whole-archive',
+                '-lwinpthread', '-Wl,--no-whole-archive']
 }
 l_args_debug = {
     'unix': ['-g'],
@@ -112,10 +116,22 @@ class MyBuildExtCommand(BuildExtCommand):
 
     def build_extensions(self):
         global lib_path
-        c = self.compiler.compiler_type
-        print("Compiler type: {}".format(c))
-        compiler_name = self.compiler.compiler[0]
-        print("Compiler name: {}".format(compiler_name))
+        try:
+            c = self.compiler.compiler_type
+            print("Compiler type: {}".format(c))
+            compiler_name = self.compiler.compiler[0]
+            print("Compiler name: {}".format(compiler_name))
+        except AttributeError as exc:
+            output = str(exc)
+            if 'MSVCCompiler' in output:
+                c = "msvc"
+                print("Compiler type: {}".format(c))
+                compiler_name = "MSVCCompiler"
+                print("Compiler name: {}".format(compiler_name))
+            else:
+                print("Could not derive compiler type")
+                c = "Unknown"
+                compiler_name = "Unknown"
         print("--debug: {}".format(self.distribution.debug))
         print("--usecysignals: {}".format(self.distribution.usecysignals))
         # Compiler and linker options
@@ -148,10 +164,7 @@ class MyBuildExtCommand(BuildExtCommand):
                 print("Warning: import cysignals failed")
         # Extra objects
         if "Darwin" in platform.system():
-            if platform.mac_ver()[2] == "arm64":
-                cur_lib_path = lib_path / "Darwin-arm"
-            else:
-                cur_lib_path = lib_path / "Darwin"
+            cur_lib_path = lib_path / "Darwin"
             if build_type == "debug":
                 cur_lib_path = cur_lib_path / "debug"
             libsdd_path = cur_lib_path / "libsdd.a"
@@ -160,7 +173,7 @@ class MyBuildExtCommand(BuildExtCommand):
             libsdd_path = cur_lib_path / "libsdd.a"
         elif "Windows" in platform.system():
             cur_lib_path = lib_path / "Windows"
-            libsdd_path = cur_lib_path / "libsdd.dll"
+            libsdd_path = cur_lib_path / "sdd.lib"
         else:
             libsdd_path = lib_path / "libsdd.a"
         for e in self.extensions:  # type: Extension
@@ -171,7 +184,9 @@ class MyBuildExtCommand(BuildExtCommand):
 if cythonize is not None:
     ext_modules = cythonize([
         Extension(
-            "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths
+            "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
+            include_dirs=include_dirs,
+            library_dirs=library_dirs
             # extra_objects=[str(libsdd_path)],
             # extra_compile_args=extra_compile_args,
             # extra_link_args=extra_link_args
@@ -190,6 +205,7 @@ else:
 install_requires = ['cython>=0.29.6']
 setup_requires = ['setuptools>=18.0', 'cython>=0.29.6']
 tests_require = ['pytest']
+dev_require = tests_require + ['cython>=0.29.6']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
     long_description = f.read()
@@ -216,11 +232,12 @@ set_setup_kwargs(
     setup_requires=setup_requires,
     tests_require=tests_require,
     extras_require={
-        'all': ['cysignals', 'numpy']
+        'all': ['cysignals', 'numpy'],
+        'dev': dev_require
     },
     include_package_data=True,
     package_data={
-        '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*lib'],
+        '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*.dylib', '*.lib'],
     },
     distclass=MyDistribution,
     cmdclass={
