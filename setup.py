@@ -237,7 +237,7 @@ set_setup_kwargs(
     },
     include_package_data=True,
     package_data={
-        '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*.dylib'],
+        '': ['*.pyx', '*.pxd', '*.h', '*.c', '*.so', '*.a', '*.dll', '*.dylib', '*.lib'],
     },
     distclass=MyDistribution,
     cmdclass={
