@@ -15,10 +15,10 @@ jobs:
       fail-fast: true
       matrix:
         # os: [ubuntu-20.04,ubuntu-18.04]
-        # python-version: ["3.8","3.9","3.10"]
+        python-version: ["3.7", "3.8","3.9","3.10", "3.11"]
         os: [ ubuntu-18.04 ]
         # cibuildwheel will automatically provide all Python versions
-        python-version: [ "3.9" ]
+        # python-version: [ "3.9" ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -55,7 +55,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ macos-11 ]
-        python-version: [ "3.8","3.9","3.10" ]
+        python-version: ["3.7", "3.8","3.9","3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -92,7 +92,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ windows-2019 ]
-        python-version: ["3.10"] # [ "3.8","3.9","3.10" ]
+        python-version: ["3.7", "3.8","3.9","3.10", "3.11"] # [ "3.8","3.9","3.10" ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
