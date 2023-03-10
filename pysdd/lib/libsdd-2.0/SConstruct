@@ -1,4 +1,5 @@
 import os
+import platform
 
 # mode debug, profile, or default
 mode = ARGUMENTS.get('mode',None)
@@ -15,27 +16,42 @@ AddOption('--enable-full-debug',
 lib = ['m']
 
 # compile
-#env = Environment(CC='gcc',CCFLAGS='-std=c99 -Wall ',
-#                  CPPPATH=['#/include', '#/src'], ENV=os.environ)
+if "Windows" in platform.system():
+    env = Environment(CCFLAGS='/TC /Wall /O2', LINKFLAGS='/DEF:sdd.def',
+                      CPPPATH=['#/include', '#/src'], ENV=os.environ, TARGET_ARCH ='x86_64')
 
-env = Environment(CCFLAGS='/TC /Wall /O2', LINKFLAGS='/DEF:sdd.def',
-                  CPPPATH=['#/include', '#/src'], ENV=os.environ, TARGET_ARCH ='x86_64')
-
-                 
-if mode == 'debug':
-    build_dir = 'debug'
-    env.Append(CCFLAGS='-O0 -g ')
-    if GetOption('ndebug'):
-        env.Append(CCFLAGS='-DNDEBUG ')
-    if GetOption('full_debug'):
-        env.Append(CCFLAGS='-DFULL_DEBUG=1 ')
+    if mode == 'debug':
+        build_dir = 'debug'
+        env.Append(CCFLAGS='-O0 -g ')
         if GetOption('ndebug'):
-            print("warning: full_debug is inactive without assertions")
+            env.Append(CCFLAGS='-DNDEBUG ')
+        if GetOption('full_debug'):
+            env.Append(CCFLAGS='-DFULL_DEBUG=1 ')
+            if GetOption('ndebug'):
+                print("warning: full_debug is inactive without assertions")
+        else:
+            env.Append(CCFLAGS='-DFULL_DEBUG=0 ')
     else:
-        env.Append(CCFLAGS='-DFULL_DEBUG=0 ')
+        build_dir = 'build'
+        #-DNDEBUG 
+     #  env.Append(CCFLAGS='/O2 ')
 else:
-    build_dir = 'build'
-    #-DNDEBUG 
- #  env.Append(CCFLAGS='/O2 ')
+    env = Environment(CC='gcc',CCFLAGS='-std=c99 -Wall ',
+                      CPPPATH=['#/include', '#/src'], ENV=os.environ)
+
+    if mode == 'debug':
+        build_dir = 'debug'
+        env.Append(CCFLAGS='-O0 -g ')
+        if GetOption('ndebug'):
+            env.Append(CCFLAGS='-DNDEBUG ')
+        if GetOption('full_debug'):
+            env.Append(CCFLAGS='-DFULL_DEBUG=1 ')
+            if GetOption('ndebug'):
+                print("warning: full_debug is inactive without assertions")
+        else:
+            env.Append(CCFLAGS='-DFULL_DEBUG=0 ')
+    else:
+        build_dir = 'build'
+        env.Append(CCFLAGS='-O2 -finline-functions -DNDEBUG ')
 
 SConscript('src/SConscript',variant_dir=build_dir,duplicate=0,exports='env')
