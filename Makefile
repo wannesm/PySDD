@@ -35,7 +35,7 @@ deploy: prepare_dist
 	versiontag=$$(python3 -c "import pysdd;print(pysdd.__version__)") && git tag "v$$versiontag"
 	@echo "Start uploading"
 	@echo "-> Use Github actions"
-	# twine upload dist/*
+	# twine upload --repository pysdd dist/*
 
 .PHONY: docs
 docs:
