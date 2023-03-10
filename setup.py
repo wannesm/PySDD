@@ -164,7 +164,10 @@ class MyBuildExtCommand(BuildExtCommand):
                 print("Warning: import cysignals failed")
         # Extra objects
         if "Darwin" in platform.system():
-            cur_lib_path = lib_path / "Darwin"
+            if "arm" in platform.platform():
+                cur_lib_path = lib_path / "Darwin-arm"
+            else:
+                cur_lib_path = lib_path / "Darwin"
             if build_type == "debug":
                 cur_lib_path = cur_lib_path / "debug"
             libsdd_path = cur_lib_path / "libsdd.a"
