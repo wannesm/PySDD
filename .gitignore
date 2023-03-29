@@ -11,5 +11,8 @@ cython_debug
 *.swp
 _build
 *.egg-info
+.eggs
 dist
 wm_*
+venv*
+__pycache__
