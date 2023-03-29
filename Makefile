@@ -45,3 +45,14 @@ docs:
 view-docs: docs
 	open docs/_build/html/index.html
 
+.PHONY: compile-macos-arm
+compile-macos-arm:
+	export MACOSX_DEPLOYMENT_TARGET=13; cd pysdd/lib/libsdd-2.0; scons -c; scons
+	cp pysdd/lib/libsdd-2.0/build/libsdd.* pysdd/lib/sdd-2.0/lib/Darwin-arm
+	make clean
+	make build
+
+.PHONY: test
+test:
+	python -m pytest --ignore=venv
+

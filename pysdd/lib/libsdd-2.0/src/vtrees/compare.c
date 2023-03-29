@@ -13,6 +13,14 @@ char cmp_vtrees(Vtree** lca, Vtree* vtree1, Vtree* vtree2);
  * basic tests
  ****************************************************************************************/
 
+#if defined(WIN32) || defined(_WIN32)
+#else
+//tests whether vtree1 is a subtree of vtree2
+inline
+int sdd_vtree_is_sub(const Vtree* vtree1, const Vtree* vtree2) {
+  return vtree1->position >= vtree2->first->position && vtree1->position <= vtree2->last->position;
+}
+#endif
 
 /****************************************************************************************
  * lca is the lowest common ancestor

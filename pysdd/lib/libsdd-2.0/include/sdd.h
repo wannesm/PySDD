@@ -548,6 +548,7 @@ void cache_computation(SddNode* node1, SddNode* node2, SddNode* node, BoolOp op,
 void sdd_vtree_garbage_collect(Vtree* vtree, SddManager* manager);
 
 //hash.c
+#if defined(WIN32) || defined(_WIN32)
 inline float hit_rate(SddHash* hash) {
 	return 100.0 * hash->hit_count / hash->lookup_count;
 }
@@ -555,6 +556,10 @@ inline float hit_rate(SddHash* hash) {
 inline float ave_lookup_cost(SddHash* hash) {
 	return ((float)hash->lookup_cost) / hash->lookup_count;
 }
+#else
+float hit_rate(SddHash* hash);
+float ave_lookup_cost(SddHash* hash);
+#endif
 float saturation(SddHash* hash);
 
 //reference.c
@@ -754,11 +759,14 @@ void sdd_vtree_save(const char* fname, Vtree* vtree);
 void sdd_vtree_save_as_dot(const char* fname, Vtree* vtree);
 
 //compare.c
-//int sdd_vtree_is_sub(const Vtree* vtree1, const Vtree* vtree2);
+#if defined(WIN32) || defined(_WIN32)
 //tests whether vtree1 is a subtree of vtree2
 inline int sdd_vtree_is_sub(const Vtree* vtree1, const Vtree* vtree2) {
 	return vtree1->position >= vtree2->first->position && vtree1->position <= vtree2->last->position;
 }
+#else
+int sdd_vtree_is_sub(const Vtree* vtree1, const Vtree* vtree2);
+#endif
 Vtree* sdd_vtree_lca(Vtree* vtree1, Vtree* vtree2, Vtree* root);
 Vtree* lca_of_compressed_elements(SddNodeSize size, SddElement* elements, SddManager* manager);
 
