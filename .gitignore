@@ -12,6 +12,9 @@ cython_debug
 *.swp
 _build
 *.egg-info
+.eggs
 dist
 pysdd/lib/sdd-2.0/*
 wm_*
+venv*
+__pycache__
