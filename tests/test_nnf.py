@@ -1,11 +1,12 @@
 from pysdd.util import nnf_file_wmc, sdd_file_wmc, psdd_file_wmc
 from pysdd.sdd import Fnf, Vtree, SddManager
-from pysdd.cli import read_weights
+from pysdd import cli
 import sys
 import os
 import math
 import logging
 from pathlib import Path
+import filecmp
 
 
 logger = logging.getLogger("pysdd")
@@ -68,6 +69,15 @@ def test_psdd1():
     print("WMC", wmc)
 
 
+def test_dimacs1():
+    fn_dimacs = here / "rsrc" / "dimacs1.txt"
+    fn_vtree = here / "rsrc" / "dimacs1.vtree"
+    fn_vtree_sol = here / "rsrc" / "dimacs1_solution.vtree"
+    fn_sdd = here / "rsrc" / "dimacs1.sdd"
+    cli.main(["-c", str(fn_dimacs), "-W", str(fn_vtree), "-R", str(fn_sdd)])
+    assert filecmp.cmp(fn_vtree, fn_vtree_sol)
+
+
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(sys.stdout)
@@ -78,3 +88,4 @@ if __name__ == "__main__":
     # test_sdd2()
     # test_psdd1()
     # test_dnf1()
+    test_dimacs1()

@@ -7,7 +7,7 @@ setup.py
 Usage: python3 setup.py build_ext --inplace
 
 :author: Wannes Meert
-:copyright: Copyright 2017-2019 KU Leuven and Regents of the University of California.
+:copyright: Copyright 2017-2023 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
 from setuptools import setup
@@ -32,6 +32,8 @@ except ImportError as exc:
     print(f"cysignals not found\n{exc}")
     cysignals = None
 
+print("Python version = " + str(platform.python_version()))
+
 
 class MyDistribution(Distribution):
     global_options = Distribution.global_options + [
@@ -43,6 +45,7 @@ class MyDistribution(Distribution):
         self.debug = 0
         self.usecysignals = 0
         super().__init__(attrs)
+
 
 # build_type = "debug"
 build_type = "optimized"
@@ -215,9 +218,12 @@ with (here / 'README.rst').open('r', encoding='utf-8') as f:
     long_description = f.read()
 
 setup_kwargs = {}
+
+
 def set_setup_kwargs(**kwargs):
     global setup_kwargs
     setup_kwargs = kwargs
+
 
 set_setup_kwargs(
     name='PySDD',
@@ -228,7 +234,7 @@ set_setup_kwargs(
     author_email='wannes.meert@cs.kuleuven.be',
     url='https://github.com/wannesm/PySDD',
     project_urls={
-        'PySDD documentation': 'http://pysdd.readthedocs.io/en/latest/',
+        'PySDD documentation': 'https://pysdd.readthedocs.io/en/latest/',
         'PySDD source': 'https://github.com/wannesm/PySDD'
     },
     packages=["pysdd"],
