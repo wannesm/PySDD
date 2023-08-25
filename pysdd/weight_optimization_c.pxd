@@ -7,7 +7,7 @@ pysdd.weight_optimization_c
 :copyright: Copyright 2017-2018 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
-cimport sddapi_c
+from . cimport sddapi_c
 
 cdef extern from "weight_optimizer.h":
 

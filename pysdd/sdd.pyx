@@ -11,11 +11,11 @@ SDD Python interface.
 
 """
 cimport cython
-cimport sddapi_c
-cimport compiler_c
-cimport io_c
-cimport fnf_c
-cimport weight_optimization_c
+from . cimport sddapi_c
+from . cimport compiler_c
+from . cimport io_c
+from . cimport fnf_c
+from . cimport weight_optimization_c
 from cpython cimport array
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
@@ -1665,7 +1665,7 @@ cdef class WmcManager:
         """
         if len(weights) > 2 * self.node._manager.var_count():
             raise Exception("Array of weights is longer than the number of variables in the manager.")
-        cdef long nb_lits = len(weights) / 2  # The array can be shorter than the number of variables
+        cdef long nb_lits = len(weights) // 2  # The array can be shorter than the number of variables
         cdef sddapi_c.SddLiteral lit
         cdef long i
         for i in range(nb_lits):

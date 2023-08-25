@@ -6,7 +6,7 @@ __license__ = "APL"
 
 """
 
-cimport sddapi_c
+from . cimport sddapi_c
 
 cdef extern from "compiler.h":
     ctypedef struct SddCompilerOptions:

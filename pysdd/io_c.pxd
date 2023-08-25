@@ -7,8 +7,8 @@ pysdd.io_c
 :copyright: Copyright 2017-2018 KU Leuven and Regents of the University of California.
 :license: Apache License, Version 2.0, see LICENSE for details.
 """
-cimport sddapi_c
-cimport compiler_c
+from . cimport sddapi_c
+from . cimport compiler_c
 
 cdef extern from "io.h":
     compiler_c.Fnf* read_fnf(const char* filename);
