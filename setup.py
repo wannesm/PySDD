@@ -210,7 +210,7 @@ else:
 
 # install_requires = ['numpy', 'cython']
 install_requires = ['cython>=3.0.0']
-setup_requires = ['setuptools>=18.0', 'cython>=0.29.6']
+setup_requires = ['setuptools>=18.0', 'cython>=3.0.0']
 tests_require = ['pytest']
 dev_require = tests_require + ['cython>=3.0.0']
 
