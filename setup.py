@@ -209,10 +209,10 @@ else:
     raise ImportError('Cython not available')
 
 # install_requires = ['numpy', 'cython']
-install_requires = ['cython>=0.29.6']
-setup_requires = ['setuptools>=18.0', 'cython>=0.29.6']
+install_requires = ['cython>=3.0.0']
+setup_requires = ['setuptools>=18.0', 'cython>=3.0.0']
 tests_require = ['pytest']
-dev_require = tests_require + ['cython>=0.29.6']
+dev_require = tests_require + ['cython>=3.0.0']
 
 with (here / 'README.rst').open('r', encoding='utf-8') as f:
     long_description = f.read()
