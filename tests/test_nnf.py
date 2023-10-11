@@ -70,12 +70,15 @@ def test_psdd1():
 
 
 def test_dimacs1():
+    """This test fails on Windows because of a mismatch between 64b and 32b data types."""
     fn_dimacs = here / "rsrc" / "dimacs1.txt"
     fn_vtree = here / "rsrc" / "dimacs1.vtree"
     fn_vtree_sol = here / "rsrc" / "dimacs1_solution.vtree"
     fn_sdd = here / "rsrc" / "dimacs1.sdd"
     cli.main(["-c", str(fn_dimacs), "-W", str(fn_vtree), "-R", str(fn_sdd)])
     assert filecmp.cmp(fn_vtree, fn_vtree_sol)
+    with fn_vtree.open("r") as fp:
+        print(fp.read())
 
 
 if __name__ == "__main__":
