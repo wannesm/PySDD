@@ -26,14 +26,14 @@ static char* read_file(const char* filename) {
 
   // lookup file size
   fseek(file,0,SEEK_END);
-  unsigned int file_size = ftell(file);
+  size_t file_size = ftell(file);
   rewind(file);
 
   // allocate memory
   char* buffer = (char*)calloc(file_size+1,sizeof(char));
 
   // read the whole file
-  unsigned int result = fread(buffer,sizeof(char),file_size,file);
+  size_t result = fread(buffer,sizeof(char),file_size,file);
   if (result != file_size) {
     printf("Could not read the file %s\n",filename);
     exit(1);

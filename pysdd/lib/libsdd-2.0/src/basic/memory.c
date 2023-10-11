@@ -84,7 +84,7 @@ SddNode* new_sdd_node(SddNodeType type, SddNodeSize size, Vtree* vtree, SddManag
   else { //allocate decomposition 
     assert(size > 0);
     //allocate decomposition node
-    int bucket = (size < GC_BUCKETS_COUNT? size: 0);
+    size_t bucket = (size < GC_BUCKETS_COUNT? size: 0);
     node       = manager->gc_node_lists[bucket];	
     if(node != NULL) { //allocating from gc list
       --manager->gc_node_count;
@@ -156,7 +156,7 @@ void gc_sdd_node(SddNode* node, SddManager* manager) {
   ++manager->gc_node_count;
   manager->gc_element_count += node->size; //no change for literal sdds
   
-  int bucket = (node->size < GC_BUCKETS_COUNT? node->size: 0); //literal sdds go into bucket 0
+  size_t bucket = (node->size < GC_BUCKETS_COUNT? node->size: 0); //literal sdds go into bucket 0
   node->next = manager->gc_node_lists[bucket]; 
   manager->gc_node_lists[bucket] = node; //add node to corresponding bucket
   

@@ -186,7 +186,7 @@ char* read_file(const char* filename) {
   // lookup file size
   // AC: I don't think this is the best way to do this
   fseek(file,0,SEEK_END);
-  unsigned int file_size = ftell(file);
+  size_t file_size = ftell(file);
   rewind(file);
 
   // allocate memory
@@ -194,7 +194,7 @@ char* read_file(const char* filename) {
   CALLOC(buffer,char,file_size+1,"read_file");
 
   // read the whole file
-  unsigned int result = fread(buffer,sizeof(char),file_size,file);
+  size_t result = fread(buffer,sizeof(char),file_size,file);
   if (result != file_size) {
     printf("Could not read the file %s\n",filename);
     exit(1);

@@ -94,7 +94,8 @@ compile_time_env = {'HAVE_CYSIGNALS': False}
 
 c_args = {
     'unix': ['-O3', '-Wall'],
-    'msvc': ['/Ox', '/fp:fast', '/favor:INTEL64', '/Og'],
+    # 'msvc': ['/Ox', '/fp:fast', '/favor:INTEL64', '/Og'],
+    'msvc': ['/Ox', '/fp:fast'],
     'mingw32': ['-O3', '-march=native']
 }
 c_args_debug = {

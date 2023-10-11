@@ -268,16 +268,16 @@ void sdd_manager_minimize_limited(SddManager* manager) {
 
 
 // these are checked by exceeded_limits(), invoked by l_apply
-void sdd_manager_set_vtree_search_time_limit(float time_limit, SddManager* manager) {
+void sdd_manager_set_vtree_search_time_limit(clock_t time_limit, SddManager* manager) {
   manager->vtree_ops.search_time_limit = time_limit*CLOCKS_PER_SEC;
 }
-void sdd_manager_set_vtree_fragment_time_limit(float time_limit, SddManager* manager) {
+void sdd_manager_set_vtree_fragment_time_limit(clock_t time_limit, SddManager* manager) {
   manager->vtree_ops.fragment_time_limit = time_limit*CLOCKS_PER_SEC;
 }
-void sdd_manager_set_vtree_operation_time_limit(float time_limit, SddManager* manager) {
+void sdd_manager_set_vtree_operation_time_limit(clock_t time_limit, SddManager* manager) {
   manager->vtree_ops.op_time_limit = time_limit*CLOCKS_PER_SEC;
 }
-void sdd_manager_set_vtree_apply_time_limit(float time_limit, SddManager* manager) {
+void sdd_manager_set_vtree_apply_time_limit(clock_t time_limit, SddManager* manager) {
   manager->vtree_ops.apply_time_limit = time_limit*CLOCKS_PER_SEC;
 }
 void sdd_manager_set_vtree_operation_memory_limit(float memory_limit, SddManager* manager) {

@@ -158,7 +158,7 @@ Vtree* new_random_vtree(SddLiteral var_count) {
   SddLiteral* labels = (SddLiteral*) calloc(var_count,sizeof(SddLiteral));
   for(SddLiteral i=0; i<var_count; i++) labels[i] = i+1; //assign labels
   SddLiteral unused_count = var_count;
-  srand(time(NULL));
+  srand((unsigned int)time(NULL));
   Vtree* vtree = new_random_vtree_aux(var_count,labels,&unused_count);
   free(labels);
   return vtree;
