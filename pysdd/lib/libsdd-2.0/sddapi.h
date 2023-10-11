@@ -23,8 +23,8 @@
  
 //sdd types
 typedef size_t SddSize; //number of nodes, sizes of hash tables, etc
-typedef unsigned int SddNodeSize; //size of decomposition for sdd nodes
-typedef unsigned int SddRefCount; //refcount
+typedef size_t SddNodeSize; //size of decomposition for sdd nodes
+typedef size_t SddRefCount; //refcount
 typedef unsigned long long SddModelCount; //model counts
 typedef double SddWmc; // weighted model count
 typedef long SddLiteral; //literals of clauses

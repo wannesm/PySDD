@@ -285,7 +285,7 @@ void print_sdd_node_file(FILE* file, SddNode* node) {
   else if(node->type==FALSE) fprintf(file,"F %"PRIsS"\n",node->index);
   else if(node->type==LITERAL) fprintf(file,"L %"PRIsS" %"PRIsS" %"PRIlitS"\n",node->index,vtree->position,LITERAL_OF(node));
   else {//decomposition 
-    fprintf(file,"D %"PRIsS" %"PRIsS" %"PRInsS"",node->index,vtree->position,node->size);
+    fprintf(file,"D %"PRIsS" %"PRIsS" %"PRIsS"",node->index,vtree->position,node->size);
 	FOR_each_prime_sub_of_node(prime,sub,node,fprintf(file," %"PRIsS" %"PRIsS"",prime->index,sub->index));
     fprintf(file,"\n");     
   }
