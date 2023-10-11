@@ -47,5 +47,5 @@ view-docs: docs
 
 .PHONY: test
 test:
-	export PYTHONPATH=.;py.test --ignore=venv --ignore-glob="venv_*"
+	export PYTHONPATH=.;python -m pytest --ignore=venv --ignore-glob="venv_*"
 
