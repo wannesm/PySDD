@@ -9,8 +9,8 @@ pysdd.sddapi_c
 """
 cdef extern from "sddapi.h":
     ctypedef size_t SddSize;  # TODO: only for 64bit
-    ctypedef unsigned int SddNodeSize
-    ctypedef unsigned int SddRefCount
+    ctypedef size_t SddNodeSize
+    ctypedef size_t SddRefCount
     ctypedef unsigned long long SddModelCount
     ctypedef double SddWmc
     ctypedef long SddLiteral

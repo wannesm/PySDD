@@ -25,7 +25,7 @@ SddNode* degenerate_fnf_test(Fnf* fnf, SddManager* manager) {
 
   if(count==0) return ONE(manager,op);
 
-  for(int i=0; i<count; i++) {
+  for(SddSize i=0; i<count; i++) {
     if (fnf->litsets[i].literal_count == 0)
       return ZERO(manager,op);
   }
@@ -43,7 +43,7 @@ SddNode* fnf_to_sdd_auto(Fnf* fnf, SddManager* manager) {
 
   if(verbose) { printf("\nclauses: %ld ",count); fflush(stdout); }
   SddNode* node = ONE(manager,op);
-  for(int i=0; i<count; i++) {
+  for(SddSize i=0; i<count; i++) {
     sort_litsets_by_lca(litsets+i,count-i,manager);
     sdd_ref(node,manager);
     SddNode* l = apply_litset(litsets[i],manager);
@@ -67,7 +67,7 @@ SddNode* fnf_to_sdd_manual(Fnf* fnf, SddManager* manager) {
 
   if(verbose) { printf("\nclauses: %ld ",count); fflush(stdout); }
   SddNode* node = ONE(manager,op);
-  for(int i=0; i<count; i++) {
+  for(SddSize i=0; i<count; i++) {
     if(period > 0 && i > 0 && i%period==0) {
       // after every period clauses
       sdd_ref(node,manager);

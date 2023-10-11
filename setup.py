@@ -93,7 +93,7 @@ compile_time_env = {'HAVE_CYSIGNALS': False}
 #     compile_time_env['HAVE_CYSIGNALS'] = True
 
 c_args = {
-    'unix': ['-O3'],
+    'unix': ['-O3', '-Wall'],
     'msvc': ['/Ox', '/fp:fast', '/favor:INTEL64', '/Og'],
     'mingw32': ['-O3', '-march=native']
 }

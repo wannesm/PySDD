@@ -27,13 +27,13 @@ import cython
 import collections
 
 
-IF HAVE_CYSIGNALS:
-    from cysignals.signals cimport sig_on, sig_off
-ELSE:
-    # for non-POSIX systems
-    noop = lambda: None
-    sig_on = noop
-    sig_off = noop
+# IF HAVE_CYSIGNALS:  # IF is deprecated in cython, drop cysignals support for now
+#     from cysignals.signals cimport sig_on, sig_off
+# ELSE:
+# for non-POSIX systems
+noop = lambda: None
+sig_on = noop
+sig_off = noop
 
 
 cdef class SddNode:
@@ -324,7 +324,7 @@ cdef class SddNode:
     def print_ptr(self):
         #cdef long t = <long>self._sddnode
         #print(t)
-        print("{0:x}".format(<unsigned int>&self._sddnode))
+        print("{0:x}".format(<size_t>&self._sddnode))
 
     def save(self, char* filename):
         return self._manager.save(filename, self)

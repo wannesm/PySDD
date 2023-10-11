@@ -45,3 +45,7 @@ docs:
 view-docs: docs
 	open docs/_build/html/index.html
 
+.PHONY: test
+test:
+	export PYTHONPATH=.;py.test --ignore=venv --ignore-glob="venv_*"
+
