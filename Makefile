@@ -54,5 +54,5 @@ compile-macos-arm:
 
 .PHONY: test
 test:
-	python -m pytest --ignore=venv
+	export PYTHONPATH=.;python -m pytest --ignore=venv --ignore-glob="venv_*"
 

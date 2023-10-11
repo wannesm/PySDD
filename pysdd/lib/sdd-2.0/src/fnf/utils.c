@@ -57,7 +57,8 @@ int litset_cmp_lca(const void* litset1_loc, const void* litset2_loc) {
 //last: by id to obtain unique order
 void sort_litsets_by_lca(LitSet** litsets, SddSize size, SddManager* manager) {
   //compute lcas of litsets
-  for(SddLiteral i=0; i<size; i++) {
+  // i was SddLiteral but to be type compatible and since i is always positive, changed to SddSize
+  for(SddSize i=0; i<size; i++) {
     LitSet* litset = litsets[i];
     litset->vtree  = sdd_manager_lca_of_literals(litset->literal_count,litset->literals,manager);
   }
