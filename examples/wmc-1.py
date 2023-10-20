@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import math
-from pysdd.sdd import SddManager, Vtree, WmcManager
+from pysdd.sdd import SddManager, Vtree
 
 
 here = Path(__file__).parent
@@ -15,6 +15,7 @@ def main():
     root = sdd.read_cnf_file(bytes(here / "input" / "simple.cnf"))
     # For DNF functions use `read_dnf_file`
     # If the vtree is not given, you can also use 'from_cnf_file`
+    sdd.auto_gc_and_minimize_off()
 
     # Model Counting
     wmc = root.wmc(log_mode=True)
@@ -41,4 +42,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
