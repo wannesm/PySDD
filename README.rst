@@ -2,7 +2,7 @@
 PySDD
 =====
 
-Python wrapper package to interactively use `Sententical Decision Diagrams (SDD) <http://reasoning.cs.ucla.edu/sdd/>`_.
+Python wrapper package to interactively use `Sentential Decision Diagrams (SDD) <http://reasoning.cs.ucla.edu/sdd/>`_.
 
 Full documentation available on http://pysdd.readthedocs.io.
 
