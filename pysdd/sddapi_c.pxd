@@ -13,7 +13,7 @@ cdef extern from "sddapi.h":
     ctypedef size_t SddRefCount
     ctypedef unsigned long long SddModelCount
     ctypedef double SddWmc
-    ctypedef long SddLiteral
+    ctypedef long long SddLiteral
 
     ctypedef SddSize SddID
 

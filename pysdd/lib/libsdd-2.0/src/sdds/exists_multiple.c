@@ -32,7 +32,7 @@ static void deref_nodes_of_terminal_shadows(SddShadows* shadows);
 //exists_map[var]  : is 1 if var is to be existentially quantified, 0 otherwise
 //exists_map[0]    : not used
 
-static long ref_count; //sanity check
+static long long ref_count; //sanity check
 
 SddNode* sdd_exists_multiple(int* exists_map, SddNode* node, SddManager* manager) {
   CHECK_ERROR(GC_NODE(node),ERR_MSG_GC,"sdd_exists_multiple");

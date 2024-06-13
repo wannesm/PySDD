@@ -322,7 +322,7 @@ cdef class SddNode:
     ## File I/O
 
     def print_ptr(self):
-        #cdef long t = <long>self._sddnode
+        #cdef long long t = <long long>self._sddnode
         #print(t)
         print("{0:x}".format(<size_t>&self._sddnode))
 
@@ -385,10 +385,10 @@ cdef class SddManager:
 
     ## Creating managers (Sec 5.1.1)
 
-    def __init__(self, long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
+    def __init__(self, long long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
         pass
 
-    def __cinit__(self, long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
+    def __cinit__(self, long long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
         self.options = CompilerOptions()
         self.root = None
         if vtree is not None:
@@ -533,7 +533,7 @@ cdef class SddManager:
             raise ValueError("Literal 0 does not exist")
         if lit > self.var_count():
             raise ValueError("Number of available literals is {} < {}".format(self.var_count(), lit))
-        cdef long literal_c = lit
+        cdef long long literal_c = lit
         # if self.is_var_used(literal_c) == 0:
         #     return None # TODO in version 2.0 this is 0 if the variable is not yet in a formula
         return SddNode.wrap(sddapi_c.sdd_manager_literal(literal_c, self._sddmanager), self)
@@ -701,8 +701,8 @@ cdef class SddManager:
         """Return an array var order (whose length will be equal the number of variables in the manager)
         with the left-to-right variable ordering of the manager’s vtree.
         """
-        cdef array.array var_order = array.array('l', [0]*self.var_count())
-        sddapi_c.sdd_manager_var_order(var_order.data.as_longs, self._sddmanager)
+        cdef array.array var_order = array.array('q', [0]*self.var_count())
+        sddapi_c.sdd_manager_var_order(var_order.data.as_longlongs, self._sddmanager)
         return var_order
 
     ## Queries and Transformations (Sec 5.2.1)
@@ -1193,9 +1193,9 @@ cdef class Vtree:
         pass
 
     def __cinit__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None, is_X_var=None):
-        cdef long[:] var_order_c
-        cdef long[:] is_X_var_c
-        cdef long var_count_c
+        cdef long long[:] var_order_c
+        cdef long long[:] is_X_var_c
+        cdef long long var_count_c
         cdef char* vtree_type_c
         cdef char* filename_c
         self.is_ref = False
@@ -1221,7 +1221,7 @@ cdef class Vtree:
                 if isinstance(is_X_var, array.array):
                     is_X_var_c = is_X_var
                 else:
-                    is_X_var_c = array.array('l', is_X_var)
+                    is_X_var_c = array.array('q', is_X_var)
 
                 self._vtree = sddapi_c.sdd_vtree_new_X_constrained(var_count_c, &is_X_var_c[0], vtree_type_c)
                 if self._vtree is NULL:
@@ -1230,7 +1230,7 @@ cdef class Vtree:
                 if isinstance(var_order, array.array):
                     var_order_c = var_order
                 else:
-                    var_order_c = array.array('l', var_order)
+                    var_order_c = array.array('q', var_order)
 
                 self._vtree = sddapi_c.sdd_vtree_new_with_var_order(var_count_c, &var_order_c[0], vtree_type_c)
                 if self._vtree is NULL:
@@ -1665,9 +1665,9 @@ cdef class WmcManager:
         """
         if len(weights) > 2 * self.node._manager.var_count():
             raise Exception("Array of weights is longer than the number of variables in the manager.")
-        cdef long nb_lits = len(weights) // 2  # The array can be shorter than the number of variables
+        cdef long long nb_lits = len(weights) // 2  # The array can be shorter than the number of variables
         cdef sddapi_c.SddLiteral lit
-        cdef long i
+        cdef long long i
         for i in range(nb_lits):
             sddapi_c.wmc_set_literal_weight(i - nb_lits, weights[i], self._wmcmanager)
         for i in range(nb_lits, 2*nb_lits):
