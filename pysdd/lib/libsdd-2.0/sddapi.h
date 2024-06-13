@@ -5,7 +5,6 @@
  ****************************************************************************************/
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -26,9 +25,9 @@
 typedef size_t SddSize; //number of nodes, sizes of hash tables, etc
 typedef size_t SddNodeSize; //size of decomposition for sdd nodes
 typedef size_t SddRefCount; //refcount
-typedef uint64_t SddModelCount; //model counts
+typedef unsigned long long SddModelCount; //model counts
 typedef double SddWmc; // weighted model count
-typedef int64_t SddLiteral; //literals of clauses
+typedef long long SddLiteral; //literals of clauses
 
 //control strings
 #define PRIsS "zu"
