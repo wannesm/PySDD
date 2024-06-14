@@ -1229,7 +1229,7 @@ cdef class Vtree:
                 if isinstance(var_order, array.array):
                     var_order_c = var_order
                 else:
-                    var_order_c = array.array('l', var_order)
+                    var_order_c = array.array('q', var_order)
 
                 self._vtree = sddapi_c.sdd_vtree_new_with_var_order(var_count_c, &var_order_c[0], vtree_type_c)
                 if self._vtree is NULL:
