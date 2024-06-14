@@ -4,8 +4,8 @@ name: Python PySDD package
 on:
   push:
     branches: [ deploy ]
-  pull_request:
-    branches: [ deploy ]
+  # pull_request:
+  #   branches: [ deploy ]
 
 jobs:
   build_unix:
