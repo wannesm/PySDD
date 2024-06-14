@@ -15,7 +15,6 @@ from . cimport sddapi_c
 from . cimport compiler_c
 from . cimport io_c
 from . cimport fnf_c
-from . cimport weight_optimization_c
 from cpython cimport array
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
@@ -322,7 +321,7 @@ cdef class SddNode:
     ## File I/O
 
     def print_ptr(self):
-        #cdef long t = <long>self._sddnode
+        #cdef long long t = <long long>self._sddnode
         #print(t)
         print("{0:x}".format(<size_t>&self._sddnode))
 
@@ -385,10 +384,10 @@ cdef class SddManager:
 
     ## Creating managers (Sec 5.1.1)
 
-    def __init__(self, long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
+    def __init__(self, long long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
         pass
 
-    def __cinit__(self, long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
+    def __cinit__(self, long long var_count=1, bint auto_gc_and_minimize=False, Vtree vtree=None):
         self.options = CompilerOptions()
         self.root = None
         if vtree is not None:
@@ -533,7 +532,7 @@ cdef class SddManager:
             raise ValueError("Literal 0 does not exist")
         if lit > self.var_count():
             raise ValueError("Number of available literals is {} < {}".format(self.var_count(), lit))
-        cdef long literal_c = lit
+        cdef long long literal_c = lit
         # if self.is_var_used(literal_c) == 0:
         #     return None # TODO in version 2.0 this is 0 if the variable is not yet in a formula
         return SddNode.wrap(sddapi_c.sdd_manager_literal(literal_c, self._sddmanager), self)
@@ -701,8 +700,8 @@ cdef class SddManager:
         """Return an array var order (whose length will be equal the number of variables in the manager)
         with the left-to-right variable ordering of the manager’s vtree.
         """
-        cdef array.array var_order = array.array('l', [0]*self.var_count())
-        sddapi_c.sdd_manager_var_order(var_order.data.as_longs, self._sddmanager)
+        cdef array.array var_order = array.array('q', [0]*self.var_count())
+        sddapi_c.sdd_manager_var_order(var_order.data.as_longlongs, self._sddmanager)
         return var_order
 
     ## Queries and Transformations (Sec 5.2.1)
@@ -1193,9 +1192,9 @@ cdef class Vtree:
         pass
 
     def __cinit__(self, var_count=None, var_order=None, vtree_type="balanced", filename=None, is_X_var=None):
-        cdef long[:] var_order_c
-        cdef long[:] is_X_var_c
-        cdef long var_count_c
+        cdef long long[:] var_order_c
+        cdef long long[:] is_X_var_c
+        cdef long long var_count_c
         cdef char* vtree_type_c
         cdef char* filename_c
         self.is_ref = False
@@ -1221,7 +1220,7 @@ cdef class Vtree:
                 if isinstance(is_X_var, array.array):
                     is_X_var_c = is_X_var
                 else:
-                    is_X_var_c = array.array('l', is_X_var)
+                    is_X_var_c = array.array('q', is_X_var)
 
                 self._vtree = sddapi_c.sdd_vtree_new_X_constrained(var_count_c, &is_X_var_c[0], vtree_type_c)
                 if self._vtree is NULL:
@@ -1665,9 +1664,9 @@ cdef class WmcManager:
         """
         if len(weights) > 2 * self.node._manager.var_count():
             raise Exception("Array of weights is longer than the number of variables in the manager.")
-        cdef long nb_lits = len(weights) // 2  # The array can be shorter than the number of variables
+        cdef long long nb_lits = len(weights) // 2  # The array can be shorter than the number of variables
         cdef sddapi_c.SddLiteral lit
-        cdef long i
+        cdef long long i
         for i in range(nb_lits):
             sddapi_c.wmc_set_literal_weight(i - nb_lits, weights[i], self._wmcmanager)
         for i in range(nb_lits, 2*nb_lits):
@@ -1803,108 +1802,3 @@ cdef class CompilerOptions:
         r += "  post_search: " + str(self.post_search) + "\n"
         r += "  verbose: " + str(self.verbose) + "\n"
         return r
-
-
-def optimize_weights(sdd: SddNode, mgr: SddManager, int nb_instances,
-                     counts_optimize, weights_optimize=None, lits_optimize = None,
-                     weights_fix = None, lits_fix = None,
-                     long double prior_sigma=2, long double l1_const=0.95, int max_iter=70,
-                     long double delta=1e-10, long double epsilon=1e-4):
-
-    """
-    Optimize the SDD literal log weights to maximize the log likelihood of the weights for some data
-    using l-BFGS optimization.
-    I.e. optimize the probabilistic model encoded by the SDD: https://doi.org/10.1016/j.artint.2007.11.002
-
-    The data is characterized by the number of instances and the counts of instances in which the literals of the
-    to-be-optimized weights are true.
-
-    Not all literal weights need to be optimized.
-    The weights of the literals that are not optimized are by default set to log(1)=0, so that they do not affect the LL.
-    Alternatively, fixed weights can be provided for literals through lit_fix and weights_fix.
-
-
-    Preconditions
-    -------------
-     - 1 <= abs(lit)) <= sdd_manager_var_count(mgr) for lit in lit_optimize and lit_fix
-     - lit_optimize & lit_fix = {}  (intersection of lit_optimize and lit_fix is empty)
-     - len(lit_optimize) == len(counts_optimize) == len(weights_optimize)
-     - len(lit_fix) == len(weights_fix)
-
-    Parameters
-    ----------
-    sdd : SddNode
-    mgr : SddManager
-    nb_instances : int
-                  The number of instances in the data
-    counts_optimize : numpy.ndarray
-                      1D Array of length N1, representing the counts of the to-be-optimized literals in the data
-                      counts_optimize[i] is the count of instances in which literal lit_optimize[i] is true
-    weights_optimize: numpy.ndarray
-                      1D Array of length N1, representing the initial weights of the to-be-optimized literals
-                      weights_optimize[i] is the initial weight of literal lit_optimize[i]
-                      default: None -> numpy.zeros(len(counts_optimize))
-    lits_optimize: numpy.ndarray
-                   1D Array of length N1, representing the to-be-optimized literals
-                   default: None -> numpy.arange(1,len(counts_optimize))
-    weights_fix: numpy.ndarray
-                 1D Array of length N2, representing the initial weights of the literals with fixed weights
-                 weights_fix[i] is the initial weight of literal lit_fix[i]
-                 default: None -> numpy.array([])
-    lits_fix: numpy.ndarray
-              1D Array of length N2, representing the literals with fixed weights
-              default: None -> numpy.array([])
-    prior sigma: float64
-                sigma of gaussian prior on weights
-                default: 2
-    l1 const: float64
-              strength of l1 regularisation
-              default: 0.95
-    max_iter: int
-              maximum number of l-bfgs iterations
-              default: 70
-    delta: float64
-           delta for convergence test in l-bfgs, it determines the minimum rate of decrease of the objective function
-           default: 1e-10
-    epsilon: float64
-             distance for delta-based convergence test in l-bfgs
-             default: 1e-4
-    """
-
-    # Implicit indicators of weights to be optimized
-    if lits_optimize is None:
-        lits_optimize = array.array('i', list(range((1,len(counts_optimize)+1))))
-
-    # Set initial weights if none were given
-    if weights_optimize is None:
-        weights_optimize = array.array('d', [0]*len(counts_optimize))
-
-    assert len(lits_optimize) == len(weights_optimize) == len(counts_optimize)
-    cdef int n_optimize = len(lits_optimize)
-
-    cdef int n_fix;
-    # No weights to be fixed
-    if lits_fix is None or len(lits_fix) == 0:
-        assert weights_fix is None or len(weights_fix)==0
-        n_fix = 0
-        # add 1 element to arrays: hacky solution to avoid out of bounds on buffer access error
-        lits_fix = array.array('i', [0])
-        weights_fix = array.array('d', [0])
-    else:
-        assert len(lits_fix) == len(weights_fix)
-        n_fix = len(lits_fix)
-
-
-    # to ctypes
-    cdef int[:] lits_optimize_c = lits_optimize
-    cdef double[:] weights_optimize_c = weights_optimize
-    cdef int[:] counts_optimize_c = counts_optimize
-    cdef int[:] lits_fix_c = lits_fix
-    cdef double[:] weights_fix_c = weights_fix
-
-    weight_optimization_c.optimize_weights(sdd._sddnode, mgr._sddmanager, nb_instances,
-                          n_optimize, &lits_optimize_c[0], &weights_optimize_c[0], &counts_optimize_c[0],
-                          n_fix, &lits_fix_c[0], &weights_fix_c[0],
-                          prior_sigma, l1_const, max_iter, delta, epsilon)
-
-    return weights_optimize

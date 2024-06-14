@@ -29,7 +29,7 @@ cdef extern from "compiler.h":
         int post_search             #  post-compilation search
         int verbose                 #  print manager
     ctypedef struct Fnf:
-        long var_count;
+        long long var_count;
         sddapi_c.SddSize litset_count;
     ctypedef Fnf Cnf;
     ctypedef Fnf Dnf;
