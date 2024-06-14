@@ -27,7 +27,7 @@ typedef size_t SddNodeSize; //size of decomposition for sdd nodes, changed to si
 typedef size_t SddRefCount; //refcount, changed to size_t for cross-platform compatibility
 typedef unsigned long long SddModelCount; //model counts
 typedef double SddWmc; // weighted model count
-typedef long SddLiteral; //literals of clauses
+typedef long long SddLiteral; //literals of clauses
 typedef char SddNodeType; //holds one of two values defined next
 
 //control strings
