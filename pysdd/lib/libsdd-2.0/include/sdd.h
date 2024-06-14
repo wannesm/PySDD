@@ -30,7 +30,7 @@ typedef size_t SddNodeSize; //size of decomposition for sdd nodes
 typedef size_t SddRefCount; //refcount
 typedef unsigned long long SddModelCount; //model count
 typedef double SddWmc; // weighted model count
-typedef long SddLiteral; //literals of clauses
+typedef long long SddLiteral; //literals of clauses
 
 //control strings
 #define PRIsS "zu"
