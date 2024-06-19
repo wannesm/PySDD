@@ -44,7 +44,7 @@ jobs:
       - name: Store wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: dist-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist/*.whl
 
 
@@ -82,7 +82,7 @@ jobs:
       - name: Store wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: dist-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist/*.whl
 
   build_windows:
@@ -134,7 +134,7 @@ jobs:
       - name: Store wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: dist-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist/*.whl
 
   build_sdist:
@@ -154,7 +154,7 @@ jobs:
       - name: Store artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: dist-source
           path: dist/*.tar.gz
 
 
@@ -168,7 +168,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          pattern: dist-*
+          merge-multiple: true
           path: dist
 
       - name: Publish package to PyPI
