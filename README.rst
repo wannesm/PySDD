@@ -164,7 +164,7 @@ programming language `ProbLog <https://dtai.cs.kuleuven.be/problog/>`_.
 
 References:
 
-* Wannes Meert, PySDD,
+* Wannes Meert & Arthur Choi, PySDD,
   in `Recent Trends in Knowledge Compilation
   <http://drops.dagstuhl.de/opus/volltexte/2018/8589/pdf/dagrep_v007_i009_p062_17381.pdf>`_,
   Report from Dagstuhl Seminar 17381, Sep 2017.
