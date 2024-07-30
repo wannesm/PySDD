@@ -237,7 +237,10 @@ set_setup_kwargs(
         'PySDD documentation': 'https://pysdd.readthedocs.io/en/latest/',
         'PySDD source': 'https://github.com/wannesm/PySDD'
     },
-    packages=["pysdd"],
+    packages=[
+        "pysdd",
+        "pysdd.lib", "pysdd.lib.sdd_extra.include"    
+    ],
     install_requires=install_requires,
     setup_requires=setup_requires,
     tests_require=tests_require,
