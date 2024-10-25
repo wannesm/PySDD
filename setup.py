@@ -172,7 +172,7 @@ class MyBuildExtCommand(BuildExtCommand):
         if "Windows" in platform.system():
             libsdd_path = lib_path / "sdd.lib"
         else:
-            libsdd_path = lib_path / "sdd.a"
+            libsdd_path = lib_path / "libsdd.a"
         # if "Darwin" in platform.system():
         #     if "arm" in platform.platform():
         #         cur_lib_path = lib_path / "Darwin-arm"
