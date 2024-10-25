@@ -10,7 +10,6 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        # macos-13 is an intel runner, macos-14 is apple silicon
         os: [ubuntu-latest, windows-latest, macos-13, macos-14]
 
     steps:
