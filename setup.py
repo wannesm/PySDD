@@ -61,8 +61,8 @@ if not wrapper_version:
 sdd_version = "2.0"
 
 libwrapper_path = here / "pysdd" / "lib"
-sdd_path = libwrapper_path / f"libsdd-{sdd_version}"
-lib_path = sdd_path / "build"
+sdd_path = libwrapper_path / f"sdd-{sdd_version}"
+lib_path = sdd_path / "lib"
 inc_path = sdd_path / "include"
 src_path = sdd_path / "src"
 csrc_path = here / "pysdd" / "src"
