@@ -8,7 +8,7 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, macos-13, macos-14]
 
@@ -26,6 +26,6 @@ jobs:
         env:
           # configure cibuildwheel to build native archs ('auto') and ARM64
           CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_SKIP: cp36-* cp37-* pp*
+          CIBW_SKIP: cp36-* cp37-* pp* *musllinux*  *i686 *ppc64le *s390x *win_arm64*
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"
