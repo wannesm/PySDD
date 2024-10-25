@@ -61,8 +61,8 @@ if not wrapper_version:
 sdd_version = "2.0"
 
 libwrapper_path = here / "pysdd" / "lib"
-sdd_path = libwrapper_path / f"sdd-{sdd_version}"
-lib_path = sdd_path / "lib"
+sdd_path = libwrapper_path / f"libsdd-{sdd_version}"
+lib_path = sdd_path / "build"
 inc_path = sdd_path / "include"
 src_path = sdd_path / "src"
 csrc_path = here / "pysdd" / "src"
@@ -169,25 +169,27 @@ class MyBuildExtCommand(BuildExtCommand):
         # Extra objects
         print('System', platform.system())
         print('platform', platform.platform())
-        if "Darwin" in platform.system():
-            if "arm" in platform.platform():
-                cur_lib_path = lib_path / "Darwin-arm"
-            else:
-                cur_lib_path = lib_path / "Darwin"
-            if build_type == "debug":
-                cur_lib_path = cur_lib_path / "debug"
-            libsdd_path = cur_lib_path / "libsdd.a"
-        elif "Linux" in platform.system():
-            if "arm" in platform.platform() or "aarch" in platform.platform():
-                cur_lib_path = lib_path / "Linux-arm"
-            else:
-                cur_lib_path = lib_path / "Linux"
-            libsdd_path = cur_lib_path / "libsdd.a"
-        elif "Windows" in platform.system():
-            cur_lib_path = lib_path / "Windows"
-            libsdd_path = cur_lib_path / "sdd.lib"
-        else:
-            libsdd_path = lib_path / "libsdd.a"
+        if "Windows" in platform.system():
+            lib_path / "sdd.lib"
+        # if "Darwin" in platform.system():
+        #     if "arm" in platform.platform():
+        #         cur_lib_path = lib_path / "Darwin-arm"
+        #     else:
+        #         cur_lib_path = lib_path / "Darwin"
+        #     if build_type == "debug":
+        #         cur_lib_path = cur_lib_path / "debug"
+        #     libsdd_path = cur_lib_path / "libsdd.a"
+        # elif "Linux" in platform.system():
+        #     if "arm" in platform.platform() or "aarch" in platform.platform():
+        #         cur_lib_path = lib_path / "Linux-arm"
+        #     else:
+        #         cur_lib_path = lib_path / "Linux"
+        #     libsdd_path = cur_lib_path / "libsdd.a"
+        # elif "Windows" in platform.system():
+        #     cur_lib_path = lib_path / "Windows"
+        #     libsdd_path = cur_lib_path / "sdd.lib"
+        # else:
+        #     libsdd_path = lib_path / "libsdd.a"
         for e in self.extensions:  # type: Extension
             e.extra_objects = [str(libsdd_path)]
         BuildExtCommand.build_extensions(self)
