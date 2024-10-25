@@ -17,7 +17,7 @@ lib = ['m']
 
 # compile
 if "Windows" in platform.system():
-    env = Environment(CCFLAGS='/TC /Wall /O2', LINKFLAGS='/DEF:sdd.def',
+    env = Environment(CCFLAGS='/TC /Wall /O2 /Ob1', LINKFLAGS='/DEF:sdd.def',
                       CPPPATH=['#/include', '#/src'], ENV=os.environ, TARGET_ARCH ='x86_64')
 
     if mode == 'debug':
