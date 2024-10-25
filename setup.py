@@ -119,7 +119,6 @@ l_args_debug = {
 class MyBuildExtCommand(BuildExtCommand):
 
     def build_extensions(self):
-        global lib_path
         try:
             c = self.compiler.compiler_type
             print("Compiler type: {}".format(c))
@@ -169,6 +168,7 @@ class MyBuildExtCommand(BuildExtCommand):
         # Extra objects
         print('System', platform.system())
         print('platform', platform.platform())
+        lib_path = libwrapper_path / "libsdd-2.0" / "build"
         if "Windows" in platform.system():
             libsdd_path = lib_path / "sdd.lib"
         else:
