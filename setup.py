@@ -171,9 +171,9 @@ class MyBuildExtCommand(BuildExtCommand):
         print('platform', platform.platform())
         # lib_path = libwrapper_path / "libsdd-2.0" / "build"
         if "Windows" in platform.system():
-            libsdd_path = lib_path / "sdd.lib"
+            extra_objects = [str(lib_path / "sdd.lib"), str(lib_path / "sdd.dll")]
         else:
-            libsdd_path = lib_path / "libsdd.a"
+            extra_objects = [str(lib_path / "libsdd.a")]
         # if "Darwin" in platform.system():
         #     if "arm" in platform.platform():
         #         cur_lib_path = lib_path / "Darwin-arm"
@@ -194,7 +194,7 @@ class MyBuildExtCommand(BuildExtCommand):
         # else:
         #     libsdd_path = lib_path / "libsdd.a"
         for e in self.extensions:  # type: Extension
-            e.extra_objects = [str(libsdd_path)]
+            e.extra_objects = extra_objects
         BuildExtCommand.build_extensions(self)
 
 
