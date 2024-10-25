@@ -176,7 +176,10 @@ class MyBuildExtCommand(BuildExtCommand):
                 cur_lib_path = cur_lib_path / "debug"
             libsdd_path = cur_lib_path / "libsdd.a"
         elif "Linux" in platform.system():
-            cur_lib_path = lib_path / "Linux"
+            if "arm" in platform.platform():
+                cur_lib_path = lib_path / "Linux-arm"
+            else:
+                cur_lib_path = lib_path / "Linux"
             libsdd_path = cur_lib_path / "libsdd.a"
         elif "Windows" in platform.system():
             cur_lib_path = lib_path / "Windows"
