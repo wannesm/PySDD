@@ -27,7 +27,7 @@ jobs:
         env:
           # configure cibuildwheel to build native archs ('auto') and ARM64
           CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_SKIP: cp36-* cp37-* pp* *ppc64le *s390x
+          CIBW_SKIP: cp36-* cp37-* pp* *i686 *ppc64le *s390x
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"
           CIBW_BEFORE_ALL: "pip install SCons && cd pysdd/lib/libsdd-2.0 && scons && mv build ../sdd-2.0/lib"
