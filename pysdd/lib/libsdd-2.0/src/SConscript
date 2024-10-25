@@ -34,5 +34,5 @@ if not "Windows" in platform.system():
 	env_version.Append(CCFLAGS=ver_flags)
 obj = env_version.Object('version.c')
 sobj = env_version.SharedObject('version.c')
-env.StaticLibrary(name,src+[obj])
-#env.SharedLibrary(name,src+[sobj])
+env.Library(name,src+[obj])
+env.SharedLibrary(name,src+[sobj])
