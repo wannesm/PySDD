@@ -173,7 +173,7 @@ class MyBuildExtCommand(BuildExtCommand):
         # lib_path = libwrapper_path / "libsdd-2.0" / "build"
         if "Windows" in platform.system():
             libsdd_path = lib_path / "sdd.lib"
-            shutil.copyfile(lib_path / "sdd.dll", Path(".") / "pysdd")
+            #shutil.copyfile(lib_path / "sdd.dll", Path(".") / "pysdd")
         else:
             libsdd_path = lib_path / "libsdd.a"
         # if "Darwin" in platform.system():
