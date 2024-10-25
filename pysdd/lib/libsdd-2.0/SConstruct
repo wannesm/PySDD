@@ -17,7 +17,7 @@ lib = ['m']
 
 # compile
 if "Windows" in platform.system():
-    env = Environment(CCFLAGS='/TC /Wall /O2', LINKFLAGS='/DEF:sdd.def',
+    env = Environment(CCFLAGS='/TC /Wall /O2', #LINKFLAGS='/DEF:sdd.def',
                       CPPPATH=['#/include', '#/src'], ENV=os.environ, TARGET_ARCH ='x86_64')
 
     if mode == 'debug':
@@ -36,7 +36,7 @@ if "Windows" in platform.system():
         #-DNDEBUG 
      #  env.Append(CCFLAGS='/O2 ')
 else:
-    env = Environment(CC='gcc',CCFLAGS='-std=c99 -Wall ',
+    env = Environment(CC='gcc',CCFLAGS='-std=c99 -Wall -fPIC ',
                       CPPPATH=['#/include', '#/src'], ENV=os.environ)
 
     if mode == 'debug':
