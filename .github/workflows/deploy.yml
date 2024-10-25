@@ -28,4 +28,4 @@ jobs:
           CIBW_ARCHS_LINUX: auto aarch64
           CIBW_SKIP: cp36-* cp37-*
           CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: "cd tests/ && pytest ."
+          CIBW_TEST_COMMAND: "pytest {project}/tests"
