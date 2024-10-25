@@ -10,8 +10,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        #os: [ubuntu-latest, macos-13, macos-14]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-13, macos-14]
 
 
     steps:
@@ -27,9 +26,13 @@ jobs:
         uses: pypa/cibuildwheel@v2.21.3
         env:
           # configure cibuildwheel to build native archs ('auto') and ARM64
-          # CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_ARCHS_LINUX: aarch64
-          CIBW_SKIP: cp36-* cp37-* pp* *musllinux*  *i686 *ppc64le *s390x *win_arm64*
+          CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_SKIP: cp36-* cp37-* pp* *ppc64le *s390x
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"
-          CIBW_BEFORE_ALL: "pip install SCons && cd pysdd/lib/libsdd-2.0 && scons"
+          CIBW_BEFORE_ALL: "pip install SCons && cd pysdd/lib/libsdd-2.0 && scons && mv build ../sdd-2.0/lib"
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
