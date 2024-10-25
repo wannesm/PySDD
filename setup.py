@@ -167,6 +167,8 @@ class MyBuildExtCommand(BuildExtCommand):
             else:
                 print("Warning: import cysignals failed")
         # Extra objects
+        print('System', platform.system())
+        print('platform', platform.platform())
         if "Darwin" in platform.system():
             if "arm" in platform.platform():
                 cur_lib_path = lib_path / "Darwin-arm"
@@ -176,7 +178,7 @@ class MyBuildExtCommand(BuildExtCommand):
                 cur_lib_path = cur_lib_path / "debug"
             libsdd_path = cur_lib_path / "libsdd.a"
         elif "Linux" in platform.system():
-            if "arm" in platform.platform():
+            if "arm" in platform.platform() or "aarch" in platform.platform():
                 cur_lib_path = lib_path / "Linux-arm"
             else:
                 cur_lib_path = lib_path / "Linux"
