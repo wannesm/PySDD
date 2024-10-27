@@ -7,6 +7,8 @@
 #include <time.h>
 #include "sddapi.h"
 #include "compiler.h"
+#include "io.h"
+#include "fnf.h"
 
 // forward references
 SddCompilerOptions sdd_getopt(int argc, char **argv); // in getopt.c

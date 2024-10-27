@@ -4,87 +4,10 @@
  * http://reasoning.cs.ucla.edu/sdd
  ****************************************************************************************/
 
-#include <string.h>
-#include "sddapi.h"
-#include "compiler.h"
-#include "io.h"
+#include "sdd.h"
 
 //local declarations
 static Fnf* parse_fnf_file(char* buffer);
-
-/****************************************************************************************
- * general file reading
- ****************************************************************************************/
-
-//Reads a file given filename.  Returns a cstring of length the size of the file
-static char* read_file(const char* filename) {
-  FILE *file = fopen(filename, "rb");
-  if (file == NULL) {
-    printf("Could not open the file %s\n",filename);
-    exit(1);
-  }
-
-  // lookup file size
-  fseek(file,0,SEEK_END);
-  size_t file_size = ftell(file);
-  rewind(file);
-
-  // allocate memory
-  char* buffer = (char*)calloc(file_size+1,sizeof(char));
-
-  // read the whole file
-  size_t result = fread(buffer,sizeof(char),file_size,file);
-  if (result != file_size) {
-    printf("Could not read the file %s\n",filename);
-    exit(1);
-  }
-  buffer[file_size] = 0; // null terminate
-
-  fclose(file);
-  return buffer;
-}
-
-//Filters commented lines (beginning with 'c') and returns a cstring
-//whose length is the length of the resulting file
-static char* filter_comments(const char* buffer) {
-  int is_comment_line, is_eol;
-  unsigned int file_length = 0, line_length;
-  const char* read_head = buffer;
-  char* write_head;
-
-  // count size of filtered string
-  while (*read_head != '\0') {
-    is_comment_line = (*read_head == 'c');
-    line_length = 0;
-    while (*read_head != '\0') {
-      is_eol = (*read_head == '\n');
-      read_head++;
-      line_length++;
-      if (is_eol) break;
-    }
-    if (!is_comment_line)
-      file_length += line_length;
-  }
-
-  // copy filtered string
-  char* filtered = (char*)calloc(file_length+1,sizeof(char));
-  read_head = buffer;
-  write_head = filtered;
-  while (*read_head != '\0') {
-    is_comment_line = (*read_head == 'c');
-    while (*read_head != '\0') {
-      is_eol = (*read_head == '\n');
-      if (!is_comment_line) {
-        *write_head = *read_head;
-        write_head++;
-      }
-      read_head++;
-      if (is_eol) break;
-    }
-  }
-  *write_head = '\0';
-  return filtered;
-}
 
 /****************************************************************************************
  * reading fnf files
@@ -101,7 +24,7 @@ Fnf* read_fnf(const char* filename) {
   return fnf;
 }
 
-Cnf* read_cnf(const char* filename) {
+Cnf* sdd_cnf_read(const char* filename) {
  Cnf* cnf = read_fnf(filename);
  //declare as cnf
   cnf->op=CONJOIN;
@@ -109,7 +32,7 @@ Cnf* read_cnf(const char* filename) {
   return cnf;
 }
 
-Dnf* read_dnf(const char* filename) {
+Dnf* sdd_dnf_read(const char* filename) {
  Dnf* dnf = read_fnf(filename);
  //declare as dnf
   dnf->op=DISJOIN;
@@ -123,7 +46,7 @@ Dnf* read_dnf(const char* filename) {
  ****************************************************************************************/
 
 //Helper function: if test confirmed, print message and exit.
-static void test_parse_fnf_file(int test, const char* message) {
+void test_parse_fnf_file(int test, const char* message) {
   if (test) {
     fprintf(stderr,".cnf parse error: %s\n",message);
     exit(1);
@@ -131,7 +54,7 @@ static void test_parse_fnf_file(int test, const char* message) {
 }
 
 //Helper function: strtok for int's, for reading cnf's
-static int cnf_int_strtok() {
+int cnf_int_strtok() {
   static const char* whitespace = " \t\n\v\f\r";
   char* token = strtok(NULL,whitespace);
   test_parse_fnf_file(token == NULL,"Unexpected end of file.");
@@ -147,7 +70,8 @@ Fnf* parse_fnf_file(char* buffer) {
   SddSize id=0;
   
   // initialize Fnf
-  Fnf* cnf = (Fnf*)malloc(sizeof(Fnf));
+  Fnf* cnf;
+  MALLOC(cnf,Fnf,"parse_fnf_file");
   cnf->var_count = 0;
   cnf->litset_count = 0;
   cnf->litsets = NULL;
@@ -163,12 +87,13 @@ Fnf* parse_fnf_file(char* buffer) {
   // read variable & clause count
   cnf->var_count = cnf_int_strtok();
   cnf->litset_count = cnf_int_strtok();
-  cnf->litsets = (LitSet*)calloc(cnf->litset_count,sizeof(LitSet));
+  CALLOC(cnf->litsets,LitSet,cnf->litset_count,"parse_fnf_file");
 
   // read in clauses
   // assume longest possible clause is #-vars * 2
   LitSet* clause;
-  SddLiteral* temp_clause = (SddLiteral*)calloc(cnf->var_count*2,sizeof(SddLiteral));
+  SddLiteral* temp_clause;
+  CALLOC(temp_clause,SddLiteral,cnf->var_count*2,"parse_fnf_file");
   SddLiteral lit;
   SddLiteral lit_index;
   for(SddSize clause_index = 0; clause_index < cnf->litset_count; clause_index++) {
@@ -185,7 +110,7 @@ Fnf* parse_fnf_file(char* buffer) {
     clause->id = id++;
     clause->bit = 0;
     clause->literal_count = lit_index;
-    clause->literals = (SddLiteral*)calloc(clause->literal_count,sizeof(SddLiteral));
+    CALLOC(clause->literals,SddLiteral,clause->literal_count,"parse_fnf_file");
     for(lit_index = 0; lit_index < clause->literal_count; lit_index++)
       clause->literals[lit_index] = temp_clause[lit_index];
   }

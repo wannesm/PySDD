@@ -18,6 +18,7 @@ from distutils.errors import CCompilerError, DistutilsExecError, DistutilsPlatfo
 import platform
 import os
 import re
+import shutil
 from pathlib import Path
 
 
@@ -81,10 +82,10 @@ c_dirs_paths = set(p.parent for p in src_path.glob("**/*.c")) | {wo_src_path}
 all_c_file_paths = [str(p) for p in c_files_paths] + [str(p) for p in wo_c_files_paths]
 # print("Found c files: ", ", ".join([str(p) for p in all_c_file_paths]))
 
-os.environ["LDFLAGS"] = f"-L{lib_path}"
+#os.environ["LDFLAGS"] = f"-L{lib_path}"
 os.environ["CPPFLAGS"] = f"-I{inc_path} " + f"-I{wo_inc_path} " + f"-I{sdd_extra_inc_path} " + f"-I{csrc_path} " + \
                          " ".join(f"-I{p}" for p in c_dirs_paths)
-library_dirs = [str(lib_path)]
+library_dirs = []# [str(lib_path)]
 include_dirs = [str(inc_path), str(wo_inc_path), str(sdd_extra_inc_path), str(csrc_path)] + \
                [str(p) for p in c_dirs_paths]
 
@@ -94,7 +95,8 @@ compile_time_env = {'HAVE_CYSIGNALS': False}
 
 c_args = {
     'unix': ['-O3', '-Wall'],
-    'msvc': ['/Ox', '/fp:fast', '/favor:INTEL64', '/Og'],
+    # 'msvc': ['/Ox', '/fp:fast', '/favor:INTEL64', '/Og'],
+    'msvc': ['/Ox', '/fp:fast'],
     'mingw32': ['-O3', '-march=native']
 }
 c_args_debug = {
@@ -166,22 +168,33 @@ class MyBuildExtCommand(BuildExtCommand):
             else:
                 print("Warning: import cysignals failed")
         # Extra objects
-        if "Darwin" in platform.system():
-            if "arm" in platform.platform():
-                cur_lib_path = lib_path / "Darwin-arm"
-            else:
-                cur_lib_path = lib_path / "Darwin"
-            if build_type == "debug":
-                cur_lib_path = cur_lib_path / "debug"
-            libsdd_path = cur_lib_path / "libsdd.a"
-        elif "Linux" in platform.system():
-            cur_lib_path = lib_path / "Linux"
-            libsdd_path = cur_lib_path / "libsdd.a"
-        elif "Windows" in platform.system():
-            cur_lib_path = lib_path / "Windows"
-            libsdd_path = cur_lib_path / "sdd.lib"
+        print('System', platform.system())
+        print('platform', platform.platform())
+        # lib_path = libwrapper_path / "libsdd-2.0" / "build"
+        if "Windows" in platform.system():
+            libsdd_path = lib_path / "sdd.lib"
+            #shutil.copyfile(lib_path / "sdd.dll", Path(".") / "pysdd")
         else:
             libsdd_path = lib_path / "libsdd.a"
+        # if "Darwin" in platform.system():
+        #     if "arm" in platform.platform():
+        #         cur_lib_path = lib_path / "Darwin-arm"
+        #     else:
+        #         cur_lib_path = lib_path / "Darwin"
+        #     if build_type == "debug":
+        #         cur_lib_path = cur_lib_path / "debug"
+        #     libsdd_path = cur_lib_path / "libsdd.a"
+        # elif "Linux" in platform.system():
+        #     if "arm" in platform.platform() or "aarch" in platform.platform():
+        #         cur_lib_path = lib_path / "Linux-arm"
+        #     else:
+        #         cur_lib_path = lib_path / "Linux"
+        #     libsdd_path = cur_lib_path / "libsdd.a"
+        # elif "Windows" in platform.system():
+        #     cur_lib_path = lib_path / "Windows"
+        #     libsdd_path = cur_lib_path / "sdd.lib"
+        # else:
+        #     libsdd_path = lib_path / "libsdd.a"
         for e in self.extensions:  # type: Extension
             e.extra_objects = [str(libsdd_path)]
         BuildExtCommand.build_extensions(self)
@@ -192,7 +205,7 @@ if cythonize is not None:
         Extension(
             "pysdd.sdd", [str(here / "pysdd" / "sdd.pyx")] + all_c_file_paths,
             include_dirs=include_dirs,
-            library_dirs=library_dirs
+            # library_dirs=library_dirs
             # extra_objects=[str(libsdd_path)],
             # extra_compile_args=extra_compile_args,
             # extra_link_args=extra_link_args
