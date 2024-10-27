@@ -1,4 +1,42 @@
 [build-system]
 # Minimum requirements for the build system to execute.
-requires = ["setuptools", "wheel", "cython"]  # PEP 508 specifications.
+requires = ["setuptools", "cython"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PySD"
+version = "1.0"
+description = "Sentential Decision Diagrams"
+authors = [
+    { name = "Wannes Meert", email = "wannes.meert@cs.kuleuven.be" },
+    { name = "Arthur Choi" },
+]
+readme = "README.rst"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+dependencies = [
+    "cython",
+    "numpy",
+    "cysignals",
+]
+keywords = ["sdd, knowledge compilation"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+
+[project.optional-dependencies]
+tests = ["pytest"]
+
+
+
+[project.urls]
+Homepage = "https://github.com/wannesm/PySDD"
+Documentation = "https://pysdd.readthedocs.io/en/latest/"
+
+[project.entry-points."console_scripts"]
+topysddmatoes = "pysdd.cli:main"
+
 
