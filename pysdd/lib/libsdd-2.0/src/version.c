@@ -2,10 +2,10 @@
  * The Sentential Decision Diagram Package
  * sdd version 2.0, January 8, 2018
  * http://reasoning.cs.ucla.edu/sdd
+ * Modified by DTAI.
  ****************************************************************************************/
 
 const char* libsdd_version() {
-  /* return "libsdd version " SDD_VERSION ", " SDD_DATE; */
   return "libsdd version 2.0";
 }
 

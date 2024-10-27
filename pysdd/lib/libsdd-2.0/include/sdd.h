@@ -2,6 +2,7 @@
  * The Sentential Decision Diagram Package
  * sdd version 2.0, January 8, 2018
  * http://reasoning.cs.ucla.edu/sdd
+ * Modified by DTAI.
  ****************************************************************************************/
 
 #include <stdio.h>
