@@ -1,8 +1,8 @@
 name: Python PySDD package
 
 on:
-  push:
-    branches: [ deploy ]
+  release:
+    types: [published]
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
@@ -30,7 +30,6 @@ jobs:
           CIBW_SKIP: cp36-* cp37-* pp* *i686 *ppc64le *s390x *win32*
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"
-          CIBW_BEFORE_ALL: "pip install SCons && cd pysdd/lib/libsdd-2.0 && scons && cp -r build ../sdd-2.0/lib"
       
       - uses: actions/upload-artifact@v4
         with:
@@ -60,8 +59,6 @@ jobs:
   upload_wheels:
     name: Upload wheels to PyPi
     runs-on: ubuntu-latest
-    # upload to PyPI on every tag starting with 'v'
-    # if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     needs: [ build_wheels,build_sdist ]
 
     steps:
