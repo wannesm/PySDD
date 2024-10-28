@@ -1,10 +1,9 @@
 name: Python PySDD package
 
-#on:
-#  release:
-#    types: [published]
 on:
-  push
+  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build_wheels:
