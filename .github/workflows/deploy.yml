@@ -11,25 +11,14 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-13, macos-14]
 
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
-          # configure cibuildwheel to build native archs ('auto') and ARM64
-          CIBW_ARCHS_LINUX: auto aarch64
           CIBW_SKIP: cp36-* cp37-* pp* *i686 *ppc64le *s390x *win32*
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"
@@ -38,6 +27,32 @@ jobs:
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
+
+  build_linux_armwheels:
+    name: Build wheels on Linux Arm with QEMU
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_ARCHS_LINUX: aarch64
+          CIBW_SKIP: cp36-* cp37-* pp* *i686 *ppc64le *s390x *win32*
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "pytest {project}/tests"
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-ubuntu-qemu-arm
+          path: ./wheelhouse/*.whl
+          
   build_sdist:
     name: Prepare source distribution
     runs-on: ubuntu-latest
