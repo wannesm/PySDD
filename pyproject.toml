@@ -64,7 +64,6 @@ sources = [
     "pysdd/lib/libsdd-2.0/src/manager/manager.c",
     "pysdd/lib/libsdd-2.0/src/manager/stats.c",
     "pysdd/lib/libsdd-2.0/src/manager/variables.c",
-    "pysdd/lib/libsdd-2.0/src/manager/variables.c",
     "pysdd/lib/libsdd-2.0/src/sdds/apply.c",
     "pysdd/lib/libsdd-2.0/src/sdds/bits.c",
     "pysdd/lib/libsdd-2.0/src/sdds/cardinality.c",
