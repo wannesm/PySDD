@@ -18,6 +18,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
+          CIBW_ARCHS_WINDOWS: ARM64
           CIBW_SKIP: cp36-* cp37-* pp* *i686 *ppc64le *s390x *win32*
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"
