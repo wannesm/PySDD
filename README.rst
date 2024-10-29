@@ -10,18 +10,12 @@ Full documentation available on http://pysdd.readthedocs.io.
 Dependencies
 ------------
 
-* Python >=3.6
+* Python >=3.8
 * Cython
 
 Optional:
 
-* cysignals
 * numpy
-
-Make sure to have the correct development tools installed:
-
-* C compiler (see `Installing Cython <https://cython.readthedocs.io/en/latest/src/quickstart/install.html>`_)
-* The Python development version that includes Python header files and static library (e.g. libpython3-dev, python-dev, ...)
 
 ------------
 Installation
@@ -128,31 +122,25 @@ perform memory management.
 Compilation from source
 -----------------------
 
+To install from source, make sure to have the correct development tools installed:
+
+* C compiler (see `Installing Cython <https://cython.readthedocs.io/en/latest/src/quickstart/install.html>`_)
+* The Python development version that includes Python header files and static library (e.g. libpython3-dev, python-dev, ...)
+
+Then run:
+
+.. code-block:: shell
+
+   $ pip install build
+   $ python -m build
+
+
+To install the main branch:
+
 .. code-block:: shell
 
    $ pip install git+https://github.com/wannesm/PySDD.git#egg=PySDD
 
-The repository should contain all the required files and libraries (unless
-you use Windows). If you want to compile from source, note that some c-source
-files from the SDD package have been updated to work with this wrapper and are
-included in this repository. Do not overwrite these new files with the original
-files.
-
-* Download the SDD package from http://reasoning.cs.ucla.edu/sdd/.
-* Install the SDD package in the PySDD package in directories
-  ``pysdd/lib/sdd-2.0`` and ``pysdd/lib/sddlib-2.0`` without overwriting
-  the already available files.
-* Run ``python3 setup.py build_ext --inplace`` or ``make build`` to compile the
-  library in the current directory. If you want to install the library such
-  that the library is available for your local installation or in your virtual
-  environment, use ``python3 setup.py install``.
-
-For some Linux platforms, it might be necessary to recompile the libsdd-2.0 code with
-the gcc option ``-fPIC`` and replace the ``pysdd/lib/sdd-2.0/lib/Linux/libsdd.a``
-library with your newly compiled version.
-
-The Windows platform is not supported. There is some initial support but we cannot
-offer guarantees or detailed instructions (but are happy to accept pull requests).
 
 
 ----------
