@@ -7,17 +7,6 @@ Python wrapper package to interactively use `Sentential Decision Diagrams (SDD) 
 Full documentation available on http://pysdd.readthedocs.io.
 
 ------------
-Dependencies
-------------
-
-* Python >=3.8
-* Cython
-
-Optional:
-
-* numpy
-
-------------
 Installation
 ------------
 
@@ -127,6 +116,8 @@ To install from source, make sure to have the correct development tools installe
 * C compiler (see `Installing Cython <https://cython.readthedocs.io/en/latest/src/quickstart/install.html>`_)
 * The Python development version that includes Python header files and static library (e.g. libpython3-dev, python-dev, ...)
 
+The build process will download Cython and numpy in an isolated environment.
+
 Then run:
 
 .. code-block:: shell
@@ -178,7 +169,7 @@ License
 
 Python SDD wrapper:
 
-Copyright 2017-2018, KU Leuven and Regents of the University of California.
+Copyright 2017-2024, KU Leuven and Regents of the University of California.
 Licensed under the Apache License, Version 2.0.
 
 
