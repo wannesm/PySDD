@@ -1,4 +1,3 @@
-pysdd/lib/libsdd*
 #pysdd/lib/sdd*
 .idea
 build
@@ -14,7 +13,6 @@ _build
 *.egg-info
 .eggs
 dist
-pysdd/lib/sdd-2.0/*
 wm_*
 venv*
 __pycache__

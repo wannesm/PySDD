@@ -1,0 +1,95 @@
+name: Python PySDD package
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-13, macos-14]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_ARCHS_WINDOWS: auto ARM64
+          CIBW_SKIP: cp36-* cp37-* pp* *i686 *ppc64le *s390x *win32*
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "pytest {project}/tests"
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+  build_linux_armwheels:
+    name: Build wheels on Linux Arm with QEMU
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_ARCHS_LINUX: aarch64
+          CIBW_SKIP: cp36-* cp37-* pp* *i686 *ppc64le *s390x *win32*
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "pytest {project}/tests"
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-ubuntu-qemu-arm
+          path: ./wheelhouse/*.whl
+          
+  build_sdist:
+    name: Prepare source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Build
+        run: |
+          python -m pip install build
+          python -m build --sdist
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-source
+          path: dist/*.tar.gz
+
+
+  upload_wheels:
+    name: Upload wheels to PyPi
+    runs-on: ubuntu-latest
+    needs: [ build_wheels,build_sdist,build_linux_armwheels ]
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dist/
+          skip_existing: true

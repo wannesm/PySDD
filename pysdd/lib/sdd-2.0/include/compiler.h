@@ -2,10 +2,13 @@
  * The Sentential Decision Diagram Package
  * sdd version 2.0, January 8, 2018
  * http://reasoning.cs.ucla.edu/sdd
+ * Modified by DTAI.
  ****************************************************************************************/
  
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "sddapi.h"
 
 /****************************************************************************************
  * this file contains macros, definitions of structures, and forward references
@@ -81,9 +84,9 @@ typedef Fnf Dnf;
  * function declaration
  ****************************************************************************************/
 
-Cnf* read_cnf(const char* filename);
-Dnf* read_dnf(const char* filename);
-void free_fnf(Fnf* fnf);
+/* Cnf* read_cnf(const char* filename); */
+/* Dnf* read_dnf(const char* filename); */
+/* void free_fnf(Fnf* fnf); */
 
 SddNode* fnf_to_sdd(Fnf* fnf, SddManager* manager);
 

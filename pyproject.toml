@@ -1,4 +1,120 @@
 [build-system]
-# Minimum requirements for the build system to execute.
-requires = ["setuptools", "wheel", "cython"]  # PEP 508 specifications.
+requires = ["setuptools", "cython"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PySDD"
+version = "1.0"
+description = "Sentential Decision Diagrams"
+authors = [
+    { name = "Wannes Meert", email = "wannes.meert@cs.kuleuven.be" },
+    { name = "Arthur Choi" },
+]
+readme = "README.rst"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+dependencies = [
+    "cython",
+    "numpy",
+]
+keywords = ["sdd, knowledge compilation"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+
+[project.optional-dependencies]
+tests = ["pytest"]
+
+
+
+[project.urls]
+Homepage = "https://github.com/wannesm/PySDD"
+Documentation = "https://pysdd.readthedocs.io/en/latest/"
+
+[project.entry-points."console_scripts"]
+pysdd = "pysdd.cli:main"
+
+[tool.setuptools]
+packages=["pysdd"]
+
+[[tool.setuptools.ext-modules]]
+name = "pysdd.sdd"
+sources = [
+    "pysdd/sdd.pyx",
+    "pysdd/lib/libsdd-2.0/src/util.c",
+    "pysdd/lib/libsdd-2.0/src/verify.c",
+    "pysdd/lib/libsdd-2.0/src/version.c",
+    "pysdd/lib/libsdd-2.0/src/basic/computed.c",
+    "pysdd/lib/libsdd-2.0/src/basic/count_and_size.c",
+    "pysdd/lib/libsdd-2.0/src/basic/gc.c",
+    "pysdd/lib/libsdd-2.0/src/basic/hash.c",
+    "pysdd/lib/libsdd-2.0/src/basic/memory.c",
+    "pysdd/lib/libsdd-2.0/src/basic/multiply.c",
+    "pysdd/lib/libsdd-2.0/src/basic/nodes.c",
+    "pysdd/lib/libsdd-2.0/src/basic/partitions.c",
+    "pysdd/lib/libsdd-2.0/src/basic/references.c",
+    "pysdd/lib/libsdd-2.0/src/basic/replace.c",
+    "pysdd/lib/libsdd-2.0/src/basic/shadows.c",
+    "pysdd/lib/libsdd-2.0/src/basic/sort.c",
+    "pysdd/lib/libsdd-2.0/src/manager/copy.c",
+    "pysdd/lib/libsdd-2.0/src/manager/interface.c",
+    "pysdd/lib/libsdd-2.0/src/manager/manager.c",
+    "pysdd/lib/libsdd-2.0/src/manager/stats.c",
+    "pysdd/lib/libsdd-2.0/src/manager/variables.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/apply.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/bits.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/cardinality.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/condition.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/copy.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/count.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/essential_vars.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/exists.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/exists_multiple.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/exists_multiple_static.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/forall.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/io.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/model_count.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/rename_vars.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/size.c",
+    "pysdd/lib/libsdd-2.0/src/sdds/wmc.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_fragments/construction.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_fragments/moves.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_fragments/operations.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_operations/cartesian_product.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_operations/dissect.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_operations/limits.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_operations/op_left_rotate.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_operations/op_right_rotate.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_operations/op_swap.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_operations/rollback.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_operations/split.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_search/auto.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_search/search.c",
+    "pysdd/lib/libsdd-2.0/src/vtree_search/state.c",
+    "pysdd/lib/libsdd-2.0/src/vtrees/compare.c",
+    "pysdd/lib/libsdd-2.0/src/vtrees/edit.c",
+    "pysdd/lib/libsdd-2.0/src/vtrees/io.c",
+    "pysdd/lib/libsdd-2.0/src/vtrees/maps.c",
+    "pysdd/lib/libsdd-2.0/src/vtrees/moves.c",
+    "pysdd/lib/libsdd-2.0/src/vtrees/static.c",
+    "pysdd/lib/libsdd-2.0/src/vtrees/vtree.c",
+    "pysdd/lib/sdd-2.0/src/fnf/compiler.c",
+    "pysdd/lib/sdd-2.0/src/fnf/fnf.c",
+    "pysdd/lib/sdd-2.0/src/fnf/io.c",
+    "pysdd/lib/sdd-2.0/src/fnf/utils.c",
+]
+include-dirs = [
+    "pysdd/lib/libsdd-2.0/include",
+    "pysdd/lib/sdd-2.0/include",
+    "pysdd/lib/sdd_extra/include",
+]
+
+[tool.cibuildwheel]
+environment = {CFLAGS="-std=c99 -O2 -finline-functions" }
+
+[tool.cibuildwheel.windows]
+environment = {CL = "/O2"}
 

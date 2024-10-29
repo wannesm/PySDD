@@ -1,2 +1,0 @@
-global-include *.pyx *.pxd *.c *.h *.so *.a *.dll *.lib
-include LICENSE
